@@ -1,0 +1,2 @@
+class APILocalException(Exception):
+    pass
