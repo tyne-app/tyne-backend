@@ -6,12 +6,12 @@ from fastapi.encoders import jsonable_encoder
 
 routes = APIRouter()
 
-
+'''
 @routes.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     pass
 
-
+'''
 @routes.get("/show/restaurants/") # TODO: Falta parámetro
 def show_restaurants():
     pass
