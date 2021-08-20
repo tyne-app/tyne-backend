@@ -1,13 +1,29 @@
+import os
+
 from httpx import AsyncClient, RequestError, HTTPStatusError
 from schema.local_schemas import CreateAccountMSLocal
 from fastapi import status
 import json
+from dotenv import load_dotenv
+
+
+# TODO: Variables a eliminar corto plazo
+CREATE_ACCOUNT_INTEGRATION = "https://ms-integration-apis.herokuapp.com/v1/login"
+VALIDATE_ACCOUNT_INTEGRATION = "https://ms-integration-apis.herokuapp.com/v1/login/validate"
+DELETE_ACCOUNT_INTEGRATION = "https://ms-integration-apis.herokuapp.com/v1/login"
+
+CREATE_ACCOUNT_LOCAL = "http://localhost:8000/v1/local/register"
+DELETE_ACCOUNT_LOCAL = "http://localhost:8000/v1/local/delete"
+
+load_dotenv()
 
 
 class FirebaseIntegrationApiClient:
-    CREATE_ACCOUNT = "https://ms-integration-apis.herokuapp.com/v1/login"  # TODO: ES POST evitar código hardcodeado
-    VALIDATE_ACCOUNT = "https://ms-integration-apis.herokuapp.com/v1/login/validate"  # TODO: Es GET
-    DELETE_ACCOUNT = "https://ms-integration-apis.herokuapp.com/v1/login"  # TODO: Es DELETE
+
+    def __init__(self):
+        self.create_account_integration = os.getenv('CREATE_ACCOUNT_INTEGRATION')
+        self.validate_account_integration = os.getenv('VALIDATE_ACCOUNT_INTEGRATION')
+        self.delete_account_integration = os.getenv('DELETE_ACCOUNT_INTEGRATION')
 
     async def create_account(self, email: str, password: str):
         async with AsyncClient() as client:
@@ -16,7 +32,7 @@ class FirebaseIntegrationApiClient:
                 "password": password
             }
             try:
-                response = await client.post(url="https://ms-integration-apis.herokuapp.com/v1/login", json=credentials)
+                response = await client.post(url=self.create_account_integration, json=credentials)
                 print(response)
                 if response.status_code != status.HTTP_200_OK:
                     return status.HTTP_400_BAD_REQUEST
@@ -31,7 +47,7 @@ class FirebaseIntegrationApiClient:
     async def delete_account(self, uid: str):
         async with AsyncClient() as client:
             try:
-                delete_account_url = self.DELETE_ACCOUNT + "/" + uid
+                delete_account_url = self.delete_account_integration + "/" + uid
                 response = await client.delete(url=delete_account_url)
                 if response.status_code != 200:
                     return status.HTTP_400_BAD_REQUEST
@@ -41,13 +57,15 @@ class FirebaseIntegrationApiClient:
 
 
 class MSLocalClient:
-    CREATE_ACCOUNT = "http://localhost:8000/v1/local/register"
-    DELETE_ACCOUNT = "http://localhost:8000/v1/local/delete"
+
+    def __init__(self):
+        self.create_account_local = os.getenv('CREATE_ACCOUNT_LOCAL')
+        self.delete_account_local = os.getenv('DELETE_ACCOUNT_LOCAL')
 
     async def create_account(self, new_account: CreateAccountMSLocal):
         async with AsyncClient() as client:
             try:
-                response = await client.post(url=self.CREATE_ACCOUNT, json=new_account)
+                response = await client.post(url=self.create_account_local, json=new_account)
                 print("RESPONSE MS")
                 print(response)
                 print(response.text)
@@ -64,10 +82,10 @@ class MSLocalClient:
             except RequestError as exc:
                 return None
 
-    async def delete_account(self, branch_id):
+    async def delete_account(self, branch_id):  # TODO: Completar url con branch id
         async with AsyncClient() as client:
             try:
-                response = await client.delete(url=self.DELETE_ACCOUNT)
+                response = await client.delete(url=self.delete_account_local)
                 print("RESPONSE DLETE MS")
                 print(response)
                 print(response.text)
