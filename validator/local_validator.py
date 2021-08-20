@@ -1,12 +1,11 @@
 import re
-from schema.local_schemas import CreateAccount, LegalRepresentative, Branch, Restaurant, BankRestaurant
+from schema.local_schemas import CreateAccount, LegalRepresentative, Branch, Restaurant, BankRestaurant, Owner, Manager
 
 STRING_REGEX = re.compile(r"[A-Za-z\sáéíóúÁÉÍÓÚ]+")  # TODO: Se podría cambia a nombre más declarativo
 NUMBER_REGEX = re.compile(r"[0-9]+")
 PHONE_REGEX = re.compile(r"\+569[0-9]{8}")
 ADDRESS_REGEX = re.compile(r"[A-Za-z\s\.0-9#áéíóúÁÉÍÓÚ]+")
 EMAIL_REGEX = re.compile(r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.?[A-Za-z]+")
-# TODO: Se debe crear respuesta que almacenee indique los campos con valores erróneos
 
 INVALID_DATA_MESSAGE = "Formato no válido"
 
@@ -14,9 +13,13 @@ INVALID_DATA_MESSAGE = "Formato no válido"
 def validate_new_account(new_account: CreateAccount):
     data_checked = {}
 
-    legal_representative_checked = validate_legal_representative(new_account.legal_representative)
-    if bool(legal_representative_checked):
-        data_checked["legal_representative"] = legal_representative_checked
+    manager_checked = validate_manager(Manager(**new_account.legal_representative[0]))
+    if bool(manager_checked):
+        data_checked["manager"] = manager_checked
+
+    owner_checked = validate_owner(Owner(**new_account.legal_representative[1]))
+    if bool(owner_checked):
+        data_checked["owner"] = owner_checked
 
     branch_checked = validate_branch(new_account.branch)
     if bool(branch_checked):
@@ -33,19 +36,38 @@ def validate_new_account(new_account: CreateAccount):
     return data_checked
 
 
-def validate_legal_representative(legal_representative: LegalRepresentative):
-
+def validate_manager(manager: Manager):
     invalid_data = {}
-    if not re.fullmatch(STRING_REGEX,legal_representative.name):
+
+    if not re.fullmatch(STRING_REGEX, manager.name):
         invalid_data["name"] = INVALID_DATA_MESSAGE
-    if not re.fullmatch(STRING_REGEX, legal_representative.last_name):
+    if not re.fullmatch(STRING_REGEX, manager.last_name):
         invalid_data["last_name"] = INVALID_DATA_MESSAGE
-    if not re.fullmatch(NUMBER_REGEX, legal_representative.identifier):
-        invalid_data["identifier"] = INVALID_DATA_MESSAGE
-    if not re.fullmatch(EMAIL_REGEX, legal_representative.email):
-        invalid_data["email"] = INVALID_DATA_MESSAGE
-    if not re.fullmatch(PHONE_REGEX, legal_representative.phone):
+    if not re.fullmatch(PHONE_REGEX, manager.phone):
         invalid_data["phone"] = INVALID_DATA_MESSAGE
+    if not re.fullmatch(EMAIL_REGEX, manager.email):
+        invalid_data["email"] = INVALID_DATA_MESSAGE
+    if manager.type_legal_representative_id != 2:
+        invalid_data["type_legal_representative_id"] = INVALID_DATA_MESSAGE
+
+    return invalid_data
+
+
+def validate_owner(owner: Owner):
+    invalid_data = {}
+
+    if not re.fullmatch(STRING_REGEX, owner.name):
+        invalid_data["name"] = INVALID_DATA_MESSAGE
+    if not re.fullmatch(STRING_REGEX, owner.last_name):
+        invalid_data["last_name"] = INVALID_DATA_MESSAGE
+    if not re.fullmatch(NUMBER_REGEX, owner.identifier):
+        invalid_data["identifier"] = INVALID_DATA_MESSAGE
+    if not re.fullmatch(PHONE_REGEX, owner.phone):
+        invalid_data["phone"] = INVALID_DATA_MESSAGE
+    if not re.fullmatch(EMAIL_REGEX, owner.email):
+        invalid_data["email"] = INVALID_DATA_MESSAGE
+    if owner.type_legal_representative_id != 1:
+        invalid_data["type_legal_representative_id"] = INVALID_DATA_MESSAGE
 
     return invalid_data
 

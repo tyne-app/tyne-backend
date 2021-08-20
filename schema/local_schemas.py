@@ -1,8 +1,25 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union
 
 
-# TODO: Agregar esquemas con registro local
+class Owner(BaseModel):
+    name: str
+    last_name: str
+    identifier: str
+    email: str
+    phone: str
+    email: str
+    type_legal_representative_id: int
+
+
+class Manager(BaseModel):
+    name: str
+    last_name: str
+    email: str
+    phone: str
+    type_legal_representative_id: int
+
+
 class LegalRepresentative(BaseModel):
     name: str
     last_name: str
@@ -12,11 +29,11 @@ class LegalRepresentative(BaseModel):
 
 
 class Branch(BaseModel):
-    name: str  # TODO: Este campo se podría eliminar
+    name: str
     accept_pet: bool
     commercial_activity: str
-    address: str  # TODO: Viene desde front campo dirección + número dirección
-    state: str  # TODO: Corresponde a nombre comuna, no es necesario campo region ya que por front se valida la relación
+    address: str
+    state: str
 
 
 class Restaurant(BaseModel):
@@ -35,7 +52,7 @@ class BankRestaurant(BaseModel):
 
 
 class CreateAccount(BaseModel):
-    legal_representative: LegalRepresentative
+    legal_representative: list
     branch: Branch
     restaurant: Restaurant
     bank_restaurant: BankRestaurant
@@ -49,3 +66,16 @@ class LocalOutput(BaseModel):
 # TODO: Agregar esquemas con actualización datos bancarios
 
 # TODO: Agregar esquemas con actualización de imágenes de local
+
+# TODO: Esquemas para integraciones
+class CreateAccountMSLocal(BaseModel):
+    legal_representative: LegalRepresentative
+    branch: Branch
+    restaurant: Restaurant
+    bank_restaurant: BankRestaurant
+
+
+class Output(BaseModel):
+    data: Optional[Union[dict, int]] = []
+    error: Optional[Union[dict, int]] = []
+
