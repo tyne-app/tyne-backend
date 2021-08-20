@@ -17,6 +17,7 @@ class Manager(BaseModel):
     last_name: str
     email: str
     phone: str
+    password: str
     type_legal_representative_id: int
 
 
@@ -77,5 +78,5 @@ class CreateAccountMSLocal(BaseModel):
 
 class Output(BaseModel):
     data: Optional[Union[dict, int]] = []
-    error: Optional[Union[dict, int]] = []
+    error: Optional[Union[dict, int, str]] = []
 
