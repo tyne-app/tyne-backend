@@ -66,10 +66,15 @@ def get_credentials(manager: Manager) -> dict:
 async def create_account_db(new_account: CreateAccount, uid: str, firebase_api_client: FirebaseIntegrationApiClient):
     ms_local = MSLocalClient()
     new_account_dict = await define_create_account_data(new_account=new_account, uid=uid)
+    logger.info("new_account_dict: {}", new_account_dict)
+
     new_account_id = await ms_local.create_account(new_account=new_account_dict)
+    logger.info("new_account_id: {}", new_account_id)
+
     if not new_account_id and type(uid) == str:
         await firebase_api_client.delete_account(uid)
         return None
+
     return new_account_id
 
 
@@ -77,13 +82,17 @@ async def define_create_account_data(new_account: CreateAccount, uid: str):
     mapbox_client = MapBoxIntegrationClient()
 
     manager = new_account.legal_representative[MANAGER_INDEX]
+    logger.info("manager: {}", manager)
     del(manager["password"])
+
     owner = new_account.legal_representative[OWNER_INDEX]
+    logger.info("owner: {}", owner)
 
     branch = dict(new_account.branch)
     branch["uid"] = uid
 
     coordinates = await mapbox_client.get_latitude_longitude(address=branch["address"])
+    logger.info("coordinates: {}", coordinates)
     if coordinates:
         branch["latitude"] = coordinates["latitude"]
         branch["longitude"] = coordinates["longitude"]
@@ -94,6 +103,7 @@ async def define_create_account_data(new_account: CreateAccount, uid: str):
         "restaurant": new_account.restaurant.dict(),
         "bank_restaurant": new_account.bank_restaurant.dict()
     }
+    logger.info("new_account_dict: {}", new_account_dict)
     return new_account_dict
 
 

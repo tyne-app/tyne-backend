@@ -70,7 +70,7 @@ class MSLocalClient:
         async with AsyncClient() as client:
             try:
                 response = await client.post(url=self.create_account_local, json=new_account)
-
+                logger.info("response: {}", response)
                 if response.status_code != status.HTTP_201_CREATED:
                     logger.error("response.text: {}", response.text)
                     return None
@@ -103,10 +103,19 @@ class MapBoxIntegrationClient:
         async with AsyncClient() as client:
             try:
                 mapbox_url = self.coordinates_url + "/" + address
+                logger.info("mapbox_url: {}", mapbox_url)
+
                 response = await client.get(url=mapbox_url)
+                logger.info("response: {}", response)
+
                 if response.status_code != status.HTTP_200_OK:
                     return None
                 data = json.loads(response.text)
+                logger.info("data: {}", data)
+
+                if 'data' not in data:
+                    return None
+
                 return data["data"]
             except RequestError as exc:
                 # TODO: Agregar logger
