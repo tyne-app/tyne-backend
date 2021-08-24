@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
-from route.routes import routes  # TODO: Por definir
+from fastapi.middleware.cors import CORSMiddleware
 from route.local_route import local_router
 
 api_local = FastAPI(
@@ -13,6 +13,16 @@ api_local = FastAPI(
     description="...",  # TODO: Definir descripción
     version="1.0.0"
 )
+
+origins = ["*"]
+
+api_local.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
 
 class HandlerExceptionTest(Exception):
     def __init__(self, name: str):
