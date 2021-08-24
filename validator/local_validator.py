@@ -79,13 +79,12 @@ def validate_branch(branch: Branch):
         invalid_data["name"] = INVALID_DATA_MESSAGE
     if type(branch.accept_pet) != bool:
         invalid_data["accept_pet"] = INVALID_DATA_MESSAGE
-
     if not re.fullmatch(STRING_REGEX, branch.commercial_activity):
         invalid_data["commercial_activity"] = INVALID_DATA_MESSAGE
     if not re.fullmatch(ADDRESS_REGEX, branch.address):
         invalid_data["address"] = INVALID_DATA_MESSAGE
-    if not re.fullmatch(STRING_REGEX, branch.state):
-        invalid_data["state"] = INVALID_DATA_MESSAGE
+    if type(branch.state_id) != int:
+        invalid_data["state_id"] = INVALID_DATA_MESSAGE
 
     return invalid_data
 
@@ -99,8 +98,8 @@ def validate_restaurant(restaurant: Restaurant):
         invalid_data["name"] = INVALID_DATA_MESSAGE
     if not re.fullmatch(ADDRESS_REGEX, restaurant.address):
         invalid_data["address"] = INVALID_DATA_MESSAGE
-    if not re.fullmatch(STRING_REGEX, restaurant.state):
-        invalid_data["state"] = INVALID_DATA_MESSAGE
+    if type(restaurant.state_id) != int:
+        invalid_data["state_id"] = INVALID_DATA_MESSAGE
 
     return invalid_data
 
@@ -116,8 +115,7 @@ def validate_bank_restaurant(bank_restaurant: BankRestaurant):
         invalid_data["account_number"] = INVALID_DATA_MESSAGE
     if not re.fullmatch(STRING_REGEX, bank_restaurant.account_type):
         invalid_data["account_type"] = INVALID_DATA_MESSAGE
-    if not re.fullmatch(STRING_REGEX, bank_restaurant.bank):
-        invalid_data["bank"] = INVALID_DATA_MESSAGE
-
+    if type(bank_restaurant.bank_id) != int:
+        invalid_data["bank_id"] = INVALID_DATA_MESSAGE
     return invalid_data
 

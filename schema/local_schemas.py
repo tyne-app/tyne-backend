@@ -34,14 +34,14 @@ class Branch(BaseModel):
     accept_pet: bool
     commercial_activity: str
     address: str
-    state: str
+    state_id: int
 
 
 class Restaurant(BaseModel):
     identifier: str # TODO: Eliminar columna
     name: str
     address: str  # TODO: Eliminar columna
-    state: str
+    state_id: int
 
 
 class BankRestaurant(BaseModel):
@@ -49,7 +49,7 @@ class BankRestaurant(BaseModel):
     account_holder: str
     account_number: str
     account_type: str
-    bank: str
+    bank_id: int
 
 
 class CreateAccount(BaseModel):
