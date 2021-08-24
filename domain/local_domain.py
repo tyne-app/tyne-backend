@@ -1,4 +1,3 @@
-import json
 from loguru import logger
 from validator.local_validator import validate_new_account
 from schema.local_schemas import CreateAccount, CreateAccountMSLocal, Manager
@@ -50,7 +49,7 @@ async def create_account(new_account: CreateAccount):
 
 async def create_account_firebase(new_account: CreateAccount, firebase_api_client: FirebaseIntegrationApiClient):
 
-    credentials = get_credentials(Manager(**new_account.legal_representative[0]))
+    credentials = get_credentials(Manager(**new_account.legal_representative[0].dict()))
     uid = await firebase_api_client.create_account(email=credentials["email"], password=credentials["password"])
     return uid
 
@@ -81,11 +80,11 @@ async def create_account_db(new_account: CreateAccount, uid: str, firebase_api_c
 async def define_create_account_data(new_account: CreateAccount, uid: str):
     mapbox_client = MapBoxIntegrationClient()
 
-    manager = new_account.legal_representative[MANAGER_INDEX]
+    manager = new_account.legal_representative[MANAGER_INDEX].dict()
     logger.info("manager: {}", manager)
     del(manager["password"])
 
-    owner = new_account.legal_representative[OWNER_INDEX]
+    owner = new_account.legal_representative[OWNER_INDEX].dict()
     logger.info("owner: {}", owner)
 
     branch = dict(new_account.branch)

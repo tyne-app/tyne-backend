@@ -53,7 +53,7 @@ class BankRestaurant(BaseModel):
 
 
 class CreateAccount(BaseModel):
-    legal_representative: list
+    legal_representative: tuple[Manager, Owner]
     branch: Branch
     restaurant: Restaurant
     bank_restaurant: BankRestaurant

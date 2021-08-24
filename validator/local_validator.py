@@ -1,7 +1,8 @@
 import re
+from loguru import logger
 from schema.local_schemas import CreateAccount, LegalRepresentative, Branch, Restaurant, BankRestaurant, Owner, Manager
 
-STRING_REGEX = re.compile(r"[A-Za-z\sáéíóúÁÉÍÓÚ]+")  # TODO: Se podría cambia a nombre más declarativo
+STRING_REGEX = re.compile(r"[A-Za-z\sáéíóúÁÉÍÓÚñ]+")  # TODO: Se podría cambia a nombre más declarativo
 NUMBER_REGEX = re.compile(r"[0-9]+")
 PHONE_REGEX = re.compile(r"\+569[0-9]{8}")
 ADDRESS_REGEX = re.compile(r"[A-Za-z\s\.0-9#áéíóúÁÉÍÓÚ]+")
@@ -13,11 +14,11 @@ INVALID_DATA_MESSAGE = "Formato no válido"
 def validate_new_account(new_account: CreateAccount):
     data_checked = {}
 
-    manager_checked = validate_manager(Manager(**new_account.legal_representative[0]))
+    manager_checked = validate_manager(Manager(**new_account.legal_representative[0].dict()))
     if bool(manager_checked):
         data_checked["manager"] = manager_checked
 
-    owner_checked = validate_owner(Owner(**new_account.legal_representative[1]))
+    owner_checked = validate_owner(Owner(**new_account.legal_representative[1].dict()))
     if bool(owner_checked):
         data_checked["owner"] = owner_checked
 
@@ -37,8 +38,9 @@ def validate_new_account(new_account: CreateAccount):
 
 
 def validate_manager(manager: Manager):
-    invalid_data = {}
+    logger.info('manager: {}', manager)
 
+    invalid_data = {}
     if not re.fullmatch(STRING_REGEX, manager.name):
         invalid_data["name"] = INVALID_DATA_MESSAGE
     if not re.fullmatch(STRING_REGEX, manager.last_name):
@@ -54,8 +56,9 @@ def validate_manager(manager: Manager):
 
 
 def validate_owner(owner: Owner):
-    invalid_data = {}
+    logger.info('owner: {}', owner)
 
+    invalid_data = {}
     if not re.fullmatch(STRING_REGEX, owner.name):
         invalid_data["name"] = INVALID_DATA_MESSAGE
     if not re.fullmatch(STRING_REGEX, owner.last_name):
@@ -73,6 +76,7 @@ def validate_owner(owner: Owner):
 
 
 def validate_branch(branch: Branch):
+    logger.info('branch: {}', branch)
 
     invalid_data = {}
     if not re.fullmatch(STRING_REGEX, branch.name):
@@ -90,6 +94,7 @@ def validate_branch(branch: Branch):
 
 
 def validate_restaurant(restaurant: Restaurant):
+    logger.info('restaurant: {}', restaurant)
 
     invalid_data = {}
     if not re.fullmatch(NUMBER_REGEX, restaurant.identifier):
@@ -105,6 +110,7 @@ def validate_restaurant(restaurant: Restaurant):
 
 
 def validate_bank_restaurant(bank_restaurant: BankRestaurant):
+    logger.info('bank_restaurant: {}', bank_restaurant)
 
     invalid_data = {}
     if not re.fullmatch(NUMBER_REGEX, bank_restaurant.account_holder_identifier):
