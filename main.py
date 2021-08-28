@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-from route.local_route import local_router
+from route import local_route, search_route
 
 api_local = FastAPI(
     docs_url="/v1/docs",
@@ -28,32 +28,35 @@ class HandlerExceptionTest(Exception):
     def __init__(self, name: str):
         self.name = name
 
-# TODO: Mejorar exception
-'''
-@api_local.exception_handler(HandlerExceptionTest)
-async def api_exception_handler(request: Request, exc: HandlerExceptionTest):
-    print("Reques en handler exceptioN!")
-    print(request)
-    print("Exc")
-    print(exc)
-    return JSONResponse(
-        status_code=418,
-        content={"message": f'Oops! {exc.name}'}
-    )
-'''
+
+def get_field_error(error: tuple):
+    if len(error) == 2:
+        return error[1]
+    if len(error) == 3:
+        return error[2]
+    if len(error) == 4:
+        return error[3]
+
+
 @api_local.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
-    # TODO: Mejorar response de Excepcion valores invalidos
-    # TODO: Esta función permite manejar la excepcion de datos inválidos en request o datos ausentes.
-    print(exc.errors())  # TODO: Este podría servir para devolver un response más amigable a frontend
+    error_array = exc.errors()
+    error_detail_list = []
+
+    for error in error_array:
+        error_detail = {
+            'field_error': get_field_error(error['loc']),
+            'error_type': error['msg']
+        }
+        error_detail_list.append(error_detail)
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content=jsonable_encoder({"hola": exc.errors(), "body": exc.body})
+        content=jsonable_encoder({'data': [], "error": error_detail_list})
     )
 
-api_local.include_router(local_router)
+api_local.include_router(local_route.local_router)
+api_local.include_router(search_route.search_router)
 
-# TODO: Crear archivos DockerFile, git-cli.yml, otros.
 
 if __name__ == "__main__":
     uvicorn.run("main:api_local", host="127.0.0.1", port=8001, reload=True)
