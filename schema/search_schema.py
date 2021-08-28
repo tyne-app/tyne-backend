@@ -3,8 +3,8 @@ from typing import Optional
 
 
 class SearchParameters(BaseModel):
-    name: str
-    date_reservation: str
-    state_id: int
-    sort_by: int
-    order_by: int
+    name: Optional[str]
+    date_reservation: Optional[str]
+    state_id: Optional[int]
+    sort_by: Optional[int]
+    order_by: Optional[int]
