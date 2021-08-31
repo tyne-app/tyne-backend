@@ -9,16 +9,16 @@ class SearchAllBranchOpenAPI:
             "id": 1,
             "name": "La picá del Rick",
             "image_url": None,
-            "amount_avg": 3426,
-            "qualification_avg": False,
+            "price": 3426,
+            "rating": 5,
             "description": "Restaurant pulento"
         },
         {
             "id": 2,
             "name": "Tuna Restobar",
             "image_url": "url_image_branch_2",
-            "amount_avg": 3426,
-            "qualification_avg": 4,
+            "price": 3426,
+            "rating": 4,
             "description": "Restaurant pulento"
         }], 'error': []}}}},
         400: {"description": "Error al buscar locales",
@@ -39,8 +39,8 @@ class SearchAllBranchByClientOpenAPI:
             "name": "La picá del Rick",
             "is_favourite": False,
             "image_url": None,
-            "amount_avg": 3426,
-            "qualification_avg": False,
+            "price": 3426,
+            "rating": 6,
             "description": "Restaurant pulento"
         },
         {
@@ -48,8 +48,8 @@ class SearchAllBranchByClientOpenAPI:
             "name": "Tuna Restobar",
             "is_favourite": False,
             "image_url": "url_image_branch_2",
-            "amount_avg": 3426,
-            "qualification_avg": 4,
+            "price": 3426,
+            "rating": 4,
             "description": "Restaurant pulento"
         }], 'error': []}}}},
         400: {"description": "Error al buscar locales",

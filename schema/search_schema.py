@@ -15,8 +15,8 @@ class PreviewBranch(BaseModel):
     name: str
     is_favourite: Optional[bool]
     image_url: Optional[str] = None  # TODO: Definir si es oopcional
-    amount_avg: Optional[int] = 0  # TODO: Descartar Optional, por ahora se deja por poca e inconsistente data
-    qualification_avg: Optional[int] = 0
+    price: Optional[int] = 0  # TODO: Descartar Optional, por ahora se deja por poca e inconsistente data
+    rating: Optional[int] = 0
     description: Optional[str] = None  # TODO: Creo que es opcional, por confirmar
 
 
