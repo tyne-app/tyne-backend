@@ -1,7 +1,7 @@
 import logging
 import os
 from httpx import AsyncClient, RequestError
-from schema.local_schemas import CreateAccountMSLocal
+from schema import local_schemas, search_schema
 from fastapi import status
 import json
 from loguru import logger
@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 CREATE_ACCOUNT_INTEGRATION = "https://ms-integration-apis.herokuapp.com/v1/login"
 VALIDATE_ACCOUNT_INTEGRATION = "https://ms-integration-apis.herokuapp.com/v1/login/validate"
 DELETE_ACCOUNT_INTEGRATION = "https://ms-integration-apis.herokuapp.com/v1/login"
+SEARCH_ALL_BRANCH = ""
+SEARCH_ALL_BRANCH_BY_CLIENT = ""
 
 CREATE_ACCOUNT_LOCAL = "http://localhost:8000/v1/local/register"
 DELETE_ACCOUNT_LOCAL = "http://localhost:8000/v1/local/delete"
@@ -65,8 +67,9 @@ class MSLocalClient:
     def __init__(self):
         self.create_account_local = os.getenv('CREATE_ACCOUNT_LOCAL')
         self.delete_account_local = os.getenv('DELETE_ACCOUNT_LOCAL')
+        self.search_all = os.getenv('SEARCH_ALL_BRANCH')
 
-    async def create_account(self, new_account: CreateAccountMSLocal):
+    async def create_account(self, new_account: local_schemas.CreateAccountMSLocal):
         async with AsyncClient() as client:
             try:
                 response = await client.post(url=self.create_account_local, json=new_account)
@@ -91,6 +94,25 @@ class MSLocalClient:
                 print(response.text)
                 return True
             except RequestError as exc:
+                return None
+
+    async def search_all_branch(self, search_parameters: dict, client_id: int):
+        async with AsyncClient() as client:
+            try:
+                search_url = self.search_all + (f"/{client_id}" if client_id else '')
+                logger.info('search_url: {}', search_url)
+                response = await client.post(url=search_url, json=search_parameters)
+
+                if response.status_code != status.HTTP_200_OK:
+                    logger.error("response.text: {}", response.text)
+                    return None  # RETORNAR ERROR Y RETORNAR RESPUESTA AMIGABLE
+                print(response)
+                print(response.text)
+                data = json.loads(response.text)
+                return data['data']
+            except RequestError as exc:
+                print(exc)
+                print(exc.args)
                 return None
 
 
