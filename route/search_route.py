@@ -1,4 +1,4 @@
-from fastapi import status,APIRouter, Response
+from fastapi import status,APIRouter, Response, Body
 from loguru import logger
 from schema.search_schema import SearchParameters, PreviewBranchOutput
 from domain.search_domain import search_all_branch
@@ -10,7 +10,7 @@ search_router = APIRouter(
 
 
 @search_router.post('/all-branch', status_code=status.HTTP_200_OK, response_model=PreviewBranchOutput)
-async def search_locals(response: Response, search_parameters: SearchParameters):
+async def search_locals(response: Response, search_parameters: SearchParameters = Body(default = {})):
     logger.info('search_paramters: {}', search_parameters)
 
     data = await search_all_branch(search_parameters=search_parameters)

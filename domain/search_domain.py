@@ -6,13 +6,17 @@ from dto.dto import GenericDTO as SearchDTO
 from integration.integrations import MSLocalClient
 
 MSG_ERROR_MS_LOCAL = "Error al buscar locales" # TODO: Mejorar todas las respuesta, más descriptivas
-LIMIT_HOUR_MSG_ERROR = "No es posible realizar petición en horario toque de queda"
+LIMIT_HOUR_MSG_ERROR = "No es posible realizar petición después de estar a dos horas o menos de toque de queda"
 LIMIT_HOUR = 22
+
 
 async def search_all_branch(search_parameters: SearchParameters, client_id: int = None):
     logger.info('search_paramters: {}', search_parameters)
-    validated_data = validate_search_paramters(search_parameters=search_parameters)
-    # TODO: Validar si la request es igual o después de las 22:00hrs devolver error por toque de queda.
+    validated_data = {}
+
+    if search_parameters != {}:
+        validated_data = validate_search_paramters(search_parameters=search_parameters)
+
     search_dto = SearchDTO()
 
     if validated_data:
@@ -25,10 +29,8 @@ async def search_all_branch(search_parameters: SearchParameters, client_id: int 
         search_dto.error = LIMIT_HOUR_MSG_ERROR
         return search_dto.__dict__
 
-    if search_parameters.date_reservation:
-        search_parameters.date_reservation = search_parameters.date_reservation.replace("/", "-") + " 00:00:00"  # TODO: Hora por definir
-
-    print(dict(search_parameters))
+    if search_parameters != {} and search_parameters.date_reservation:
+        search_parameters.date_reservation = search_parameters.date_reservation.replace("/", "-")
 
     ms_local_client = MSLocalClient()
     all_branch = await ms_local_client.search_all_branch(search_parameters=dict(search_parameters), client_id=client_id)
