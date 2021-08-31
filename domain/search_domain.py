@@ -7,7 +7,7 @@ from integration.integrations import MSLocalClient
 
 MSG_ERROR_MS_LOCAL = "Error al buscar locales" # TODO: Mejorar todas las respuesta, más descriptivas
 LIMIT_HOUR_MSG_ERROR = "No es posible realizar petición después de estar a dos horas o menos de toque de queda"
-LIMIT_HOUR = 23
+LIMIT_HOUR = 22
 
 
 async def search_all_branch(search_parameters: SearchParameters, client_id: int = None):
