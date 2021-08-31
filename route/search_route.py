@@ -1,6 +1,6 @@
 from fastapi import status,APIRouter, Response, Body
 from loguru import logger
-from schema.search_schema import SearchParameters, PreviewBranchOutput
+from schema.search_schema import SearchParameters, PreviewBranchOutput, PreviewBranchOutputClient
 from domain.search_domain import search_all_branch
 from openapi.search_openapi import SearchAllBranchByClientOpenAPI, SearchAllBranchOpenAPI
 
@@ -26,7 +26,7 @@ async def search_locals(response: Response, search_parameters: SearchParameters 
 
 
 @search_router.post(
-    '/all-branch/{client_id}', status_code=status.HTTP_200_OK, response_model=PreviewBranchOutput,
+    '/all-branch/{client_id}', status_code=status.HTTP_200_OK, response_model=PreviewBranchOutputClient,
     summary=SearchAllBranchByClientOpenAPI.summary, responses=SearchAllBranchByClientOpenAPI.responses,
     description=SearchAllBranchByClientOpenAPI.description, response_description=SearchAllBranchByClientOpenAPI.response_description
 )

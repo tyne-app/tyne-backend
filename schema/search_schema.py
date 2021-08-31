@@ -13,7 +13,6 @@ class SearchParameters(BaseModel):
 class PreviewBranch(BaseModel):
     id: int
     name: str
-    is_favourite: Optional[bool]
     image_url: Optional[str] = None  # TODO: Definir si es oopcional
     price: Optional[int] = 0  # TODO: Descartar Optional, por ahora se deja por poca e inconsistente data
     rating: Optional[int] = 0
@@ -22,4 +21,19 @@ class PreviewBranch(BaseModel):
 
 class PreviewBranchOutput(BaseModel):
     data: Optional[list[PreviewBranch]] = []
+    error: Optional[str] = []
+
+
+class PreviewBranchClient(BaseModel):
+    id: int
+    name: str
+    is_favourite: Optional[bool]
+    image_url: Optional[str] = None  # TODO: Definir si es oopcional
+    price: Optional[int] = 0  # TODO: Descartar Optional, por ahora se deja por poca e inconsistente data
+    rating: Optional[int] = 0
+    description: Optional[str] = None  # TODO: Creo que es opcional, por confirmar
+
+
+class PreviewBranchOutputClient(BaseModel):
+    data: Optional[list[PreviewBranchClient]] = []
     error: Optional[str] = []
