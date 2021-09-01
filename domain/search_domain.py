@@ -11,7 +11,12 @@ LIMIT_HOUR = 22
 
 
 async def search_all_branch(search_parameters: SearchParameters, client_id: int = None):
-    logger.info('search_paramters: {}', search_parameters)
+    logger.info('search_paramters: {}, client_id: {}', search_parameters, client_id)
+
+    if client_id:
+        # TODO: Validar TOKEN CLIENTE SI ES VÁLIDO
+        pass
+
     validated_data = {}
 
     if search_parameters != {}:

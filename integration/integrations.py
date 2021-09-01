@@ -142,3 +142,19 @@ class MapBoxIntegrationClient:
             except RequestError as exc:
                 # TODO: Agregar logger
                 return None
+
+
+class MSIntegrationApi:
+
+    def __init__(self):
+        self.validate_token_url = os.getenv('VALIDATE_TOKEN_URL')
+        self.login_url = ''
+        self.token_data_url = os.getenv('TOKEN_DATA_URL')
+
+    async def validate_token(self):
+        async with AsyncClient() as client:
+            try:
+                # TODO: Obtener validacion token
+                return None
+            except RequestError as exc:
+                return None

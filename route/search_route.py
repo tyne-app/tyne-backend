@@ -24,7 +24,13 @@ async def search_locals(response: Response, search_parameters: SearchParameters 
 
     return data
 
-
+# TODO: Parece que se deberá ocupar un decorador, middleware se ejecuta antes del routing.
+# https://stackoverflow.com/questions/62895883/fastapi-cant-access-path-parameters-from-middleware
+# https://gist.github.com/geospatial-jeff/17d677202f1223eacd3b32960ac29c60
+# https://www.xspdf.com/resolution/59308827.html
+# https://github.com/tiangolo/fastapi/issues/1174
+# TODO: Este link podría servir https://stackoverflow.com/questions/64497615/how-to-add-a-custom-decorator-to-a-fastapi-route
+# TODO: No se que es pero tal vez sirva. https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-in-path-operation-decorators/
 @search_router.post(
     '/all-branch/{client_id}', status_code=status.HTTP_200_OK, response_model=PreviewBranchOutputClient,
     summary=SearchAllBranchByClientOpenAPI.summary, responses=SearchAllBranchByClientOpenAPI.responses,
