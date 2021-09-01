@@ -1,4 +1,3 @@
-import logging
 import os
 from httpx import AsyncClient, RequestError
 from schema import local_schemas, search_schema
@@ -9,6 +8,7 @@ from dotenv import load_dotenv
 
 
 # TODO: Variables a eliminar corto plazo
+# TODO: DEFINIR CONSTANTES CON VERIONES DE API, EJ CREATE_ACCOUNT_URL_V1
 CREATE_ACCOUNT_INTEGRATION = "https://ms-integration-apis.herokuapp.com/v1/login"
 VALIDATE_ACCOUNT_INTEGRATION = "https://ms-integration-apis.herokuapp.com/v1/login/validate"
 DELETE_ACCOUNT_INTEGRATION = "https://ms-integration-apis.herokuapp.com/v1/login"
@@ -106,8 +106,6 @@ class MSLocalClient:
                 if response.status_code != status.HTTP_200_OK:
                     logger.error("response.text: {}", response.text)
                     return None  # RETORNAR ERROR Y RETORNAR RESPUESTA AMIGABLE
-                print(response)
-                print(response.text)
                 data = json.loads(response.text)
                 return data['data']
             except RequestError as exc:
@@ -141,6 +139,8 @@ class MapBoxIntegrationClient:
                 return data["data"]
             except RequestError as exc:
                 # TODO: Agregar logger
+                print(exc)
+                print(exc.args)
                 return None
 
 
@@ -151,10 +151,12 @@ class MSIntegrationApi:
         self.login_url = ''
         self.token_data_url = os.getenv('TOKEN_DATA_URL')
 
-    async def validate_token(self):
+    async def validate_token(self, client_token: str):
         async with AsyncClient() as client:
             try:
-                # TODO: Obtener validacion token
-                return None
+                authorization_header = { 'Authorization': client_token}
+                return await client.post(headers=authorization_header, url=self.validate_token_url)
             except RequestError as exc:
+                print(exc)
+                print(exc.args)
                 return None

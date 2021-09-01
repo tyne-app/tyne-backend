@@ -19,7 +19,16 @@ async def register_account(response: Response, new_account: CreateAccount):
 
     # TODO: https: // ms - integration - apis.herokuapp.com / v1 / docs /  # /Login/post_v1_login <-- Retorna UID
     # TODO: Flujo:
+    # TODO: Enviar correo a local crear cuenta al siguiente endpoint
+    # https://backbone-email.herokuapp.com/v1/docs/#/Email/post_v1_emails_welcome_local
     '''
+    la request te pide estos dos campos {
+        "url": "string", Este lo devuelve el servicio de registro, lo devuelve firebase para vlaidar usuario despues
+        "email": "string" Email del cliente
+        }
+    
+    
+    
     - /v1/login -> Crea usuario retorna UID
     - /v1/login -> Verifica usuario retorna JWT
     - /v1/login/validate - > Verifica JWT sesion usuario. Middleware
