@@ -102,7 +102,8 @@ class MSLocalClient:
                 search_url = self.search_all + (f"/{client_id}" if client_id else '')
                 logger.info('search_url: {}', search_url)
                 response = await client.post(url=search_url, json=search_parameters)
-
+                print(response)
+                print(response.text)
                 if response.status_code != status.HTTP_200_OK:
                     logger.error("response.text: {}", response.text)
                     return None  # RETORNAR ERROR Y RETORNAR RESPUESTA AMIGABLE

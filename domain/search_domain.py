@@ -53,7 +53,8 @@ async def validate_token(client_token: str):
     ms_integration_api = MSIntegrationApi()
 
     response = await ms_integration_api.validate_token(client_token=client_token)
-    validated_token = json.loads(response.text) # TODO: Parece que devuelve true si es correcto. Agregar a validacion
+    # validated_token = json.loads(response.text) # TODO: Parece que devuelve true si es correcto. Agregar a validacion
+
     if response.status_code != status.HTTP_200_OK:
         search_dto.error = MSG_UNAUTHORIZED
 
