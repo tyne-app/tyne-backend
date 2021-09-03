@@ -6,9 +6,13 @@ from dto.dto import GenericDTO as LocalDTO
 
 MANAGER_INDEX = 0
 OWNER_INDEX = 1
-MSG_ERROR_FIREBASE = "No se puede crear credenciales, usuario existente o mal formato"
+MSG_ERROR_FIREBASE = "No se puede crear credenciales, usuario existente"
 MSG_ERROR_MS_LOCAL = "Error al registrar datos de sucursal"
-
+MSG_ERROR_BRANCH_ADDRESS = "Dirección de local no válida"
+LEGAL_REPRESENTATIVE_MSG_ERROR = "Rut representante legal ya registrado"
+LEGAL_REPRESENTATIVE_KEY = "legal_representative"
+RESTAURANT_MSG_ERROR = "Rut restaurant ya registrado"
+RESTAURANT_KEY = "restaurant"
 
 async def create_account(new_account: CreateAccount):
     logger.info("new_account: {}", new_account)
@@ -35,15 +39,15 @@ async def create_account(new_account: CreateAccount):
 
     logger.info("uid: {}", uid)
 
-    new_account_id = await create_account_db(new_account=new_account, uid=uid, firebase_api_client=firebase_api_client)
+    new_account_response = await create_account_db(new_account=new_account, uid=uid, firebase_api_client=firebase_api_client)
 
-    if not new_account_id:
-        logger.error("new_account_id: {}", new_account_id)
-        local_dto.error = MSG_ERROR_MS_LOCAL
+    if type(new_account_response) == str:
+        logger.error("new_account_id: {}", new_account_response)
+        local_dto.error = new_account_response
         return local_dto.__dict__
 
-    logger.info("new_account_id: {}", new_account_id)
-    local_dto.data = new_account_id
+    logger.info("new_account_response: {}", new_account_response)
+    local_dto.data = new_account_response
     return local_dto.__dict__
 
 
@@ -65,16 +69,24 @@ def get_credentials(manager: Manager) -> dict:
 async def create_account_db(new_account: CreateAccount, uid: str, firebase_api_client: FirebaseIntegrationApiClient):
     ms_local = MSLocalClient()
     new_account_dict = await define_create_account_data(new_account=new_account, uid=uid)
+
+    if type(new_account_dict) == str:
+        logger.info("new_account_dict: {}", new_account_dict)
+        await firebase_api_client.delete_account(uid)
+        return new_account_dict
+
     logger.info("new_account_dict: {}", new_account_dict)
 
-    new_account_id = await ms_local.create_account(new_account=new_account_dict)
-    logger.info("new_account_id: {}", new_account_id)
+    new_account_response = await ms_local.create_account(new_account=new_account_dict)
+    logger.info("new_account_id: {}", new_account_response)
 
-    if not new_account_id and type(uid) == str:
+    if type(new_account_response) == str and type(uid) == str:
         await firebase_api_client.delete_account(uid)
-        return None
+        return LEGAL_REPRESENTATIVE_MSG_ERROR \
+            if LEGAL_REPRESENTATIVE_KEY in new_account_response \
+            else RESTAURANT_MSG_ERROR
 
-    return new_account_id
+    return new_account_response
 
 
 async def define_create_account_data(new_account: CreateAccount, uid: str):
@@ -90,11 +102,14 @@ async def define_create_account_data(new_account: CreateAccount, uid: str):
     branch = dict(new_account.branch)
     branch["uid"] = uid
 
-    coordinates = await mapbox_client.get_latitude_longitude(address=branch["address"])
+    coordinates = await mapbox_client.get_latitude_longitude(address=f"{branch['address']} Chile")
     logger.info("coordinates: {}", coordinates)
-    if coordinates:
-        branch["latitude"] = coordinates["latitude"]
-        branch["longitude"] = coordinates["longitude"]
+
+    if not coordinates:
+        return MSG_ERROR_BRANCH_ADDRESS
+
+    branch["latitude"] = coordinates["latitude"]
+    branch["longitude"] = coordinates["longitude"]
 
     new_account_dict = {
         "legal_representative": [manager, owner],

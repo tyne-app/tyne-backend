@@ -38,11 +38,14 @@ class FirebaseIntegrationApiClient:
             }
             try:
                 response = await client.post(url=self.create_account_integration, json=credentials)
+
+                logger.info("response: {}", response)
+                logger.info("response.text: {}", response.text)
+                data = json.loads(response.text)
                 if response.status_code != status.HTTP_200_OK:
                     logger.error("response.text: {}", response.text)
                     return None
-                logger.info("response.text: {}", response.text)
-                data = json.loads(response.text)
+
                 return data["data"]["uid"]
 
             except RequestError as exc:
@@ -63,7 +66,6 @@ class FirebaseIntegrationApiClient:
 
 
 class MSLocalClient:
-
     def __init__(self):
         self.create_account_local = os.getenv('CREATE_ACCOUNT_LOCAL')
         self.delete_account_local = os.getenv('DELETE_ACCOUNT_LOCAL')
@@ -72,17 +74,24 @@ class MSLocalClient:
     async def create_account(self, new_account: local_schemas.CreateAccountMSLocal):
         async with AsyncClient() as client:
             try:
-                response = await client.post(url=self.create_account_local, json=new_account)
+                response = await client.post(url=CREATE_ACCOUNT_LOCAL, json=new_account)  # ToDo. Cambiar a CLOUD
+
                 logger.info("response: {}", response)
-                if response.status_code != status.HTTP_201_CREATED:
-                    logger.error("response.text: {}", response.text)
-                    return None
                 logger.info("response.text: {}", response.text)
+
                 data = json.loads(response.text)
+
+                if response.status_code != status.HTTP_201_CREATED:
+                    logger.error("response: {}", response)
+                    logger.error("response.text: {}", response.text)
+                    return data['error']
+
                 return int(data["data"])
 
-            except RequestError as exc:
-                return None
+            except RequestError as exception:
+                logger.error("Exception: {}", exception)
+                logger.error("response.text: {}", exception)
+                return f"Excepción: {exception.response} - {exception.respose.status_code}"
 
     async def delete_account(self, branch_id: int):
         async with AsyncClient() as client:
@@ -128,8 +137,11 @@ class MapBoxIntegrationClient:
 
                 response = await client.get(url=mapbox_url)
                 logger.info("response: {}", response)
+                logger.info("response.text: {}", response.text)
 
                 if response.status_code != status.HTTP_200_OK:
+                    logger.error("response: {}", response)
+                    logger.error("response.text: {}", response.text)
                     return None
                 data = json.loads(response.text)
                 logger.info("data: {}", data)
