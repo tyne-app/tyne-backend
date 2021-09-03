@@ -74,7 +74,7 @@ class MSLocalClient:
     async def create_account(self, new_account: local_schemas.CreateAccountMSLocal):
         async with AsyncClient() as client:
             try:
-                response = await client.post(url=CREATE_ACCOUNT_LOCAL, json=new_account)  # ToDo. Cambiar a CLOUD
+                response = await client.post(url=self.create_account_local, json=new_account)
 
                 logger.info("response: {}", response)
                 logger.info("response.text: {}", response.text)
