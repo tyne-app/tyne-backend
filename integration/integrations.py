@@ -70,6 +70,7 @@ class MSLocalClient:
         self.create_account_local = os.getenv('CREATE_ACCOUNT_LOCAL')
         self.delete_account_local = os.getenv('DELETE_ACCOUNT_LOCAL')
         self.search_all = os.getenv('SEARCH_ALL_BRANCH')
+        self.search_branch = os.getenv('SEARCH_BRANCH')
 
     async def create_account(self, new_account: local_schemas.CreateAccountMSLocal):
         async with AsyncClient() as client:
@@ -104,6 +105,29 @@ class MSLocalClient:
                 return True
             except RequestError as exc:
                 return None
+
+    async def search_branch_profile(self, branch_id: int):
+        async with AsyncClient() as client:
+            try:
+                search_branch_profile_url = self.search_branch + "/" + str(branch_id)
+                logger.info('search_branch_profile_url: {}', search_branch_profile_url)
+                response = await client.get(url=search_branch_profile_url)
+                logger.info("response: {}", response)
+                logger.info("response.text: {}", response.text)
+
+                data = json.loads(response.text)
+
+                if response.status_code != status.HTTP_200_OK:
+                    logger.error("response: {}", response)
+                    logger.error("response.text: {}", response.text)
+                    return data['error']
+
+                return data["data"]
+
+            except RequestError as exception:
+                logger.error("Exception: {}", exception)
+                logger.error("response.text: {}", exception)
+                return f"Excepción: {exception.response} - {exception.respose.status_code}"
 
     async def search_all_branch(self, search_parameters: dict, client_id: int):
         async with AsyncClient() as client:

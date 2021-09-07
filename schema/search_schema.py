@@ -37,3 +37,24 @@ class PreviewBranchClient(BaseModel):
 class PreviewBranchOutputClient(BaseModel):
     data: Optional[list[PreviewBranchClient]] = []
     error: Optional[str] = []
+
+
+class BranchProfileView(BaseModel):
+    id: int
+    name: str
+    description: str
+    latitude: float
+    longitude: float
+    accept_pet: bool
+    address: Optional[str]
+    rating: Optional[float]
+    price: Optional[int]
+    related_branch: list[dict]
+    branch_images: list[dict]
+    opinion_list: list[dict]
+    schedule_list: Optional[list]
+
+
+class PreviewBranchProfileOutput(BaseModel):
+    data: Optional[PreviewBranchClient] = []
+    error: Optional[str] = []

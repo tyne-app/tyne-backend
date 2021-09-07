@@ -14,7 +14,7 @@ MSG_UNAUTHORIZED = "Usuario no autorizado"
 # TODO: Se debe refactorizar lo siguiente:
 # TODO: - Manejar status code en capa domain junto con el json_load de la response. Capa integration solo se comunica y devuelve la respuesta cruda
 
-async def search_all_branch(search_parameters: SearchParameters, client_id: int = None, client_token: str = None):
+async def search_all_branch(search_parameters: SearchParameters, client_id: int = None):
     logger.info('search_paramters: {}, client_id: {}', search_parameters, client_id)
     search_dto = SearchDTO()
 
@@ -48,6 +48,19 @@ async def search_all_branch(search_parameters: SearchParameters, client_id: int 
     return search_dto.__dict__
 
 
+async def search_branch_profile(branch_id: int):
+    logger.info('branch_id: {}', branch_id)
+    search_dto = SearchDTO()
+    ms_local_client = MSLocalClient()
+    branch_profile = await ms_local_client.search_branch_profile(branch_id=branch_id)
+
+    if type(branch_profile) == str:
+        search_dto.error = branch_profile
+
+    search_dto.data = branch_profile
+    return search_dto.__dict__
+
+
 async def validate_token(client_token: str):
     search_dto = SearchDTO()
     ms_integration_api = MSIntegrationApi()
@@ -59,3 +72,5 @@ async def validate_token(client_token: str):
         search_dto.error = MSG_UNAUTHORIZED
 
     return search_dto.__dict__
+
+
