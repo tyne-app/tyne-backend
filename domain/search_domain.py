@@ -10,7 +10,6 @@ from integration.integrations import MSLocalClient, MSIntegrationApi
 MSG_ERROR_MS_LOCAL = "Error al buscar locales" # TODO: Mejorar todas las respuesta, más descriptivas
 LIMIT_HOUR_MSG_ERROR = "No es posible realizar petición después de estar a dos horas o menos de toque de queda"
 LIMIT_HOUR = 22
-MSG_UNAUTHORIZED = "Usuario no autorizado"
 # TODO: Se debe refactorizar lo siguiente:
 # TODO: - Manejar status code en capa domain junto con el json_load de la response. Capa integration solo se comunica y devuelve la respuesta cruda
 
@@ -61,16 +60,6 @@ async def search_branch_profile(branch_id: int):
     return search_dto.__dict__
 
 
-async def validate_token(client_token: str):
-    search_dto = SearchDTO()
-    ms_integration_api = MSIntegrationApi()
 
-    response = await ms_integration_api.validate_token(client_token=client_token)
-    # validated_token = json.loads(response.text) # TODO: Parece que devuelve true si es correcto. Agregar a validacion
-
-    if response.status_code != status.HTTP_200_OK:
-        search_dto.error = MSG_UNAUTHORIZED
-
-    return search_dto.__dict__
 
 

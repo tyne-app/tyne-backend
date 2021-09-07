@@ -121,6 +121,19 @@ async def define_create_account_data(new_account: CreateAccount, uid: str):
     return new_account_dict
 
 
+async def get_branch_profile(email: str):
+    ms_local_client = MSLocalClient()
+    local_dto = LocalDTO()
+
+    branch_profile = await ms_local_client.get_account(email=email)
+    if type(branch_profile) == str:
+        local_dto.error = branch_profile
+        return local_dto.__dict__
+
+    local_dto.data = branch_profile
+    return local_dto.__dict__
+
+
 def define_response(data):  # TODO:  Crear funcion para crear respuesta estandar
     logger.info("data: {}", data)
     pass

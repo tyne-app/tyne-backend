@@ -80,3 +80,31 @@ class Output(BaseModel):
     data: Optional[Union[dict, int]] = []
     error: Optional[Union[dict, int, str]] = []
 
+
+class LegalRepresentativeOutput(BaseModel):
+    id: int
+    name: str
+    last_name: str
+    email: str
+    phone: str
+
+
+class BranchOutput(BaseModel):
+    id: int
+    name: str
+    accept_pet: bool
+    commercial_activity: str
+    description: Optional[str]
+    address: str
+    state: str
+
+
+class BranchProfile(BaseModel):
+    legal_representative: LegalRepresentativeOutput
+    branch: BranchOutput
+    schedule_list: list
+
+
+class BranchProfileLoginOutput(BaseModel):
+    data: Optional[BranchProfile] = []
+    error: Optional[str] = []

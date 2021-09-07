@@ -1,8 +1,9 @@
 from fastapi import status,APIRouter, Response, Body, Request
 from loguru import logger
 from schema.search_schema import SearchParameters, PreviewBranchOutput, PreviewBranchOutputClient, BranchProfileOutput
-from domain.search_domain import search_all_branch, validate_token, search_branch_profile
+from domain.search_domain import search_all_branch, search_branch_profile
 from openapi.search_openapi import SearchAllBranchByClientOpenAPI, SearchAllBranchOpenAPI
+from validator.integration_validator import validate_token
 
 search_router = APIRouter(
     prefix="/v1/api/search",
