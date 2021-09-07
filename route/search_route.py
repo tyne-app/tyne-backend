@@ -1,6 +1,6 @@
 from fastapi import status,APIRouter, Response, Body, Request
 from loguru import logger
-from schema.search_schema import SearchParameters, PreviewBranchOutput, PreviewBranchOutputClient, PreviewBranchProfileOutput
+from schema.search_schema import SearchParameters, PreviewBranchOutput, PreviewBranchOutputClient, BranchProfileOutput
 from domain.search_domain import search_all_branch, validate_token, search_branch_profile
 from openapi.search_openapi import SearchAllBranchByClientOpenAPI, SearchAllBranchOpenAPI
 
@@ -50,7 +50,7 @@ async def search_locals_client(request: Request, response: Response, client_id: 
     return data
 
 
-@search_router.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=PreviewBranchProfileOutput)
+@search_router.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=BranchProfileOutput)
 async def read_branch_profile(request: Request, response: Response, branch_id: int):
     logger.info('branch_id: {}', branch_id)
     if 'authorization' not in request.headers:

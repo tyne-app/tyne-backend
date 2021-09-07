@@ -55,6 +55,6 @@ class BranchProfileView(BaseModel):
     schedule_list: Optional[list]
 
 
-class PreviewBranchProfileOutput(BaseModel):
-    data: Optional[PreviewBranchClient] = []
+class BranchProfileOutput(BaseModel):
+    data: Optional[BranchProfileView] = []
     error: Optional[str] = []
