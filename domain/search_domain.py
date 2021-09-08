@@ -26,12 +26,12 @@ async def search_all_branch(search_parameters: SearchParameters, client_id: int 
         logger.error('validated_data: {}', validated_data)
         search_dto.error = validated_data
         return search_dto.__dict__
-
+    '''
     if datetime.now().time().hour >= LIMIT_HOUR:
         logger.error('Request realizado en toque de queda')
         search_dto.error = LIMIT_HOUR_MSG_ERROR
         return search_dto.__dict__
-
+    '''
     if search_parameters != {} and search_parameters.date_reservation:
         search_parameters.date_reservation = search_parameters.date_reservation.replace("/", "-")
 
