@@ -19,7 +19,7 @@ search_router = APIRouter(
 )
 async def search_locals(
         response: Response,
-        client_id: Optional[str] = None, name: Optional[str] = None, dateReservation: Optional[str] = None,
+        name: Optional[str] = None, dateReservation: Optional[str] = None,
         state: Optional[int] = None, sortBy: Optional[int] = None, orderBy: Optional[int] = None):
 
     logger.info('name: {}, dateReservation: {}, state: {}, sortBy: {}, orderBy: {}',
@@ -47,8 +47,23 @@ async def search_locals(
     summary=SearchAllBranchByClientOpenAPI.summary, responses=SearchAllBranchByClientOpenAPI.responses,
     description=SearchAllBranchByClientOpenAPI.description, response_description=SearchAllBranchByClientOpenAPI.response_description
 )
-async def search_locals_client(request: Request, response: Response, client_id: int, search_parameters: SearchParameters = Body(default = {})):
-    logger.info('search_paramters: {}', search_parameters)
+async def search_locals_client(
+    request: Request, response: Response, client_id: int,
+    name: Optional[str] = None, dateReservation: Optional[str] = None,
+    state: Optional[int] = None, sortBy: Optional[int] = None, orderBy: Optional[int] = None):
+
+    logger.info('client_id: {}, name: {}, dateReservation: {}, state: {}, sortBy: {}, orderBy: {}',
+                client_id, name, dateReservation, state, sortBy, orderBy)
+
+    search_parameters = {
+        'name': name,
+        'date_reservation': dateReservation,
+        'state_id': state,
+        'sort_by': sortBy,
+        'order_by': orderBy
+    }
+
+    logger.info('search_parameters: {}', search_parameters)
 
     if 'authorization' not in request.headers:
         response.status_code = status.HTTP_401_UNAUTHORIZED

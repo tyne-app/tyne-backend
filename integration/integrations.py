@@ -159,7 +159,7 @@ class MSLocalClient:
             try:
                 search_url = self.search_all +\
                              (f"/{client_id}" if client_id else '') +\
-                             query_parameters if query_parameters != '?' else ''
+                             (query_parameters if query_parameters != '?' else '')
                 logger.info('search_url: {}', search_url)
                 response = await client.get(url=search_url)
                 print(response)
