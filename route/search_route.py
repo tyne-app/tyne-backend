@@ -11,7 +11,7 @@ search_router = APIRouter(
 )
 
 
-@search_router.post(
+@search_router.get(
     '/all-branch', status_code=status.HTTP_200_OK, response_model=PreviewBranchOutput,
     summary=SearchAllBranchOpenAPI.summary, responses=SearchAllBranchOpenAPI.responses,
     description=SearchAllBranchOpenAPI.description, response_description=SearchAllBranchOpenAPI.response_description
@@ -26,7 +26,7 @@ async def search_locals(response: Response, search_parameters: SearchParameters 
     return data
 
 
-@search_router.post(
+@search_router.get(
     '/all-branch/{client_id}', status_code=status.HTTP_200_OK, response_model=PreviewBranchOutputClient,
     summary=SearchAllBranchByClientOpenAPI.summary, responses=SearchAllBranchByClientOpenAPI.responses,
     description=SearchAllBranchByClientOpenAPI.description, response_description=SearchAllBranchByClientOpenAPI.response_description
