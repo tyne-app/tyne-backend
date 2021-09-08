@@ -83,7 +83,7 @@ async def search_locals_client(
 
 
 @search_router.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=BranchProfileOutput)
-async def read_branch_profile(request: Request, response: Response, branch_id: int):
+async def read_branch_profile_client_login(request: Request, response: Response, branch_id: int):
     logger.info('branch_id: {}', branch_id)
     if 'authorization' not in request.headers:
         response.status_code = status.HTTP_401_UNAUTHORIZED
