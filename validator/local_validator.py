@@ -2,7 +2,7 @@ import re
 from loguru import logger
 from schema.local_schemas import CreateAccount, LegalRepresentative, Branch, Restaurant, BankRestaurant, Owner, Manager
 
-STRING_REGEX = re.compile(r"[A-Za-z\sáéíóúÁÉÍÓÚñ]+")  # TODO: Se podría cambia a nombre más declarativo
+STRING_REGEX = re.compile(r"[A-Za-z0-9\sáéíóúÁÉÍÓÚñ]+")  # TODO: Se podría cambia a nombre más declarativo
 NUMBER_REGEX = re.compile(r"[0-9]+")
 PHONE_REGEX = re.compile(r"\+569[0-9]{8}")
 ADDRESS_REGEX = re.compile(r"[A-Za-z\s\.0-9#áéíóúÁÉÍÓÚ]+")
