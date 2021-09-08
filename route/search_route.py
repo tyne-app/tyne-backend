@@ -1,4 +1,5 @@
 from fastapi import status,APIRouter, Response, Body, Request
+from typing import Optional
 from loguru import logger
 from schema.search_schema import SearchParameters, PreviewBranchOutput, PreviewBranchOutputClient, BranchProfileOutput
 from domain.search_domain import search_all_branch, search_branch_profile
@@ -16,7 +17,22 @@ search_router = APIRouter(
     summary=SearchAllBranchOpenAPI.summary, responses=SearchAllBranchOpenAPI.responses,
     description=SearchAllBranchOpenAPI.description, response_description=SearchAllBranchOpenAPI.response_description
 )
-async def search_locals(response: Response, search_parameters: SearchParameters = Body(default = {})):
+async def search_locals(
+        response: Response,
+        client_id: Optional[str] = None, name: Optional[str] = None, dateReservation: Optional[str] = None,
+        state: Optional[int] = None, sortBy: Optional[int] = None, orderBy: Optional[int] = None):
+
+    logger.info('name: {}, dateReservation: {}, state: {}, sortBy: {}, orderBy: {}',
+                name, dateReservation, state, sortBy, orderBy)
+
+    search_parameters = {
+        'name': name,
+        'date_reservation': dateReservation,
+        'state_id': state,
+        'sort_by': sortBy,
+        'order_by': orderBy
+    }
+
     logger.info('search_paramters: {}', search_parameters)
 
     data = await search_all_branch(search_parameters=search_parameters)

@@ -154,12 +154,14 @@ class MSLocalClient:
                 logger.error("response.text: {}", exception)
                 return f"Excepción: {exception.response} - {exception.respose.status_code}"
 
-    async def search_all_branch(self, search_parameters: dict, client_id: int):
+    async def search_all_branch(self, query_parameters: str, client_id: int):
         async with AsyncClient() as client:
             try:
-                search_url = self.search_all + (f"/{client_id}" if client_id else '')
+                search_url = self.search_all +\
+                             (f"/{client_id}" if client_id else '') +\
+                             query_parameters if query_parameters != '?' else ''
                 logger.info('search_url: {}', search_url)
-                response = await client.post(url=search_url, json=search_parameters)
+                response = await client.get(url=search_url)
                 print(response)
                 print(response.text)
                 if response.status_code != status.HTTP_200_OK:

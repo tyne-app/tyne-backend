@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union
 
 
 class SearchParameters(BaseModel):
@@ -21,7 +21,7 @@ class PreviewBranch(BaseModel):
 
 class PreviewBranchOutput(BaseModel):
     data: Optional[list[PreviewBranch]] = []
-    error: Optional[str] = []
+    error: Optional[Union[str, dict]] = []
 
 
 class PreviewBranchClient(BaseModel):

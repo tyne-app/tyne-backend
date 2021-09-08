@@ -3,24 +3,26 @@ import json
 from datetime import datetime
 from loguru import logger
 from schema.search_schema import SearchParameters
-from validator.search_validator import validate_search_paramters
+from validator.search_validator import validate_search_parameters
 from dto.dto import GenericDTO as SearchDTO
 from integration.integrations import MSLocalClient, MSIntegrationApi
 
 MSG_ERROR_MS_LOCAL = "Error al buscar locales" # TODO: Mejorar todas las respuesta, más descriptivas
 LIMIT_HOUR_MSG_ERROR = "No es posible realizar petición después de estar a dos horas o menos de toque de queda"
 LIMIT_HOUR = 22
-# TODO: Se debe refactorizar lo siguiente:
-# TODO: - Manejar status code en capa domain junto con el json_load de la response. Capa integration solo se comunica y devuelve la respuesta cruda
 
-async def search_all_branch(search_parameters: SearchParameters, client_id: int = None):
+# TODO: Se debe refactorizar lo siguiente:
+# TODO: Manejar status code en capa domain junto con json_load de response.
+# TODO: Capa integration solo comunica y devuelve respuesta cruda
+
+
+async def search_all_branch(search_parameters: dict, client_id: int = None):
     logger.info('search_paramters: {}, client_id: {}', search_parameters, client_id)
     search_dto = SearchDTO()
 
     validated_data = {}
 
-    if search_parameters != {}:
-        validated_data = validate_search_paramters(search_parameters=search_parameters)
+    validated_data = validate_search_parameters(search_parameters=search_parameters)
 
     if validated_data:
         logger.error('validated_data: {}', validated_data)
@@ -32,11 +34,13 @@ async def search_all_branch(search_parameters: SearchParameters, client_id: int 
         search_dto.error = LIMIT_HOUR_MSG_ERROR
         return search_dto.__dict__
     '''
-    if search_parameters != {} and search_parameters.date_reservation:
-        search_parameters.date_reservation = search_parameters.date_reservation.replace("/", "-")
+    if search_parameters['date_reservation']:
+        search_parameters['date_reservation'] = search_parameters['date_reservation'].replace("/", "-")
+
+    query_parameters = define_query_parameters(search_parameters=search_parameters)
 
     ms_local_client = MSLocalClient()
-    all_branch = await ms_local_client.search_all_branch(search_parameters=dict(search_parameters), client_id=client_id)
+    all_branch = await ms_local_client.search_all_branch(query_parameters=query_parameters, client_id=client_id)
     logger.info('all_branch: {}', all_branch)
 
     if type(all_branch) != list:  # SI hay data o es válida, siepmre será una lista
@@ -45,6 +49,20 @@ async def search_all_branch(search_parameters: SearchParameters, client_id: int 
 
     search_dto.data = all_branch
     return search_dto.__dict__
+
+
+def define_query_parameters(search_parameters: dict):
+
+    query_parameters = '?'
+    for key, element in search_parameters.items():
+        query_parameters += f"{key}={element}&" if search_parameters[key] else ''
+
+    if query_parameters != '?':
+        query_parameters = query_parameters[:-1]
+
+    logger.info('query_parameters: {}', query_parameters)
+
+    return query_parameters
 
 
 async def search_branch_profile(branch_id: int):
