@@ -1,6 +1,6 @@
 import re
+
 from loguru import logger
-from schema.search_schema import SearchParameters
 
 STRING_REGEX = re.compile(r"[A-Za-z0-9\sáéíóúÁÉÍÓÚñ]+")
 SORT_BY_INDEX_LIST = [1, 2, 3]

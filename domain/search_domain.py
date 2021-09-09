@@ -1,11 +1,8 @@
-from fastapi import status
-import json
-from datetime import datetime
 from loguru import logger
-from schema.search_schema import SearchParameters
-from validator.search_validator import validate_search_parameters
+
 from dto.dto import GenericDTO as SearchDTO
-from integration.integrations import MSLocalClient, MSIntegrationApi
+from integration.integrations import MSLocalClient
+from validator.search_validator import validate_search_parameters
 
 MSG_ERROR_MS_LOCAL = "Error al buscar locales" # TODO: Mejorar todas las respuesta, más descriptivas
 LIMIT_HOUR_MSG_ERROR = "No es posible realizar petición después de estar a dos horas o menos de toque de queda"

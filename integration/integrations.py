@@ -1,11 +1,12 @@
-import os
-from httpx import AsyncClient, RequestError
-from schema import local_schemas, search_schema
-from fastapi import status
 import json
-from loguru import logger
-from dotenv import load_dotenv
+import os
 
+from dotenv import load_dotenv
+from fastapi import status
+from httpx import AsyncClient, RequestError
+from loguru import logger
+
+from schema import local_schemas
 
 # TODO: Variables a eliminar corto plazo
 # TODO: DEFINIR CONSTANTES CON VERIONES DE API, EJ CREATE_ACCOUNT_URL_V1

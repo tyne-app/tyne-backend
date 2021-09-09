@@ -1,8 +1,8 @@
-from fastapi import FastAPI,status,HTTPException,APIRouter, Response, Request
+from fastapi import status, APIRouter, Response, Request
 from loguru import logger
-from schema.local_schemas import CreateAccount, Output, BranchProfileLoginOutput
+
 from domain.local_domain import create_account, get_branch_profile
-from validator.integration_validator import validate_token
+from schema.local_schemas import CreateAccount, Output, BranchProfileLoginOutput
 
 local_router = APIRouter(
     prefix="/v1/api/local",

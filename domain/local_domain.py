@@ -1,8 +1,9 @@
 from loguru import logger
-from validator.local_validator import validate_new_account
-from schema.local_schemas import CreateAccount, CreateAccountMSLocal, Manager
-from integration.integrations import FirebaseIntegrationApiClient, MSLocalClient, MapBoxIntegrationClient
+
 from dto.dto import GenericDTO as LocalDTO
+from integration.integrations import FirebaseIntegrationApiClient, MSLocalClient, MapBoxIntegrationClient
+from schema.local_schemas import CreateAccount, Manager
+from validator.local_validator import validate_new_account
 
 MANAGER_INDEX = 0
 OWNER_INDEX = 1
