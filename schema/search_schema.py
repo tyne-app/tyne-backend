@@ -43,7 +43,7 @@ class PreviewBranchOutputClient(BaseModel):
 class BranchProfileView(BaseModel):
     id: int
     name: str
-    description: str
+    description: Optional[str]
     latitude: float
     longitude: float
     accept_pet: bool
