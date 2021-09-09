@@ -12,6 +12,7 @@ INVALID_DATA_MESSAGE = "Valor no válido"  # TODO: Podría ser general, en ingle
 
 def validate_search_parameters(search_parameters: dict):
     logger.info('search_parameters:{}', search_parameters)
+
     data_checked = {}
 
     if search_parameters['name'] and not re.fullmatch(STRING_REGEX, search_parameters['name']):

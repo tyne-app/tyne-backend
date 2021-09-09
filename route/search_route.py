@@ -1,5 +1,5 @@
 from fastapi import status,APIRouter, Response, Body, Request
-from typing import Optional
+from typing import Optional, Union
 from loguru import logger
 from schema.search_schema import SearchParameters, PreviewBranchOutput, PreviewBranchOutputClient, BranchProfileOutput
 from domain.search_domain import search_all_branch, search_branch_profile
@@ -20,7 +20,7 @@ search_router = APIRouter(
 async def search_locals(
         response: Response,
         name: Optional[str] = None, dateReservation: Optional[str] = None,
-        state: Optional[int] = None, sortBy: Optional[int] = None, orderBy: Optional[int] = None):
+        state: Optional[int] = None, sortBy: Optional[Union[int, str]] = None, orderBy: Optional[Union[int, str]] = None):
 
     logger.info('name: {}, dateReservation: {}, state: {}, sortBy: {}, orderBy: {}',
                 name, dateReservation, state, sortBy, orderBy)
@@ -35,7 +35,7 @@ async def search_locals(
 
     logger.info('search_paramters: {}', search_parameters)
 
-    data = await search_all_branch(search_parameters=search_parameters)
+    data = await search_all_branch(parameters=search_parameters)
     if 'data' not in data:
         response.status_code = status.HTTP_400_BAD_REQUEST
 
@@ -75,7 +75,7 @@ async def search_locals_client(
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {'error': 'Usuario no autorizado'}
 
-    data = await search_all_branch(search_parameters=search_parameters, client_id=client_id)
+    data = await search_all_branch(parameters=search_parameters, client_id=client_id)
     if 'data' not in data:
         response.status_code = status.HTTP_400_BAD_REQUEST
 

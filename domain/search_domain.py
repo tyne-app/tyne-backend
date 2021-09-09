@@ -16,9 +16,11 @@ LIMIT_HOUR = 22
 # TODO: Capa integration solo comunica y devuelve respuesta cruda
 
 
-async def search_all_branch(search_parameters: dict, client_id: int = None):
-    logger.info('search_paramters: {}, client_id: {}', search_parameters, client_id)
+async def search_all_branch(parameters: dict, client_id: int = None):
+    logger.info('parameters: {}, client_id: {}', parameters, client_id)
     search_dto = SearchDTO()
+
+    search_parameters = clear_null_values(values=parameters)
 
     validated_data = {}
 
@@ -78,6 +80,13 @@ async def search_branch_profile(branch_id: int):
     return search_dto.__dict__
 
 
+def clear_null_values(values: dict):
+    logger.info('values: {}', values)
+    clean_values = {}
+    for key, element in values.items():
 
+        clean_values[key] = element if element != 'null' else None
 
+    logger.info('clean_values: {}', clean_values)
 
+    return clean_values
