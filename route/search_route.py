@@ -83,21 +83,23 @@ async def search_locals_client(
 
 
 @search_router.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=BranchProfileOutput)
-async def read_branch_profile_client_login(request: Request, response: Response, branch_id: int):
+async def read_branch_profile(request: Request, response: Response, branch_id: int):  # TODO: login cliente opcional
     logger.info('branch_id: {}', branch_id)
-    if 'authorization' not in request.headers:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        return {'error': 'Usuario no autorizado'}
 
-    token = await validate_token(client_token=request.headers['authorization'])
+    if 'authorization' in request.headers:
+        authorization = await validate_token(client_token=request.headers['authorization'])
 
-    if 'error' in token:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        return {'error': 'Usuario no autorizado'}
+        if 'error' in authorization:
+            response.status_code = status.HTTP_401_UNAUTHORIZED
+            return authorization
 
     data = await search_branch_profile(branch_id=branch_id)
 
     if 'data' not in data:
         response.status_code = status.HTTP_400_BAD_REQUEST
+        return data
+
+    if 'authorization' not in request.headers:
+        data['data']['price'] = 0
 
     return data

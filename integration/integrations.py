@@ -218,8 +218,17 @@ class MSIntegrationApi:
     async def validate_token(self, client_token: str):
         async with AsyncClient() as client:
             try:
-                authorization_header = { 'Authorization': client_token}
-                return await client.post(headers=authorization_header, url=self.validate_token_url)
+                authorization_header = {'Authorization': client_token}
+                response = await client.post(headers=authorization_header, url=self.validate_token_url)
+
+                if response.status_code != status.HTTP_200_OK:  # TODO: Mejorar manejo respuesta
+                    logger.error('response: {}', response)
+                    logger.error('response.text: {}', response.text)
+
+                logger.info('response: {}', response)
+                logger.info('response.text: {}', response.text)
+
+                return response
             except RequestError as exc:
                 print(exc)
                 print(exc.args)
