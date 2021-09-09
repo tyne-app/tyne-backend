@@ -3,7 +3,11 @@ from dto.dto import GenericDTO as SearchDTO
 from integration.integrations import MSLocalClient
 from validator.search_validator import validate_search_parameters
 
+# TODO: Crear servicio para que maneje las respuesta del ms-local y las convierta en español
+
 MSG_ERROR_MS_LOCAL = "Error al buscar locales" # TODO: Mejorar todas las respuesta, más descriptivas
+NOT_BRANCH_MSG_ERROR = "Error, local no existente"
+NOT_BRANCH_RAW_MSG_ERROR = "'NoneType' object has no attribute 'restaurant_id'"
 LIMIT_HOUR_MSG_ERROR = "No es posible realizar petición después de estar a dos horas o menos de toque de queda"
 LIMIT_HOUR = 22
 
@@ -70,7 +74,8 @@ async def search_branch_profile(branch_id: int):
     branch_profile = await ms_local_client.search_branch_profile(branch_id=branch_id)
 
     if type(branch_profile) == str:
-        search_dto.error = branch_profile
+        search_dto.error = NOT_BRANCH_MSG_ERROR
+        return search_dto.__dict__
 
     search_dto.data = branch_profile
     return search_dto.__dict__
@@ -80,9 +85,7 @@ def clear_null_values(values: dict):
     logger.info('values: {}', values)
     clean_values = {}
     for key, element in values.items():
-
         clean_values[key] = element if element != 'null' else None
 
     logger.info('clean_values: {}', clean_values)
-
     return clean_values
