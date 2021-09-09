@@ -10,7 +10,7 @@ menu_router = APIRouter(
 )
 
 
-@menu_router.get('/{branch_id}/menu', status_code=status.HTTP_200_OK, response_model=MenuOutput)
+@menu_router.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=MenuOutput)
 async def read_menu(branch_id: int, response: Response):
     logger.info('branch_id: {}', branch_id)
 
