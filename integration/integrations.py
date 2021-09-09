@@ -234,3 +234,30 @@ class MSIntegrationApi:
                 print(exc)
                 print(exc.args)
                 return None
+
+
+class MSBackboneMenu:
+
+    def __init__(self):
+        self.get_menu_url = os.getenv('GET_BRANCH_MENU')
+
+    async def read_menu(self, branch_id: int):
+        async with AsyncClient() as client:
+            try:
+                branch_menu_url = self.get_menu_url + '/' + str(branch_id) + '/menu'
+                logger.info('branch_menu_url: {}', branch_menu_url)
+
+                response = await client.get(url=branch_menu_url)
+
+                if response.status_code != status.HTTP_200_OK:
+                    logger.error('response: {}', response)
+                    logger.error('response.text: {}', response.text)
+
+                logger.info('response: {}', response)
+                logger.info('response.text: {}', response.text)
+                data = json.loads(response.text)
+                return data['data']
+            except RequestError as exc:
+                print(exc)
+                print(exc.args)
+                return None

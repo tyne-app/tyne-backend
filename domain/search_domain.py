@@ -1,5 +1,4 @@
 from loguru import logger
-
 from dto.dto import GenericDTO as SearchDTO
 from integration.integrations import MSLocalClient
 from validator.search_validator import validate_search_parameters
