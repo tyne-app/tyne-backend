@@ -101,6 +101,9 @@ async def read_branch_profile(request: Request, response: Response, branch_id: i
         response.status_code = status.HTTP_400_BAD_REQUEST
         return data
 
+    if type(data['data']) == list:
+        return data
+
     if 'authorization' not in request.headers:
         data['data']['price'] = 0
 

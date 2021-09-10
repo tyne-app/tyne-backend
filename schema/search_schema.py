@@ -57,5 +57,5 @@ class BranchProfileView(BaseModel):
 
 
 class BranchProfileOutput(BaseModel):
-    data: Optional[BranchProfileView] = []
+    data: Optional[Union[BranchProfileView, list]] = []
     error: Optional[str] = []
