@@ -13,6 +13,15 @@ EMAIL_REGEX = re.compile(r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.?[A-Za-z]+")
 INVALID_DATA_MESSAGE = "Formato no válido"
 
 
+def validate_email(email: str):
+    data_checked = {}
+
+    if not re.fullmatch(EMAIL_REGEX, email):
+        data_checked["email"] = INVALID_DATA_MESSAGE
+
+    return data_checked
+
+
 def validate_new_account(new_account: CreateAccount):
     data_checked = {}
 

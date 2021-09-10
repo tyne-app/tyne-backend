@@ -3,7 +3,7 @@ from loguru import logger
 from dto.dto import GenericDTO as LocalDTO
 from integration.integrations import FirebaseIntegrationApiClient, MSLocalClient, MapBoxIntegrationClient
 from schema.local_schemas import CreateAccount, Manager
-from validator.local_validator import validate_new_account
+from validator.local_validator import validate_new_account, validate_email
 
 MANAGER_INDEX = 0
 OWNER_INDEX = 1
@@ -15,9 +15,9 @@ LEGAL_REPRESENTATIVE_KEY = "legal_representative"
 RESTAURANT_MSG_ERROR = "Rut restaurant ya registrado"
 RESTAURANT_KEY = "restaurant"
 
+
 async def create_account(new_account: CreateAccount):
     logger.info("new_account: {}", new_account)
-
     local_dto = LocalDTO()
 
     validated_data = validate_new_account(new_account=new_account)
@@ -122,9 +122,37 @@ async def define_create_account_data(new_account: CreateAccount, uid: str):
     return new_account_dict
 
 
+async def get_branch_pre_login(email: str):
+    ms_local_client = MSLocalClient()
+    local_dto = LocalDTO()
+
+    validated_data = validate_email(email=email)
+
+    if validated_data:
+        logger.error("validated_data: {}", validated_data)
+        local_dto.error = validated_data
+        return local_dto.__dict__
+
+    branch_pre_login = await ms_local_client.get_account_pre_login(email=email)
+
+    if type(branch_pre_login) == str:
+        local_dto.error = branch_pre_login
+        return local_dto.__dict__
+
+    local_dto.data = branch_pre_login
+    return local_dto.__dict__
+
+
 async def get_branch_profile(email: str):
     ms_local_client = MSLocalClient()
     local_dto = LocalDTO()
+
+    validated_data = validate_email(email=email)
+
+    if validated_data:
+        logger.error("validated_data: {}", validated_data)
+        local_dto.error = validated_data
+        return local_dto.__dict__
 
     branch_profile = await ms_local_client.get_account(email=email)
     if type(branch_profile) == str:

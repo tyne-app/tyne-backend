@@ -106,5 +106,19 @@ class BranchProfile(BaseModel):
 
 
 class BranchProfileLoginOutput(BaseModel):
-    data: Optional[BranchProfile] = []
-    error: Optional[str] = []
+    data: Optional[Union[BranchProfile, list]] = []
+    error: Optional[Union[str, dict, list]] = []
+
+
+class BranchPreLogin(BaseModel):
+    id: int
+    name: str
+    accept_pet: bool
+    commercial_activity: str
+    description: Optional[str]
+    address: str
+
+
+class BranchProfilePreLoginOutput(BaseModel):
+    data: Optional[Union[BranchPreLogin, list]] = []
+    error: Optional[Union[str, dict, list]] = []
