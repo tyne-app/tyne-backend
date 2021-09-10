@@ -2,6 +2,7 @@ from fastapi import status, APIRouter, Response, Request
 from loguru import logger
 from domain.local_domain import create_account, get_branch_profile, get_branch_pre_login
 from schema.local_schemas import CreateAccount, Output, BranchProfilePreLoginOutput, BranchProfileLoginOutput
+from validator.integration_validator import validate_token
 
 local_router = APIRouter(
     prefix="/v1/api/local",
@@ -36,7 +37,7 @@ async def read_account_pre_login(request: Request, response: Response, email: st
 async def read_account(request: Request, response: Response, email: str):
     logger.info('email: {}', email)
     #TODO: Falta probar con token validar
-    '''
+
     if 'authorization' not in request.headers:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {'error': 'Usuario no autorizado'}
@@ -46,7 +47,6 @@ async def read_account(request: Request, response: Response, email: str):
     if 'error' in token:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {'error': 'Usuario no autorizado'}
-    '''
 
     data = await get_branch_profile(email=email)
 
