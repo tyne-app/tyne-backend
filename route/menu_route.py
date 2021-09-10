@@ -11,7 +11,7 @@ menu_router = APIRouter(
 
 
 @menu_router.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=MenuOutput)
-async def read_menu(branch_id: int, response: Response):
+async def read_full_menu(branch_id: int, response: Response):
     logger.info('branch_id: {}', branch_id)
 
     data = await get_menu(branch_id=branch_id)
@@ -20,3 +20,17 @@ async def read_menu(branch_id: int, response: Response):
         response.status_code = status.HTTP_400_BAD_REQUEST
 
     return data
+
+
+@menu_router.get('/{branch_id}', status_code=status.HTTP_200_OK)
+async def read_all_menu(branch_id: int, response: Response):
+    logger.info('branch_id: {}', branch_id)
+
+    return 'TODOS LOS MENUS en desarrollo'
+
+
+@menu_router.put('/{branch_id}', status_code=status.HTTP_200_OK)
+async def save_menu(branch_id:int, response: Response):
+    logger.info('branch_id: {}', branch_id)
+    return "GUARDA CAMBIOS DE MENUS"
+
