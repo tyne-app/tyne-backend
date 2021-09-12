@@ -9,7 +9,7 @@ from schema.search_schema import PreviewBranchOutput, PreviewBranchOutputClient,
 from validator.integration_validator import validate_token
 
 search_router = APIRouter(
-    prefix="/v1/api/search",
+    prefix="/v1/locals/search",
     tags=["Search"]
 )
 

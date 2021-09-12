@@ -5,7 +5,7 @@ from schema.local_schemas import CreateAccount, Output, BranchProfilePreLoginOut
 from validator.integration_validator import validate_token
 
 local_router = APIRouter(
-    prefix="/v1/api/local",
+    prefix="/v1/locals",
     tags=["Local"]
 )
 

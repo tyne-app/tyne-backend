@@ -5,7 +5,7 @@ from domain.menu_domain import get_menu
 from schema.menu_schema import MenuOutput
 
 menu_router = APIRouter(
-    prefix="/v1/api/menu",
+    prefix="/v1/locals/menu",
     tags=["Menu"]
 )
 
