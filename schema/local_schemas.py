@@ -112,6 +112,7 @@ class BranchProfileLoginOutput(BaseModel):
 
 class BranchPreLogin(BaseModel):
     id: int
+    uid: str
     name: str
     accept_pet: bool
     commercial_activity: str
