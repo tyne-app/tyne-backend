@@ -31,16 +31,17 @@ class LegalRepresentative(BaseModel):
 
 class Branch(BaseModel):
     name: str
-    accept_pet: bool
-    commercial_activity: str
     address: str
     state_id: int
+    accept_pet: bool
 
 
 class Restaurant(BaseModel):
-    identifier: str # TODO: Eliminar columna
-    name: str
-    address: str  # TODO: Eliminar columna
+    identifier: str
+    social_reason: str
+    commercial_activity: str
+    address: str
+    phone: str
     state_id: int
 
 

@@ -112,6 +112,11 @@ async def define_create_account_data(new_account: CreateAccount, uid: str):
     branch["latitude"] = coordinates["latitude"]
     branch["longitude"] = coordinates["longitude"]
 
+    restaurant = new_account.restaurant.dict()
+    restaurant["name"] = branch["name"]
+
+    del(branch["name"])
+
     new_account_dict = {
         "legal_representative": [manager, owner],
         "branch": branch,
