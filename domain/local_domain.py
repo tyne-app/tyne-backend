@@ -120,7 +120,7 @@ async def define_create_account_data(new_account: CreateAccount, uid: str):
     new_account_dict = {
         "legal_representative": [manager, owner],
         "branch": branch,
-        "restaurant": new_account.restaurant.dict(),
+        "restaurant": restaurant,
         "bank_restaurant": new_account.bank_restaurant.dict()
     }
     logger.info("new_account_dict: {}", new_account_dict)
