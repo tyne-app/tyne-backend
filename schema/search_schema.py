@@ -51,7 +51,9 @@ class BranchProfileView(BaseModel):
     accept_pet: bool
     address: Optional[str]
     rating: Optional[float]
-    price: Optional[int]
+    price: Optional[int] = 0
+    min_price: Optional[int] = 0
+    max_price: Optional[int] = 0
     related_branch: list[dict]
     branch_images: list[dict]
     opinion_list: list[dict]
