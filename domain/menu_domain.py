@@ -15,3 +15,7 @@ async def get_menu(branch_id: int):
 
     menu_dto.data = menu
     return menu_dto.__dict__
+
+
+async def get_category_menu(branch_id: int):
+    return None
