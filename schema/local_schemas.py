@@ -118,7 +118,8 @@ class BranchPreLogin(BaseModel):
     accept_pet: bool
     commercial_activity: str
     description: Optional[str]
-    address: str
+    street: str
+    street_number: int
 
 
 class BranchProfilePreLoginOutput(BaseModel):
