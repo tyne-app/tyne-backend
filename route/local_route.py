@@ -1,7 +1,8 @@
 from fastapi import status, APIRouter, Response, Request
 from loguru import logger
-from domain.local_domain import create_account, get_branch_profile, get_branch_pre_login
-from schema.local_schemas import CreateAccount, Output, BranchProfilePreLoginOutput, BranchProfileLoginOutput
+from domain.local_domain import create_account, get_branch_profile, get_branch_pre_login, add_new_branch
+from schema.local_schemas import CreateAccount, Output, BranchProfilePreLoginOutput, BranchProfileLoginOutput,\
+    NewBranchOutput, AddBranch
 from validator.integration_validator import validate_token
 
 local_router = APIRouter(
@@ -49,6 +50,22 @@ async def read_account(request: Request, response: Response, email: str):
         return {'error': 'Usuario no autorizado'}
 
     data = await get_branch_profile(email=email)
+
+    if 'data' not in data:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+
+    return data
+
+
+@local_router.post('/new-branch', status_code=status.HTTP_201_CREATED, response_model=NewBranchOutput)
+async def add_branch(request: Request, response: Response, new_branch: AddBranch, email: str):
+    logger.info('')
+
+    if 'authorization' not in request.headers:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return {'error': 'Usuario no autorizado'}
+
+    data = add_new_branch(new_branch=new_branch)
 
     if 'data' not in data:
         response.status_code = status.HTTP_400_BAD_REQUEST

@@ -124,3 +124,25 @@ class BranchPreLogin(BaseModel):
 class BranchProfilePreLoginOutput(BaseModel):
     data: Optional[Union[BranchPreLogin, list]] = []
     error: Optional[Union[str, dict, list]] = []
+
+
+class NewBranch(BaseModel):
+    uid: str
+    street: str
+    street_number: int
+    latitude: float
+    longitude: float
+    state_id: int
+    accept_pet: bool
+
+
+class AddBranch(BaseModel):
+    branch_id: int
+    legal_representative: Manager
+    new_branch: NewBranch
+    bank_restaurant: BankRestaurant
+
+
+class NewBranchOutput(BaseModel):
+    data: Optional[int] = []
+    error: Optional[str] = []

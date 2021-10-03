@@ -2,8 +2,8 @@ from loguru import logger
 
 from dto.dto import GenericDTO as LocalDTO
 from integration.integrations import FirebaseIntegrationApiClient, MSLocalClient, MapBoxIntegrationClient
-from schema.local_schemas import CreateAccount, Manager
-from validator.local_validator import validate_new_account, validate_email
+from schema.local_schemas import CreateAccount, Manager, AddBranch
+from validator.local_validator import validate_new_account, validate_email, validate_new_branch
 
 MANAGER_INDEX = 0
 OWNER_INDEX = 1
@@ -166,6 +166,27 @@ async def get_branch_profile(email: str):
 
     local_dto.data = branch_profile
     return local_dto.__dict__
+
+
+def add_new_branch(new_branch: AddBranch):
+    logger.info("new_branch: {}", new_branch)
+    local_dto = LocalDTO()
+
+    validated_data = validate_new_branch(new_branch=new_branch)
+
+    if validated_data:
+        logger.error("validated_data: {}", validated_data)
+        local_dto.error = validated_data
+        return local_dto.__dict__
+
+    # TODO: Validar token
+
+    # TODO: Obtener branch id de token
+
+    # TODO: Validar transformación street + street_number a latitude y longitude
+
+    # TODO: Otros.
+    pass
 
 
 def define_response(data):  # TODO:  Crear funcion para crear respuesta estandar

@@ -2,7 +2,7 @@ import re
 
 from loguru import logger
 
-from schema.local_schemas import CreateAccount, Branch, Restaurant, BankRestaurant, Owner, Manager
+from schema.local_schemas import CreateAccount, Branch, Restaurant, BankRestaurant, Owner, Manager, AddBranch
 
 STRING_REGEX = re.compile(r"[A-Za-z0-9\sáéíóúÁÉÍÓÚñ]+")  # TODO: Se podría cambia a nombre más declarativo
 NUMBER_REGEX = re.compile(r"[0-9]+")
@@ -138,3 +138,22 @@ def validate_bank_restaurant(bank_restaurant: BankRestaurant):
         invalid_data["bank_id"] = INVALID_DATA_MESSAGE
     return invalid_data
 
+
+def validate_new_branch(new_branch: AddBranch):
+    logger.info('new_branch: {}', new_branch)
+
+    data_checked = {}
+
+    manager_checked = validate_manager(Manager(**new_branch.legal_representative.dict()))
+    if bool(manager_checked):
+        data_checked["legal_representative"] = manager_checked
+
+    branch_checked = validate_branch(new_branch.new_branch)
+    if bool(branch_checked):
+        data_checked["new_branch"] = branch_checked
+
+    bank_restaurant_checked = validate_bank_restaurant(new_branch.bank_restaurant)
+    if bool(bank_restaurant_checked):
+        data_checked["bank_restaurant"] = bank_restaurant_checked
+
+    return data_checked
