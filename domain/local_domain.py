@@ -20,6 +20,7 @@ RESTAURANT_MSG_ERROR = "Rut restaurant ya registrado"
 RESTAURANT_KEY = "restaurant"
 BASE_COUNTRY = "Chile"
 
+
 async def create_account(new_account: CreateAccount):
     logger.info("new_account: {}", new_account)
     local_dto = LocalDTO()
@@ -33,26 +34,66 @@ async def create_account(new_account: CreateAccount):
 
     logger.info("validated_data: {}", validated_data)
 
-    firebase_api_client = FirebaseIntegrationApiClient()
+    coordinates = await geocoding(street=new_account.branch.street,
+                                  street_number=new_account.branch.street_number)
 
-    uid = await create_account_firebase(new_account=new_account.legal_representative[0])
+    if type(coordinates) != dict:
+        logger.error('coordinates: {}', coordinates)
+        local_dto.error = MSG_ERROR_BRANCH_ADDRESS
+        return local_dto.__dict__
+
+    uid = await create_account_firebase(new_account=new_account.legal_representative[MANAGER_INDEX])
 
     if not uid:
         logger.error("uid: {}", uid)
         local_dto.error = MSG_ERROR_FIREBASE
         return local_dto.__dict__
-
     logger.info("uid: {}", uid)
 
-    new_account_response = await create_account_db(new_account=new_account, uid=uid, firebase_api_client=firebase_api_client)
+    manager = new_account.legal_representative[MANAGER_INDEX].dict()
+    del (manager["password"])
+    manager["type_legal_representative_id"] = MANAGER_ID
+    logger.info("manager: {}", manager)
 
-    if type(new_account_response) == str:
-        logger.error("new_account_id: {}", new_account_response)
-        local_dto.error = new_account_response
+    owner = new_account.legal_representative[OWNER_INDEX].dict()
+    owner["type_legal_representative_id"] = OWNER_ID
+    logger.info("owner: {}", owner)
+
+    restaurant = new_account.restaurant.dict()
+    restaurant["name"] = new_account.branch.name
+    logger.info("restaurant: {}", restaurant)
+
+    branch = new_account.branch.dict()
+    branch["uid"] = uid
+    branch["latitude"] = coordinates["latitude"]
+    branch["longitude"] = coordinates["longitude"]
+    del (branch["name"])
+    logger.info("branch: {}", branch)
+
+    new_account_dict = {
+        "legal_representative": [manager, owner],
+        "branch": branch,
+        "restaurant": restaurant,
+        "bank_restaurant": new_account.bank_restaurant.dict()
+    }
+    logger.info("new_account_dict: {}", new_account_dict)
+
+    ms_local = MSLocalClient()
+    new_account_id = await ms_local.create_account(new_account=new_account)
+    logger.info("new_account_id: {}", new_account_id)
+
+    if type(new_account_id) == str: # TODO: Puede que de error si uid es STR, lo dudo.
+        logger.error("new_account_id: {}", new_account_id)
+        await delete_firebase_credentials(uid=uid)
+        local_dto.error = LEGAL_REPRESENTATIVE_MSG_ERROR \
+            if LEGAL_REPRESENTATIVE_KEY in new_account_id else RESTAURANT_MSG_ERROR
+
+        logger.error('local_dto: {}', local_dto.__dict__)
         return local_dto.__dict__
 
-    logger.info("new_account_response: {}", new_account_response)
-    local_dto.data = new_account_response
+    logger.info("new_account_id: {}", new_account_id)
+    local_dto.data = new_account_id
+    logger.info('local_dto: {}', local_dto.__dict__)
     return local_dto.__dict__
 
 
@@ -60,7 +101,7 @@ async def create_account_firebase(manager: Manager):
 
     firebase_api_client = FirebaseIntegrationApiClient()
     credentials = get_credentials(manager=manager)
-    uid = await firebase_api_client.create_account(email=credentials["email"], password=credentials["password"])
+    uid = await firebase_api_client.create_account(credentials=credentials)
     return uid
 
 
@@ -70,6 +111,17 @@ def get_credentials(manager: Manager) -> dict:
         "password": manager.password
     }
     return credentials
+
+
+async def delete_firebase_credentials(uid: str):
+    firebase_api_client = FirebaseIntegrationApiClient()
+    response = await firebase_api_client.delete_account(uid)
+
+    if type(response) != bool:
+        logger.error('response: {}', response)
+        return response
+    logger.info('response: {}', response)
+    return response  # TODO: Ver cómo manejar error al eliminar credenciales.
 
 
 async def geocoding(street: str, street_number: int):
@@ -87,75 +139,6 @@ async def geocoding(street: str, street_number: int):
         return MSG_ERROR_BRANCH_ADDRESS
 
     return coordinates
-
-
-async def delete_firebase_credentials(uid: str):
-    firebase_api_client = FirebaseIntegrationApiClient()
-    response = await firebase_api_client.delete_account(uid)
-
-    if type(response) != bool:
-        logger.error('response: {}', response)
-        return response
-    logger.info('response: {}', response)
-    return response  # TODO: Ver cómo manejar error al eliminar credenciales.
-
-
-async def create_account_db(new_account: CreateAccount, uid: str):
-    ms_local = MSLocalClient()
-    new_account_dict = await define_create_account_data(new_account=new_account, uid=uid)  # TODO: Esto debe estar en funcion principal para evitar recursivdad
-
-    if type(new_account_dict) == str:
-        logger.info("new_account_dict: {}", new_account_dict)
-        await delete_firebase_credentials(uid=uid)
-        return new_account_dict
-
-    logger.info("new_account_dict: {}", new_account_dict)
-
-    new_account_response = await ms_local.create_account(new_account=new_account_dict)
-    logger.info("new_account_id: {}", new_account_response)
-
-    if type(new_account_response) == str and type(uid) == str:
-        await delete_firebase_credentials(uid=uid)
-        return LEGAL_REPRESENTATIVE_MSG_ERROR \
-            if LEGAL_REPRESENTATIVE_KEY in new_account_response \
-            else RESTAURANT_MSG_ERROR
-
-    return new_account_response
-
-
-async def define_create_account_data(new_account: CreateAccount, uid: str):
-    manager = new_account.legal_representative[MANAGER_INDEX].dict()
-    logger.info("manager: {}", manager)
-    del(manager["password"])
-
-    owner = new_account.legal_representative[OWNER_INDEX].dict()
-    logger.info("owner: {}", owner)
-
-    branch = dict(new_account.branch)
-    branch["uid"] = uid
-
-    coordinates = await geocoding(street=branch["street"], street_number=branch["street_number"])  # TODO: Puede que de error esto
-    logger.info("coordinates: {}", coordinates)
-
-    if type(coordinates) != dict:
-        return MSG_ERROR_BRANCH_ADDRESS
-
-    branch["latitude"] = coordinates["latitude"]
-    branch["longitude"] = coordinates["longitude"]
-
-    restaurant = new_account.restaurant.dict()
-    restaurant["name"] = branch["name"]
-
-    del(branch["name"])
-
-    new_account_dict = {
-        "legal_representative": [manager, owner],
-        "branch": branch,
-        "restaurant": restaurant,
-        "bank_restaurant": new_account.bank_restaurant.dict()
-    }
-    logger.info("new_account_dict: {}", new_account_dict)
-    return new_account_dict
 
 
 async def get_branch_pre_login(email: str):
@@ -210,7 +193,6 @@ async def add_new_branch(new_branch: AddBranch, client_token: str):
         local_dto.error = validated_data
         return local_dto.__dict__
 
-    # TODO: Obtener branch id de token
     ms_integration_api = MSIntegrationApi()
     branch_id = await ms_integration_api.token_data(client_token=client_token)
 
@@ -219,7 +201,6 @@ async def add_new_branch(new_branch: AddBranch, client_token: str):
         local_dto.error = branch_id
         return local_dto.__dict__
 
-    # TODO: Validar transformación street + street_number a latitude y longitude
     coordinates = await geocoding(street=new_branch.new_branch.street,
                                   street_number=new_branch.new_branch.street_number)
 
@@ -228,7 +209,6 @@ async def add_new_branch(new_branch: AddBranch, client_token: str):
         local_dto.error = MSG_ERROR_BRANCH_ADDRESS
         return local_dto.__dict__
 
-    # TODO: Crear cuenta en firebase
     uid = await create_account_firebase(manager=new_branch.legal_representative)
 
     if not uid:
@@ -237,8 +217,6 @@ async def add_new_branch(new_branch: AddBranch, client_token: str):
         return local_dto.__dict__
 
     logger.info("uid: {}", uid)
-
-    # TODO: Crear JSON para crear cuenta en db
 
     legal_representative_dict = new_branch.legal_representative.dict()
     del(legal_representative_dict["password"])
@@ -262,8 +240,7 @@ async def add_new_branch(new_branch: AddBranch, client_token: str):
     ms_local_client = MSLocalClient()
     new_branch_id = await ms_local_client.add_branch(new_branch=new_branch_dict)
 
-    # TODO: Si da error, eliminar credenciales de firebas y retornar error
-    if type(new_branch_id) == str and type(uid) == str:
+    if type(new_branch_id) == str:
         await delete_firebase_credentials(uid=uid)
         local_dto.error = new_branch_id
         return local_dto.__dict__

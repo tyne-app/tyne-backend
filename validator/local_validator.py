@@ -25,23 +25,23 @@ def validate_email(email: str):
 def validate_new_account(new_account: CreateAccount):
     data_checked = {}
 
-    manager_checked = validate_manager(Manager(**new_account.legal_representative[0].dict()))
+    manager_checked = validate_manager(manager=new_account.legal_representative[0])
     if bool(manager_checked):
         data_checked["manager"] = manager_checked
 
-    owner_checked = validate_owner(Owner(**new_account.legal_representative[1].dict()))
+    owner_checked = validate_owner(owner=new_account.legal_representative[1])
     if bool(owner_checked):
         data_checked["owner"] = owner_checked
 
-    branch_checked = validate_branch(new_account.branch)
+    branch_checked = validate_branch(branch=new_account.branch)
     if bool(branch_checked):
         data_checked["branch"] = branch_checked
 
-    restaurant_checked = validate_restaurant(new_account.restaurant)
+    restaurant_checked = validate_restaurant(restaurant=new_account.restaurant)
     if bool(restaurant_checked):
         data_checked["restaurant"] = restaurant_checked
 
-    bank_restaurant_checked = validate_bank_restaurant(new_account.bank_restaurant)
+    bank_restaurant_checked = validate_bank_restaurant(bank_restaurant=new_account.bank_restaurant)
     if bool(bank_restaurant_checked):
         data_checked["bank_restaurant"] = bank_restaurant_checked
 
@@ -74,12 +74,10 @@ def validate_owner(owner: Owner):
         invalid_data["last_name"] = INVALID_DATA_MESSAGE
     if not re.fullmatch(NUMBER_REGEX, owner.identifier):
         invalid_data["identifier"] = INVALID_DATA_MESSAGE
-    if not re.fullmatch(PHONE_REGEX, owner.phone):
-        invalid_data["phone"] = INVALID_DATA_MESSAGE
     if not re.fullmatch(EMAIL_REGEX, owner.email):
         invalid_data["email"] = INVALID_DATA_MESSAGE
-    if owner.type_legal_representative_id != 1:
-        invalid_data["type_legal_representative_id"] = INVALID_DATA_MESSAGE
+    if not re.fullmatch(PHONE_REGEX, owner.phone):
+        invalid_data["phone"] = INVALID_DATA_MESSAGE
 
     return invalid_data
 
@@ -92,8 +90,10 @@ def validate_branch(branch: Branch):
         invalid_data["name"] = INVALID_DATA_MESSAGE
     if type(branch.accept_pet) != bool:
         invalid_data["accept_pet"] = INVALID_DATA_MESSAGE
-    if not re.fullmatch(ADDRESS_REGEX, branch.address):
-        invalid_data["address"] = INVALID_DATA_MESSAGE
+    if not re.fullmatch(ADDRESS_REGEX, branch.street):
+        invalid_data["street"] = INVALID_DATA_MESSAGE
+    if type(ADDRESS_REGEX, branch.street_number) != int:
+        invalid_data["street_number"] = INVALID_DATA_MESSAGE
     if type(branch.state_id) != int:
         invalid_data["state_id"] = INVALID_DATA_MESSAGE
 
@@ -104,14 +104,16 @@ def validate_restaurant(restaurant: Restaurant):
     logger.info('restaurant: {}', restaurant)
 
     invalid_data = {}
-    if not re.fullmatch(NUMBER_REGEX, restaurant.identifier):
-        invalid_data["identifier"] = INVALID_DATA_MESSAGE
     if not re.fullmatch(STRING_REGEX, restaurant.social_reason):
         invalid_data["social_reason"] = INVALID_DATA_MESSAGE
     if not re.fullmatch(STRING_REGEX, restaurant.commercial_activity):
         invalid_data["commercial_activity"] = INVALID_DATA_MESSAGE
-    if not re.fullmatch(ADDRESS_REGEX, restaurant.address):
-        invalid_data["address"] = INVALID_DATA_MESSAGE
+    if not re.fullmatch(NUMBER_REGEX, restaurant.identifier):
+        invalid_data["identifier"] = INVALID_DATA_MESSAGE
+    if not re.fullmatch(ADDRESS_REGEX, restaurant.street):
+        invalid_data["street"] = INVALID_DATA_MESSAGE
+    if type(ADDRESS_REGEX, restaurant.street) != int:
+        invalid_data["street_number"] = INVALID_DATA_MESSAGE
     if not re.fullmatch(PHONE_REGEX, restaurant.phone):
         invalid_data["phone"] = INVALID_DATA_MESSAGE
     if type(restaurant.state_id) != int:

@@ -8,8 +8,6 @@ class Owner(BaseModel):
     identifier: str
     email: str
     phone: str
-    email: str
-    type_legal_representative_id: int
 
 
 class Manager(BaseModel):
@@ -30,16 +28,18 @@ class LegalRepresentative(BaseModel):
 
 class Branch(BaseModel):
     name: str
-    address: str
+    street: str
+    street_number: int
     state_id: int
     accept_pet: bool
 
 
 class Restaurant(BaseModel):
-    identifier: str
     social_reason: str
     commercial_activity: str
-    address: str
+    identifier: str
+    street: str
+    street_number: int
     phone: str
     state_id: int
 
@@ -54,26 +54,14 @@ class BankRestaurant(BaseModel):
 
 class CreateAccount(BaseModel):
     legal_representative: tuple[Manager, Owner]
-    branch: Branch
     restaurant: Restaurant
+    branch: Branch
     bank_restaurant: BankRestaurant
 
 
 class LocalOutput(BaseModel):
     data: Optional[int] = []
     error: Optional[str] = []
-# TODO: Agregar esquemas con actualización datos locales
-
-# TODO: Agregar esquemas con actualización datos bancarios
-
-# TODO: Agregar esquemas con actualización de imágenes de local
-
-# TODO: Esquemas para integraciones
-class CreateAccountMSLocal(BaseModel):
-    legal_representative: LegalRepresentative
-    branch: Branch
-    restaurant: Restaurant
-    bank_restaurant: BankRestaurant
 
 
 class Output(BaseModel):

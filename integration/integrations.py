@@ -6,8 +6,6 @@ from fastapi import status
 from httpx import AsyncClient, RequestError
 from loguru import logger
 
-from schema import local_schemas
-
 # TODO: Variables a eliminar corto plazo
 # TODO: DEFINIR CONSTANTES CON VERIONES DE API, EJ CREATE_ACCOUNT_URL_V1
 CREATE_ACCOUNT_INTEGRATION = "https://ms-integration-apis.herokuapp.com/v1/login"
@@ -31,12 +29,8 @@ class FirebaseIntegrationApiClient:
         self.validate_account_integration = os.getenv('VALIDATE_ACCOUNT_INTEGRATION')
         self.delete_account_integration = os.getenv('DELETE_ACCOUNT_INTEGRATION')
 
-    async def create_account(self, email: str, password: str):
+    async def create_account(self, credentials: dict):
         async with AsyncClient() as client:
-            credentials = {
-                "email": email,
-                "password": password
-            }
             try:
                 response = await client.post(url=self.create_account_integration, json=credentials)
 
@@ -44,13 +38,16 @@ class FirebaseIntegrationApiClient:
                 logger.info("response.text: {}", response.text)
                 data = json.loads(response.text)
                 if response.status_code != status.HTTP_200_OK:
+                    logger.error("response: {}", response)
                     logger.error("response.text: {}", response.text)
                     return None
 
                 return data["data"]["uid"]
 
-            except RequestError as exc:
-                return None
+            except RequestError as exception:
+                logger.error("Exception: {}", exception)
+                logger.error("response.text: {}", exception)
+                return None  # TODO: Mejorar respuesta ya que en todos los servicios un String significa error, este es la excepcion
 
     async def delete_account(self, uid: str):
         async with AsyncClient() as client:
@@ -78,7 +75,7 @@ class MSLocalClient:
         self.branch_pre_login = os.getenv('BRANCH_PRE_LOGIN')
         self.add_branch_url = os.getenv('ADD_BRANCH')
 
-    async def create_account(self, new_account: local_schemas.CreateAccountMSLocal):
+    async def create_account(self, new_account: dict):
         async with AsyncClient() as client:
             try:
                 response = await client.post(url=self.create_account_local, json=new_account)
@@ -93,7 +90,8 @@ class MSLocalClient:
                     logger.error("response.text: {}", response.text)
                     return data['error']
 
-                return int(data["data"])
+                branch_id = int(data["data"])
+                return branch_id
 
             except RequestError as exception:
                 logger.error("Exception: {}", exception)
