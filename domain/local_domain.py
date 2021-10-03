@@ -42,7 +42,7 @@ async def create_account(new_account: CreateAccount):
         local_dto.error = MSG_ERROR_BRANCH_ADDRESS
         return local_dto.__dict__
 
-    uid = await create_account_firebase(new_account=new_account.legal_representative[MANAGER_INDEX])
+    uid = await create_account_firebase(manager=new_account.legal_representative[MANAGER_INDEX])
 
     if not uid:
         logger.error("uid: {}", uid)
@@ -79,7 +79,7 @@ async def create_account(new_account: CreateAccount):
     logger.info("new_account_dict: {}", new_account_dict)
 
     ms_local = MSLocalClient()
-    new_account_id = await ms_local.create_account(new_account=new_account)
+    new_account_id = await ms_local.create_account(new_account=new_account_dict)
     logger.info("new_account_id: {}", new_account_id)
 
     if type(new_account_id) == str: # TODO: Puede que de error si uid es STR, lo dudo.

@@ -95,8 +95,8 @@ class MSLocalClient:
 
             except RequestError as exception:
                 logger.error("Exception: {}", exception)
-                logger.error("response.text: {}", exception)
-                return f"Excepción: {exception.response} - {exception.respose.status_code}"
+                logger.error("response.args: {}", exception.args)
+                return f"Excepción: {exception.args[0]} - {exception.respose.status_code}"
 
     async def get_account_pre_login(self, email: str):
         async with AsyncClient() as client:
