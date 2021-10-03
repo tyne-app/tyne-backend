@@ -86,10 +86,6 @@ async def search_locals_client(
 async def read_branch_profile(request: Request, response: Response, branch_id: int):  # TODO: login cliente opcional
     logger.info('branch_id: {}', branch_id)
 
-    if 'authorization' not in request.headers:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        return {'error': 'Usuario no autorizado'}
-
     if 'authorization' in request.headers:
         authorization = await validate_token(client_token=request.headers['authorization'])  # TODO: Tal vez se deba validar con campo type(?) para saber si es usuario o local
 
