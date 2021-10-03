@@ -49,7 +49,8 @@ class BranchProfileView(BaseModel):
     latitude: float
     longitude: float
     accept_pet: bool
-    address: Optional[str]
+    street: str
+    street_number: int
     rating: Optional[float]
     price: Optional[int] = 0
     min_price: Optional[int] = 0

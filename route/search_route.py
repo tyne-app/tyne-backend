@@ -1,8 +1,6 @@
 from typing import Optional, Union
-
 from fastapi import status, APIRouter, Response, Request
 from loguru import logger
-
 from domain.search_domain import search_all_branch, search_branch_profile
 from openapi.search_openapi import SearchAllBranchByClientOpenAPI, SearchAllBranchOpenAPI
 from schema.search_schema import PreviewBranchOutput, PreviewBranchOutputClient, BranchProfileOutput
@@ -89,7 +87,7 @@ async def read_branch_profile(request: Request, response: Response, branch_id: i
     logger.info('branch_id: {}', branch_id)
 
     if 'authorization' in request.headers:
-        authorization = await validate_token(client_token=request.headers['authorization'])
+        authorization = await validate_token(client_token=request.headers['authorization'])  # TODO: Tal vez se deba validar con campo type(?) para saber si es usuario o local
 
         if 'error' in authorization:
             response.status_code = status.HTTP_401_UNAUTHORIZED

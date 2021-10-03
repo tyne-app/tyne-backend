@@ -1,5 +1,5 @@
 from fastapi import status
-
+from loguru import logger
 from dto.dto import GenericDTO as ValidatorDTO
 from integration.integrations import MSIntegrationApi
 
@@ -12,7 +12,7 @@ async def validate_token(client_token: str):
 
     response = await ms_integration_api.validate_token(client_token=client_token)
     # validated_token = json.loads(response.text) # TODO: Parece que devuelve true si es correcto. Agregar a validacion
-
+    logger.info('response: {}', response)
     if response.status_code != status.HTTP_200_OK:
         validator_dto.error = MSG_UNAUTHORIZED
 
