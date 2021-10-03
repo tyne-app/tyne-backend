@@ -104,5 +104,7 @@ async def read_branch_profile(request: Request, response: Response, branch_id: i
 
     if 'authorization' not in request.headers:
         data['data']['price'] = 0
+        data['data']['min_price'] = 0
+        data['data']['max_price'] = 0
 
     return data
