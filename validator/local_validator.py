@@ -2,7 +2,7 @@ import re
 
 from loguru import logger
 
-from schema.local_schemas import CreateAccount, Branch, Restaurant, BankRestaurant, Owner, Manager, AddBranch
+from schema.local_schemas import CreateAccount, Branch, Restaurant, BankRestaurant, Owner, Manager, AddBranch, NewBranch
 
 STRING_REGEX = re.compile(r"[A-Za-z0-9\sáéíóúÁÉÍÓÚñ]+")  # TODO: Se podría cambia a nombre más declarativo
 NUMBER_REGEX = re.compile(r"[0-9]+")
@@ -60,8 +60,6 @@ def validate_manager(manager: Manager):
         invalid_data["phone"] = INVALID_DATA_MESSAGE
     if not re.fullmatch(EMAIL_REGEX, manager.email):
         invalid_data["email"] = INVALID_DATA_MESSAGE
-    if manager.type_legal_representative_id != 2:
-        invalid_data["type_legal_representative_id"] = INVALID_DATA_MESSAGE
 
     return invalid_data
 
@@ -139,6 +137,21 @@ def validate_bank_restaurant(bank_restaurant: BankRestaurant):
     return invalid_data
 
 
+def validate_second_branch(new_branch: NewBranch):
+    logger.info('new_branch: {}', NewBranch)
+
+    invalid_data = {}
+    if not re.fullmatch(STRING_REGEX, new_branch.street):
+        invalid_data["street"] = INVALID_DATA_MESSAGE
+    if type(new_branch.street_number) != int:
+        invalid_data["street_number"] = INVALID_DATA_MESSAGE
+    if type(new_branch.state_id) != int:
+        invalid_data["state_id"] = INVALID_DATA_MESSAGE
+    if type(new_branch.accept_pet) != bool:
+        invalid_data["accept_pet"] = INVALID_DATA_MESSAGE
+    return invalid_data
+
+
 def validate_new_branch(new_branch: AddBranch):
     logger.info('new_branch: {}', new_branch)
 
@@ -148,7 +161,7 @@ def validate_new_branch(new_branch: AddBranch):
     if bool(manager_checked):
         data_checked["legal_representative"] = manager_checked
 
-    branch_checked = validate_branch(new_branch.new_branch)
+    branch_checked = validate_second_branch(new_branch.new_branch)
     if bool(branch_checked):
         data_checked["new_branch"] = branch_checked
 

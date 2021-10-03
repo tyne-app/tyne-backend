@@ -18,7 +18,6 @@ class Manager(BaseModel):
     email: str
     phone: str
     password: str
-    type_legal_representative_id: int
 
 
 class LegalRepresentative(BaseModel):
@@ -128,17 +127,13 @@ class BranchProfilePreLoginOutput(BaseModel):
 
 
 class NewBranch(BaseModel):
-    uid: str
     street: str
     street_number: int
-    latitude: float
-    longitude: float
     state_id: int
     accept_pet: bool
 
 
 class AddBranch(BaseModel):
-    branch_id: int
     legal_representative: Manager
     new_branch: NewBranch
     bank_restaurant: BankRestaurant

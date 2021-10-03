@@ -43,9 +43,9 @@ async def read_account(request: Request, response: Response, email: str):
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {'error': 'Usuario no autorizado'}
 
-    token = await validate_token(client_token=request.headers['authorization'])
+    valid_token = await validate_token(client_token=request.headers['authorization'])
 
-    if 'error' in token:
+    if 'error' in valid_token:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {'error': 'Usuario no autorizado'}
 
@@ -58,14 +58,23 @@ async def read_account(request: Request, response: Response, email: str):
 
 
 @local_router.post('/new-branch', status_code=status.HTTP_201_CREATED, response_model=NewBranchOutput)
-async def add_branch(request: Request, response: Response, new_branch: AddBranch, email: str):
+async def add_branch(request: Request, response: Response, new_branch: AddBranch):
     logger.info('')
 
     if 'authorization' not in request.headers:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {'error': 'Usuario no autorizado'}
 
-    data = add_new_branch(new_branch=new_branch)
+    token = request.headers['authorization']
+    valid_token = await validate_token(client_token=request.headers['authorization'])
+
+    if 'error' in valid_token:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return {'error': 'Usuario no autorizado'}
+
+
+    # TODO: Refactorizar eliminando campo type_lega_representative, se agrega en backend.
+    data = await add_new_branch(new_branch=new_branch, client_token=token)
 
     if 'data' not in data:
         response.status_code = status.HTTP_400_BAD_REQUEST

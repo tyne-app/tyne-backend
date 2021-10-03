@@ -62,8 +62,10 @@ class FirebaseIntegrationApiClient:
                     return None
                 logger.info("response.text: {}", response.text)
                 return True  # TODO: Cambiar parámetro
-            except RequestError as exc:
-                return status.HTTP_500_INTERNAL_SERVER_ERROR
+            except RequestError as exception:
+                logger.error("Exception: {}", exception)
+                logger.error("response.text: {}", exception)
+                return f"Excepción: {exception.response} - {exception.respose.status_code}"
 
 
 class MSLocalClient:
@@ -74,6 +76,7 @@ class MSLocalClient:
         self.search_branch = os.getenv('SEARCH_BRANCH')
         self.branch_profile = os.getenv('BRANCH_PROFILE')
         self.branch_pre_login = os.getenv('BRANCH_PRE_LOGIN')
+        self.add_branch_url = os.getenv('ADD_BRANCH')
 
     async def create_account(self, new_account: local_schemas.CreateAccountMSLocal):
         async with AsyncClient() as client:
@@ -143,6 +146,30 @@ class MSLocalClient:
                     return data['error']
 
                 return data["data"]
+
+            except RequestError as exception:
+                logger.error("Exception: {}", exception)
+                logger.error("response.text: {}", exception)
+                return f"Excepción: {exception.response} - {exception.respose.status_code}"
+
+    async def add_branch(self, new_branch: dict):
+        async with AsyncClient() as client:
+            try:
+                logger.info('new_branch: {}', new_branch)
+                response = await client.post(url=self.add_branch_url, json=new_branch)
+
+                logger.info("response: {}", response)
+                logger.info("response.text: {}", response.text)
+
+                data = json.loads(response.text)
+                logger.info('data: {}', data)
+
+                if response.status_code != status.HTTP_201_CREATED:
+                    logger.error("response: {}", response)
+                    logger.error("response.text: {}", response.text)
+                    return data['error']
+
+                return int(data["data"])
 
             except RequestError as exception:
                 logger.error("Exception: {}", exception)
@@ -226,6 +253,7 @@ class MapBoxIntegrationClient:
                     return None
                 data = json.loads(response.text)
                 logger.info("data: {}", data)
+                logger.info("data type: {}", type(data))
 
                 if 'data' not in data:
                     return None
@@ -254,14 +282,39 @@ class MSIntegrationApi:
                 if response.status_code != status.HTTP_200_OK:  # TODO: Mejorar manejo respuesta
                     logger.error('response: {}', response)
                     logger.error('response.text: {}', response.text)
+                    return response
 
                 logger.info('response: {}', response)
                 logger.info('response.text: {}', response.text)
 
                 return response
-            except RequestError as exc:
-                print(exc)
-                print(exc.args)
+            except RequestError as exception:
+                logger.error('exception: {}', exception)
+                logger.error('exception.args: {}', exception.args)
+                return None
+
+    async def token_data(self, client_token: str):
+        async with AsyncClient() as client:
+            try:
+                authorization_header = {'Authorization': client_token}
+                response = await client.get(headers=authorization_header, url=self.token_data_url)
+
+                if response.status_code != status.HTTP_200_OK:
+                    logger.error('response: {}', response)
+                    logger.error('response.text: {}', response.text)
+                    return response
+
+                logger.info('response: {}', response)
+                logger.info('response.text: {}', response.text)
+
+                data = json.loads(response.text)
+                logger.info("data: {}", data)
+
+                branch_id = int(data["data"]["id"])
+                return branch_id
+            except RequestError as exception:
+                logger.error('exception: {}', exception)
+                logger.error('exceptio.args: {}', exception.args)
                 return None
 
 
@@ -286,7 +339,7 @@ class MSBackboneMenu:
                 logger.info('response.text: {}', response.text)
                 data = json.loads(response.text)
                 return data['data']
-            except RequestError as exc:
-                print(exc)
-                print(exc.args)
-                return None
+            except RequestError as exception:
+                logger.error("Exception: {}", exception)
+                logger.error("response.text: {}", exception)
+                return f"Excepción: {exception.response} - {exception.respose.status_code}"
