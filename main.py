@@ -6,6 +6,8 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from route import local_route, search_route, menu_route
 
+from repository.database.database import engine
+
 api_local = FastAPI(
     docs_url="/v1/docs",
     redoc_url="/v1/redoc",
@@ -57,6 +59,9 @@ async def validation_exception_handler(request, exc):
 api_local.include_router(local_route.local_router)
 api_local.include_router(search_route.search_router)
 api_local.include_router(menu_route.menu_router)
+
+
+engine.connect()
 
 
 if __name__ == "__main__":

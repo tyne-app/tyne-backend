@@ -2,7 +2,7 @@ import re
 
 from loguru import logger
 
-from schema.local_schemas import CreateAccount, Branch, Restaurant, BankRestaurant, Owner, Manager
+from schema_request.local_schemas import CreateAccount, Branch, Restaurant, BankRestaurant, Owner, Manager
 
 STRING_REGEX = re.compile(r"[A-Za-z0-9\sáéíóúÁÉÍÓÚñ]+")  # TODO: Se podría cambia a nombre más declarativo
 NUMBER_REGEX = re.compile(r"[0-9]+")

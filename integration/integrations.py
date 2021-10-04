@@ -6,7 +6,7 @@ from fastapi import status
 from httpx import AsyncClient, RequestError
 from loguru import logger
 
-from schema import local_schemas
+from schema_request import local_schemas
 
 # TODO: Variables a eliminar corto plazo
 # TODO: DEFINIR CONSTANTES CON VERIONES DE API, EJ CREATE_ACCOUNT_URL_V1

@@ -2,11 +2,6 @@ from typing import Optional, Union
 from pydantic import BaseModel
 
 
-class MenuOutput(BaseModel):
-    data: Optional[list] = []
-    error: Optional[str] = []
-
-
 class Product(BaseModel):
     id: str
     name: str
@@ -24,3 +19,16 @@ class Category(BaseModel):
 class MenuRequest(BaseModel):
     branchId: str
     categories: list[Category]
+
+
+class MenuResponse(BaseModel):
+    id: str
+    product_id: str
+    branch_id: str
+
+
+class MenuOutput(BaseModel):
+    # data: Optional[list] = []
+    # error: Optional[str] = []
+    data: Optional[MenuResponse] = []
+    error: Optional[str] = []

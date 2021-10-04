@@ -1,8 +1,15 @@
 from typing import Optional, Union
-from fastapi import status, APIRouter, Response, Request
+from fastapi import APIRouter, Depends, Response, status
+
 from loguru import logger
-from domain.menu_domain import get_menu
-from schema.menu_schema import MenuOutput, MenuRequest
+# from domain.menu_domain import get_menu
+from repository.model.models import Menu
+from schema_request.menu_schema import MenuOutput, MenuRequest, MenuResponse
+
+from repository.dao.menu_dao import get_menu
+from dto.dto import GenericDTO as MenuDTO
+from repository.database.database import get_data_base
+from sqlalchemy.orm import Session
 
 menu_router = APIRouter(
     prefix="/v1/locals/menu",
@@ -27,7 +34,8 @@ async def update_menu(branch_id: int, response: Response):
 
 #  Obtiene el menu según la sucursal
 @menu_router.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=MenuOutput)
-async def read_menu(branch_id: int, response: Response):
+async def read_menu(branch_id: int, response: Response, db: Session = Depends(get_data_base)):
+    """
     logger.info('branch_id: {}', branch_id)
 
     data = await get_menu(branch_id=branch_id)
@@ -35,10 +43,25 @@ async def read_menu(branch_id: int, response: Response):
     if 'data' not in data:
         response.status_code = status.HTTP_400_BAD_REQUEST
 
-    return data
+    return data"""
+    try:
+        menu_dto = MenuDTO()
+        menu: Menu = get_menu(db, branch_id)
+
+        if not menu:
+            menu_dto.error = 'Error ms menu, respuesta en mejora'  # TODO:  Mejorar repsuesta
+            return menu_dto.__dict__
+
+        menu_dto.data = menu
+        menu_dto.error = ""
+        return menu_dto.__dict__
+
+    except Exception as error:
+        print(f'Error: {error}')
+        return "Error"
 
 
-#  Obtiene las categorías del menú
+"""#  Obtiene las categorías del menú
 @menu_router.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=MenuOutput)
 async def read_category_menu(branch_id: int, response: Response):
     logger.info('branch_id: {}', branch_id)
@@ -48,7 +71,7 @@ async def read_category_menu(branch_id: int, response: Response):
     if 'data' not in data:
         response.status_code = status.HTTP_400_BAD_REQUEST
 
-    return data
+    return data"""
 
 
 #  Se eliminará el menú
