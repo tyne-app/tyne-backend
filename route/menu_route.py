@@ -1,15 +1,15 @@
-from typing import Optional, Union
 from fastapi import APIRouter, Depends, Response, status
-
 from loguru import logger
-# from domain.menu_domain import get_menu
-from repository.model.models import Menu
-from schema_request.menu_schema import MenuOutput, MenuRequest, MenuResponse
-
-from repository.dao.menu_dao import get_menu
-from dto.dto import GenericDTO as MenuDTO
-from repository.database.database import get_data_base
 from sqlalchemy.orm import Session
+
+from dto.dto import GenericDTO as ResponseDTO
+from dto.request.MenuRequestDTO import MenuRequestDTO
+from exception.exceptions import CustomError
+from mappers.request import menu_mapper_request
+from mappers.response import menu_mapper_response
+from repository.dao import menu_dao
+from repository.database.database import get_data_base
+from repository.model.models import Product
 
 menu_router = APIRouter(
     prefix="/v1/locals/menu",
@@ -18,47 +18,41 @@ menu_router = APIRouter(
 
 
 #  Se creará el menu por productos
-@menu_router.post('/{branch_id}', status_code=status.HTTP_200_OK)
-async def create_menu(menuRequest: MenuRequest, response: Response):
-    # logger.info('branch_id: {}', branch_id)
+# async def create_menu(menuRequest: MenuRequest, response: Response):
+@menu_router.post('/{branch_id}', status_code=status.HTTP_201_CREATED)
+async def create_menu(branch_id: int, response: Response, menu_request: MenuRequestDTO,
+                      db: Session = Depends(get_data_base)):
+    response = ResponseDTO()
+    logger.info('branch_id: {}', menu_request)
 
-    return 'TODOS LOS MENUS en desarrollo'
+    models = menu_mapper_request.to_models_save(menu_request, branch_id)
+
+    if menu_dao.save(db, models):
+        response.data = [{"details": "Productos y categorias guardados correctamente"}]
+        return response
 
 
 #  Se modificará el menu por productos
-@menu_router.put('/{branch_id}', status_code=status.HTTP_200_OK)
+@menu_router.put('/{branch_id}', status_code=status.HTTP_201_CREATED)
 async def update_menu(branch_id: int, response: Response):
     logger.info('branch_id: {}', branch_id)
     return "GUARDA CAMBIOS DE MENUS"
 
 
-#  Obtiene el menu según la sucursal
-@menu_router.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=MenuOutput)
+# @menu_router.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=MenuOutput)
+@menu_router.get('/{branch_id}', status_code=status.HTTP_200_OK)  # Obtiene el menu según la sucursal
 async def read_menu(branch_id: int, response: Response, db: Session = Depends(get_data_base)):
-    """
-    logger.info('branch_id: {}', branch_id)
+    products: list[Product] = menu_dao.get_products_by_branch(db, branch_id)
 
-    data = await get_menu(branch_id=branch_id)
+    if not products:
+        raise CustomError(
+            name="Products not Found",
+            detail="No Products for menu",
+            status_code=status.HTTP_204_NO_CONTENT)
 
-    if 'data' not in data:
-        response.status_code = status.HTTP_400_BAD_REQUEST
+    menu_response = menu_mapper_response.to_menu_response(products)
 
-    return data"""
-    try:
-        menu_dto = MenuDTO()
-        menu: Menu = get_menu(db, branch_id)
-
-        if not menu:
-            menu_dto.error = 'Error ms menu, respuesta en mejora'  # TODO:  Mejorar repsuesta
-            return menu_dto.__dict__
-
-        menu_dto.data = menu
-        menu_dto.error = ""
-        return menu_dto.__dict__
-
-    except Exception as error:
-        print(f'Error: {error}')
-        return "Error"
+    return menu_response
 
 
 """#  Obtiene las categorías del menú
@@ -73,28 +67,27 @@ async def read_category_menu(branch_id: int, response: Response):
 
     return data"""
 
-
 #  Se eliminará el menú
-@menu_router.delete('/{branch_id}', status_code=status.HTTP_200_OK, response_model=MenuOutput)
-async def delete_menu(branch_id: int, response: Response):
-    logger.info('branch_id: {}', branch_id)
-
-    data = await get_menu(branch_id=branch_id)
-
-    if 'data' not in data:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-
-    return data
+# @menu_router.delete('/{branch_id}', status_code=status.HTTP_200_OK, response_model=MenuOutput)
+# async def delete_menu(branch_id: int, response: Response):
+#     logger.info('branch_id: {}', branch_id)
+#
+#     data = await get_menu(branch_id=branch_id)
+#
+#     if 'data' not in data:
+#         response.status_code = status.HTTP_400_BAD_REQUEST
+#
+#     return data
 
 
 # Se sacará el producto del menú
-@menu_router.delete('/{branch_id}', status_code=status.HTTP_200_OK, response_model=MenuOutput)
-async def delete_product_menu(branch_id: int, response: Response):
-    logger.info('branch_id: {}', branch_id)
-
-    data = await get_menu(branch_id=branch_id)
-
-    if 'data' not in data:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-
-    return data
+# @menu_router.delete('/{branch_id}', status_code=status.HTTP_200_OK, response_model=MenuOutput)
+# async def delete_product_menu(branch_id: int, response: Response):
+#     logger.info('branch_id: {}', branch_id)
+#
+#     data = await get_menu(branch_id=branch_id)
+#
+#     if 'data' not in data:
+#         response.status_code = status.HTTP_400_BAD_REQUEST
+#
+#     return data

@@ -2,7 +2,7 @@ from loguru import logger
 
 from dto.dto import GenericDTO as LocalDTO
 from integration.integrations import FirebaseIntegrationApiClient, MSLocalClient, MapBoxIntegrationClient
-from schema_request.local_schemas import CreateAccount, Manager
+from schema.local_schemas import CreateAccount, Manager
 from validator.local_validator import validate_new_account, validate_email
 
 MANAGER_INDEX = 0

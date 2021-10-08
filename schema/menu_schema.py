@@ -5,15 +5,18 @@ from pydantic import BaseModel
 class Product(BaseModel):
     id: str
     name: str
-    price: str
     description: str
     image_url: str
+    price: str
 
 
 class Category(BaseModel):
     id: str
     name: str
     products: list[Product]
+
+    class Config:
+        orm_mode = True
 
 
 class MenuRequest(BaseModel):
@@ -22,13 +25,14 @@ class MenuRequest(BaseModel):
 
 
 class MenuResponse(BaseModel):
-    id: str
-    product_id: str
-    branch_id: str
+    id: int
+    product_id: int
+    branch_id: int
+
+    class Config:
+        orm_mode = True
 
 
 class MenuOutput(BaseModel):
-    # data: Optional[list] = []
-    # error: Optional[str] = []
-    data: Optional[MenuResponse] = []
+    data: Optional[str] = []
     error: Optional[str] = []

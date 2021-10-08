@@ -5,7 +5,7 @@ from loguru import logger
 
 from domain.search_domain import search_all_branch, search_branch_profile
 from openapi.search_openapi import SearchAllBranchByClientOpenAPI, SearchAllBranchOpenAPI
-from schema_request.search_schema import PreviewBranchOutput, PreviewBranchOutputClient, BranchProfileOutput
+from schema.search_schema import PreviewBranchOutput, PreviewBranchOutputClient, BranchProfileOutput
 from validator.integration_validator import validate_token
 
 search_router = APIRouter(

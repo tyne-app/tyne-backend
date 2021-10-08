@@ -1,4 +1,6 @@
-from sqlalchemy import Integer, String, Boolean, Column, ForeignKey, TIMESTAMP, DECIMAL
+from datetime import datetime
+
+from sqlalchemy import Integer, String, Boolean, Column, ForeignKey, TIMESTAMP, DECIMAL, Float, Text
 from sqlalchemy.orm import relationship
 
 from repository.database.database import Base
@@ -139,33 +141,9 @@ class Category(Base):
     # Back FK
     product_category = relationship("Product", back_populates='category')
 
-
-class Image(Base):
-    __tablename__ = "image"
-    __table_args__ = {'schema': 'tyne'}
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    url = Column(String)
-    creation_date = Column(TIMESTAMP)
-    update_date = Column(TIMESTAMP)
-
-    # Back FK
-    branchimage_image = relationship("BranchImage", back_populates='image')
-
-
-class BranchImage(Base):
-    __tablename__ = "branch_image"
-    __table_args__ = {'schema': 'tyne'}
-
-    id = Column(Integer, primary_key=True, index=True)
-
-    # FK
-    image_id = Column(Integer, ForeignKey('tyne.image.id'))
-    branch_id = Column(Integer, ForeignKey('tyne.branch.id'))
-
-    # Back FK
-    image = relationship("Image", back_populates='branchimage_image')
-    branch = relationship("Branch", back_populates='branchimage_branch')
+    def __init__(self, id=None, name=""):
+        self.id = id
+        self.name = name
 
 
 class Branch(Base):
@@ -194,9 +172,9 @@ class Branch(Base):
     bank_restaurant = relationship("BankRestaurant", foreign_keys='[Branch.bank_restaurant_id]')
 
     # Back FK
-    branchimage_branch = relationship("BranchImage", back_populates='branch')
-    menu_branch = relationship("Menu", back_populates='branch')
-    product_branch = relationship("Product", back_populates='branch')
+    # menu_branch = relationship("Menu", back_populates='branch')
+    # product_branch = relationship("Product", back_populates='branch')
+    # children = relationship("product", lazy='joined')
 
 
 class Product(Base):
@@ -204,32 +182,75 @@ class Product(Base):
     __table_args__ = {"schema": "tyne"}
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, )
+    name = Column(String)
     description = Column(String)
+    url_image = Column(Text)
 
     # FK
     category_id = Column(Integer, ForeignKey('tyne.category.id'))
     branch_id = Column(Integer, ForeignKey('tyne.branch.id'))
 
-    # Back ForeignKeys
     category = relationship("Category", back_populates='product_category')
-    branch = relationship("Branch", back_populates='product_branch')
+    # branch = relationship("Branch", back_populates='product_branch')
 
-    menu_product = relationship("Menu", back_populates='product')
+    # Back ForeignKeys
+    price_product = relationship("Price", back_populates='product_price')
 
-
-class Menu(Base):
-    __tablename__ = "menu"
-    __table_args__ = {"schema": "tyne"}
-
-    id = Column(Integer, primary_key=True, index=True)
-
-    # ForeignKeys
-    product_id = Column(Integer, ForeignKey('tyne.product.id'))
-    branch_id = Column(Integer, ForeignKey('tyne.branch.id'))
-
-    # Back FK
-    product = relationship("Product", back_populates='menu_product')
-    branch = relationship("Branch", back_populates='menu_branch')
+    # FALTAN:
+    # reservation_product = relationship("Menu", back_populates='product')
 
     # branch = relationship("TABLE_NAME", back_populates='Other Back FK')
+
+    def __init__(self, id, name, description, url_image, branch_id):
+        self.id = id
+        self.name = name
+        self.description = description
+        self.url_image = url_image
+        self.branch_id = branch_id
+
+    def product_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "image_url": self.url_image,
+            "price": self.price_product[0].amount
+        }
+
+    def get_category_dict(self):
+        return {"id": self.category.id, "name": self.category.name}
+
+    def get_category_name(self):
+        return self.category.name
+
+    class Config:
+        orm_mode = True
+
+
+class Price(Base):
+    __tablename__ = "price"
+    __table_args__ = {'schema': 'tyne'}
+
+    id = Column(Integer, primary_key=True, index=True)
+    amount = Column(Float(100))
+    commission_tyne = Column(Float(100))
+    created_date = Column(TIMESTAMP)
+    update_date = Column(TIMESTAMP)
+    state = Column(Integer)
+
+    # FK
+    product_id = Column(Integer, ForeignKey('tyne.product.id'))
+
+    # Back FK
+    product_price = relationship("Product", back_populates='price_product')
+
+    def __init__(self, id=None, amount=0, commission_tyne=0, created_date=None, update_date=datetime.now(), state=1):
+        self.id = id
+        self.amount = amount
+        self.commission_tyne = commission_tyne
+        self.created_date = created_date
+        self.update_date = update_date
+        self.state = state
+
+    class Config:
+        orm_mode = True
