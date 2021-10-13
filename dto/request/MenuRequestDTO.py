@@ -8,7 +8,8 @@ class ProductDTO(BaseModel):
     name: str
     description: str
     url_image: str
-    price: str
+    amount: str
+    commission_tyne: str
 
 
 class CategoryDTO(BaseModel):

@@ -4,13 +4,13 @@ from domain.local_domain import create_account, get_branch_profile, get_branch_p
 from schema.local_schemas import CreateAccount, Output, BranchProfilePreLoginOutput, BranchProfileLoginOutput
 from validator.integration_validator import validate_token
 
-local_router = APIRouter(
+local_controller = APIRouter(
     prefix="/v1/locals",
     tags=["Local"]
 )
 
 
-@local_router.post("/register", response_model=Output, status_code=status.HTTP_201_CREATED)
+@local_controller.post("/register", response_model=Output, status_code=status.HTTP_201_CREATED)
 async def register_account(response: Response, new_account: CreateAccount):
     logger.info("new_account: {}", new_account)
     data = await create_account(new_account)
@@ -21,7 +21,7 @@ async def register_account(response: Response, new_account: CreateAccount):
     return data
 
 
-@local_router.get('/pre-login/{email}', status_code=status.HTTP_200_OK, response_model=BranchProfilePreLoginOutput)
+@local_controller.get('/pre-login/{email}', status_code=status.HTTP_200_OK, response_model=BranchProfilePreLoginOutput)
 async def read_account_pre_login(request: Request, response: Response, email: str):
     logger.info('email: {}', email)
 
@@ -33,7 +33,7 @@ async def read_account_pre_login(request: Request, response: Response, email: st
     return data
 
 
-@local_router.get('/{email}', status_code=status.HTTP_200_OK, response_model=BranchProfileLoginOutput)
+@local_controller.get('/{email}', status_code=status.HTTP_200_OK, response_model=BranchProfileLoginOutput)
 async def read_account(request: Request, response: Response, email: str):
     logger.info('email: {}', email)
     #TODO: Falta probar con token validar

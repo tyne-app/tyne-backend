@@ -1,16 +1,20 @@
+# TODO: Convertir a Schemas de respuesta
+"""
 class ProductDTO:
     id: str
     name: str
     description: str
     url_image: str
-    price: str
+    amount: str
+    commision_tyne: str
 
     def __init__(self, product_json):
         self.id = product_json["id"]
         self.name = product_json["name"]
         self.description = product_json["description"]
         self.url_image = product_json["image_url"]
-        self.price = product_json["price"]
+        self.amount = product_json["amount"]
+        self.commision_tyne = product_json["commision_tyne"]
 
 
 class CategoryDTO:
@@ -64,3 +68,4 @@ class MenuDTO:
         section = SectionMenuDTO(productDTO, categoryDTO)
         self.menu.append(section)
         return section
+"""

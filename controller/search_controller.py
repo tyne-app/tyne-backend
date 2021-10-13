@@ -3,18 +3,18 @@ from typing import Optional, Union
 from fastapi import status, APIRouter, Response, Request
 from loguru import logger
 
+from configuration.openapi.search_openapi import SearchAllBranchOpenAPI, SearchAllBranchByClientOpenAPI
 from domain.search_domain import search_all_branch, search_branch_profile
-from openapi.search_openapi import SearchAllBranchByClientOpenAPI, SearchAllBranchOpenAPI
 from schema.search_schema import PreviewBranchOutput, PreviewBranchOutputClient, BranchProfileOutput
 from validator.integration_validator import validate_token
 
-search_router = APIRouter(
+search_controller = APIRouter(
     prefix="/v1/locals/search",
     tags=["Search"]
 )
 
 
-@search_router.get(
+@search_controller.get(
     '/all-branch', status_code=status.HTTP_200_OK, response_model=PreviewBranchOutput,
     summary=SearchAllBranchOpenAPI.summary, responses=SearchAllBranchOpenAPI.responses,
     description=SearchAllBranchOpenAPI.description, response_description=SearchAllBranchOpenAPI.response_description
@@ -44,7 +44,7 @@ async def search_locals(
     return data
 
 
-@search_router.get(
+@search_controller.get(
     '/all-branch/{client_id}', status_code=status.HTTP_200_OK, response_model=PreviewBranchOutputClient,
     summary=SearchAllBranchByClientOpenAPI.summary, responses=SearchAllBranchByClientOpenAPI.responses,
     description=SearchAllBranchByClientOpenAPI.description, response_description=SearchAllBranchByClientOpenAPI.response_description
@@ -84,7 +84,7 @@ async def search_locals_client(
     return data
 
 
-@search_router.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=BranchProfileOutput)
+@search_controller.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=BranchProfileOutput)
 async def read_branch_profile(request: Request, response: Response, branch_id: int):  # TODO: login cliente opcional
     logger.info('branch_id: {}', branch_id)
 

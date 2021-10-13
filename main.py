@@ -6,13 +6,9 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 
 from exception.exceptions import CustomError
-from route import local_route, search_route, menu_route
+from controller import local_controller, search_controller, menu_controller
 
-from repository.database.database import engine
-
-from loguru import logger
-
-from dto.dto import GenericDTO as ResponseDTO
+# from configuration.database import engine
 
 api_local = FastAPI(
     docs_url="/v1/docs",
@@ -30,11 +26,6 @@ api_local.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-
-
-class HandlerExceptionTest(Exception):
-    def __init__(self, name: str):
-        self.name = name
 
 
 def get_field_error(error: tuple):
@@ -78,11 +69,11 @@ async def custom_exception_handler(request: Request, exc: CustomError):
     )
 
 
-api_local.include_router(local_route.local_router)
-api_local.include_router(search_route.search_router)
-api_local.include_router(menu_route.menu_router)
+api_local.include_router(local_controller.local_controller)
+api_local.include_router(search_controller.search_controller)
+api_local.include_router(menu_controller.menu_controller)
 
-engine.connect()
+# engine.connect()
 
 if __name__ == "__main__":
     uvicorn.run("main:api_local", host="127.0.0.1", port=8001, reload=True)
