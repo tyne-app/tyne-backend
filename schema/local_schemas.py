@@ -64,6 +64,13 @@ class LocalOutput(BaseModel):
     error: Optional[str] = []
 
 
+class CreateAccountMSLocal(BaseModel):
+    legal_representative: LegalRepresentative
+    branch: Branch
+    restaurant: Restaurant
+    bank_restaurant: BankRestaurant
+
+
 class Output(BaseModel):
     data: Optional[Union[dict, int]] = []
     error: Optional[Union[dict, int, str]] = []
