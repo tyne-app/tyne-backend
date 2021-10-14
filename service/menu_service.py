@@ -15,14 +15,18 @@ async def create_menu(branch_id, db, menu_request):
 
     seccions_list_entity = menu_mapper_request.to_entities(menu_request, branch_id)
 
-    for products in seccions_list_entity:
-        is_saved = product_dao.save_all_products(db, products, 3)
+    # for products in seccions_list_entity:
+    #     is_saved = product_dao.save_all_products(db, products, 3)
+    #
+    #     if not is_saved:
+    #         raise CustomError(
+    #             name="Error in create_menu",
+    #             detail="Products not created or updated",
+    #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        if not is_saved:
-            raise CustomError(
-                name="Error in create_menu",
-                detail="Products not created or updated",
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    is_saved = product_dao.save_all_products_menu(db, seccions_list_entity, branch_id)
+
+    logger.info(is_saved)
 
     menu_response = menu_mapper_response.to_menu_create_response()
     logger.info('menu_response - create_menu: {}', menu_response)

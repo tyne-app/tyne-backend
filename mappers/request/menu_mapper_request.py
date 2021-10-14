@@ -1,8 +1,6 @@
 from datetime import datetime
 
 from dto.request.MenuRequestDTO import MenuRequestDTO, CategoryDTO
-# from repository.entity.ProductEntity import Product
-# from repository.entity.CategoryEntity import Category
 from repository.entity.CategoryEntity import CategoryEntity
 from repository.entity.ProductEntity import ProductEntity
 
