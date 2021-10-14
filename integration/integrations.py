@@ -6,6 +6,8 @@ from fastapi import status
 from httpx import AsyncClient, RequestError
 from loguru import logger
 
+from schema import local_schemas
+
 # TODO: Variables a eliminar corto plazo
 # TODO: DEFINIR CONSTANTES CON VERIONES DE API, EJ CREATE_ACCOUNT_URL_V1
 CREATE_ACCOUNT_INTEGRATION = "https://ms-integration-apis.herokuapp.com/v1/login"
@@ -29,8 +31,12 @@ class FirebaseIntegrationApiClient:
         self.validate_account_integration = os.getenv('VALIDATE_ACCOUNT_INTEGRATION')
         self.delete_account_integration = os.getenv('DELETE_ACCOUNT_INTEGRATION')
 
-    async def create_account(self, credentials: dict):
+    async def create_account(self, email: str, password: str):
         async with AsyncClient() as client:
+            credentials = {
+                "email": email,
+                "password": password
+            }
             try:
                 response = await client.post(url=self.create_account_integration, json=credentials)
 
@@ -38,16 +44,13 @@ class FirebaseIntegrationApiClient:
                 logger.info("response.text: {}", response.text)
                 data = json.loads(response.text)
                 if response.status_code != status.HTTP_200_OK:
-                    logger.error("response: {}", response)
                     logger.error("response.text: {}", response.text)
                     return None
 
                 return data["data"]["uid"]
 
-            except RequestError as exception:
-                logger.error("Exception: {}", exception)
-                logger.error("response.text: {}", exception)
-                return None  # TODO: Mejorar respuesta ya que en todos los servicios un String significa error, este es la excepcion
+            except RequestError as exc:
+                return None
 
     async def delete_account(self, uid: str):
         async with AsyncClient() as client:
@@ -59,10 +62,8 @@ class FirebaseIntegrationApiClient:
                     return None
                 logger.info("response.text: {}", response.text)
                 return True  # TODO: Cambiar parámetro
-            except RequestError as exception:
-                logger.error("Exception: {}", exception)
-                logger.error("response.text: {}", exception)
-                return f"Excepción: {exception.response} - {exception.respose.status_code}"
+            except RequestError as exc:
+                return status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 class MSLocalClient:
@@ -73,9 +74,8 @@ class MSLocalClient:
         self.search_branch = os.getenv('SEARCH_BRANCH')
         self.branch_profile = os.getenv('BRANCH_PROFILE')
         self.branch_pre_login = os.getenv('BRANCH_PRE_LOGIN')
-        self.add_branch_url = os.getenv('ADD_BRANCH')
 
-    async def create_account(self, new_account: dict):
+    async def create_account(self, new_account: local_schemas.CreateAccountMSLocal):
         async with AsyncClient() as client:
             try:
                 response = await client.post(url=self.create_account_local, json=new_account)
@@ -90,13 +90,12 @@ class MSLocalClient:
                     logger.error("response.text: {}", response.text)
                     return data['error']
 
-                branch_id = int(data["data"])
-                return branch_id
+                return int(data["data"])
 
             except RequestError as exception:
                 logger.error("Exception: {}", exception)
-                logger.error("response.args: {}", exception.args)
-                return f"Excepción: {exception.args[0]} - {exception.respose.status_code}"
+                logger.error("response.text: {}", exception)
+                return f"Excepción: {exception.response} - {exception.respose.status_code}"
 
     async def get_account_pre_login(self, email: str):
         async with AsyncClient() as client:
@@ -144,30 +143,6 @@ class MSLocalClient:
                     return data['error']
 
                 return data["data"]
-
-            except RequestError as exception:
-                logger.error("Exception: {}", exception)
-                logger.error("response.text: {}", exception)
-                return f"Excepción: {exception.response} - {exception.respose.status_code}"
-
-    async def add_branch(self, new_branch: dict):
-        async with AsyncClient() as client:
-            try:
-                logger.info('new_branch: {}', new_branch)
-                response = await client.post(url=self.add_branch_url, json=new_branch)
-
-                logger.info("response: {}", response)
-                logger.info("response.text: {}", response.text)
-
-                data = json.loads(response.text)
-                logger.info('data: {}', data)
-
-                if response.status_code != status.HTTP_201_CREATED:
-                    logger.error("response: {}", response)
-                    logger.error("response.text: {}", response.text)
-                    return data['error']
-
-                return int(data["data"])
 
             except RequestError as exception:
                 logger.error("Exception: {}", exception)
@@ -251,7 +226,6 @@ class MapBoxIntegrationClient:
                     return None
                 data = json.loads(response.text)
                 logger.info("data: {}", data)
-                logger.info("data type: {}", type(data))
 
                 if 'data' not in data:
                     return None
@@ -280,39 +254,14 @@ class MSIntegrationApi:
                 if response.status_code != status.HTTP_200_OK:  # TODO: Mejorar manejo respuesta
                     logger.error('response: {}', response)
                     logger.error('response.text: {}', response.text)
-                    return response
 
                 logger.info('response: {}', response)
                 logger.info('response.text: {}', response.text)
 
                 return response
-            except RequestError as exception:
-                logger.error('exception: {}', exception)
-                logger.error('exception.args: {}', exception.args)
-                return None
-
-    async def token_data(self, client_token: str):
-        async with AsyncClient() as client:
-            try:
-                authorization_header = {'Authorization': client_token}
-                response = await client.get(headers=authorization_header, url=self.token_data_url)
-
-                if response.status_code != status.HTTP_200_OK:
-                    logger.error('response: {}', response)
-                    logger.error('response.text: {}', response.text)
-                    return response
-
-                logger.info('response: {}', response)
-                logger.info('response.text: {}', response.text)
-
-                data = json.loads(response.text)
-                logger.info("data: {}", data)
-
-                branch_id = int(data["data"]["id"])
-                return branch_id
-            except RequestError as exception:
-                logger.error('exception: {}', exception)
-                logger.error('exceptio.args: {}', exception.args)
+            except RequestError as exc:
+                print(exc)
+                print(exc.args)
                 return None
 
 
@@ -337,7 +286,7 @@ class MSBackboneMenu:
                 logger.info('response.text: {}', response.text)
                 data = json.loads(response.text)
                 return data['data']
-            except RequestError as exception:
-                logger.error("Exception: {}", exception)
-                logger.error("response.text: {}", exception)
-                return f"Excepción: {exception.response} - {exception.respose.status_code}"
+            except RequestError as exc:
+                print(exc)
+                print(exc.args)
+                return None

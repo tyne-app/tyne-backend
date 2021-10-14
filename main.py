@@ -1,10 +1,14 @@
 import uvicorn
-from fastapi import FastAPI, status
+from fastapi import FastAPI, status, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-from route import local_route, search_route, menu_route
+
+from exception.exceptions import CustomError
+from controller import local_controller, search_controller, menu_controller
+
+# from configuration.database import engine
 
 api_local = FastAPI(
     docs_url="/v1/docs",
@@ -22,11 +26,6 @@ api_local.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-
-
-class HandlerExceptionTest(Exception):
-    def __init__(self, name: str):
-        self.name = name
 
 
 def get_field_error(error: tuple):
@@ -54,10 +53,27 @@ async def validation_exception_handler(request, exc):
         content=jsonable_encoder({'data': [], "error": error_detail_list})
     )
 
-api_local.include_router(local_route.local_router)
-api_local.include_router(search_route.search_router)
-api_local.include_router(menu_route.menu_router)
 
+@api_local.exception_handler(CustomError)
+async def custom_exception_handler(request: Request, exc: CustomError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=jsonable_encoder({
+            'data': [],
+            "error": [{
+                "name": f"{exc.name}",
+                "detail": f"{exc.detail}",
+                "cause": f"{exc.cause}",
+            }]
+        })
+    )
+
+
+api_local.include_router(local_controller.local_controller)
+api_local.include_router(search_controller.search_controller)
+api_local.include_router(menu_controller.menu_controller)
+
+# engine.connect()
 
 if __name__ == "__main__":
     uvicorn.run("main:api_local", host="127.0.0.1", port=8001, reload=True)
