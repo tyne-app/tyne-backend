@@ -57,7 +57,7 @@ async def read_account(request: Request, response: Response, email: str):
     return data
 
 
-@local_router.post('/new-branch', status_code=status.HTTP_201_CREATED, response_model=NewBranchOutput)
+@local_controller.post('/new-branch', status_code=status.HTTP_201_CREATED, response_model=NewBranchOutput)
 async def add_branch(request: Request, response: Response, new_branch: AddBranch):
     logger.info('')
 
