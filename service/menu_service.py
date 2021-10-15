@@ -1,3 +1,5 @@
+import json
+
 from loguru import logger
 from starlette import status
 
@@ -8,11 +10,11 @@ from mappers.response import menu_mapper_response
 from repository.dao import product_dao, category_dao
 from repository.entity.ProductEntity import ProductEntity
 
+from dto.dto import GenericDTO as wrapperDTO
+
 
 async def create_menu(branch_id, db, menu_request):
     logger.info('menu_request - create_menu: {}', menu_request)
-
-    # TODO: Validator
 
     seccions_list_entity = menu_mapper_request.to_entities(menu_request, branch_id)
 
@@ -25,25 +27,44 @@ async def create_menu(branch_id, db, menu_request):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     menu_response = menu_mapper_response.to_menu_create_response()
+
     logger.info('menu_response - create_menu: {}', menu_response)
+
     return menu_response
 
 
 async def read_menu(branch_id, db):
-    logger.info('menu_request - read_menu branch_id: {}', branch_id)
 
-    products: list[ProductEntity] = product_dao.get_products_by_branch(db, branch_id)
+    try:
+        logger.info('menu_request - read_menu branch_id: {}', branch_id)
 
-    if not products:
-        raise CustomError(
-            name="Products not Found",
-            detail="No Products for menu",
-            status_code=status.HTTP_204_NO_CONTENT)
+        products: list[ProductEntity] = product_dao.get_products_by_branch(db, branch_id)
 
-    menu_domain = menu_mapper_domain.to_menu_read_domain(products)
+        if not products:
+            raise CustomError(
+                name="Products not Found",
+                detail="No Products for menu",
+                status_code=status.HTTP_204_NO_CONTENT)
 
-    menu_response = menu_mapper_response.to_menu_read_response(menu_domain)
+        menu_domain = menu_mapper_domain.to_menu_read_domain(products)
 
-    logger.info('menu_response - read_menu: {}', menu_response)
+        # menu_response = menu_mapper_response.to_menu_read_response(menu_domain)
 
-    return menu_response
+        # return menu_response
+
+        # wrapper_response = wrapperDTO()
+
+        # wrapper_response.data = menu_response
+
+        # return wrapper_response.__dict__
+
+        logger.info('menu_domain - read_menu: {}', menu_domain)
+
+        return menu_domain
+
+    except Exception as error:
+        logger.error(error)
+        raise CustomError(name="Error products",
+                          detail="BD error",
+                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                          cause=error.__cause__)

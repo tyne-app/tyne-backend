@@ -3,8 +3,10 @@ from sqlalchemy.orm import Session
 
 from configuration.database import database
 from dto.request.MenuRequestDTO import MenuRequestDTO
-from dto.response.MenuResponseDTO import MenuResponseDTO
+from dto.response.MenuRespDTO import MenuRespDTO, MenuRespOutput
+from exception.exceptions import CustomError
 from service import menu_service
+from loguru import logger
 
 menu_controller = APIRouter(
     prefix="/v1/locals/menu",
@@ -22,8 +24,17 @@ async def create_menu(branch_id: int,
 
 
 # Obtiene el menu según la sucursal
-@menu_controller.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=MenuResponseDTO)
+@menu_controller.get('/{branch_id}', status_code=status.HTTP_200_OK)
 async def read_menu(branch_id: int,
                     response: Response,
                     db: Session = Depends(database.get_data_base)):
-    return await menu_service.read_menu(branch_id, db)
+    try:
+        return await menu_service.read_menu(branch_id, db)
+
+    except Exception as error:
+        logger.error(error)
+        raise CustomError(name="Error products",
+                          detail="BD error",
+                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                          cause=error.__cause__)
+
