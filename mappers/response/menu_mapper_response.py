@@ -2,20 +2,20 @@ from domain2.Category import Category
 from domain2.Menu import Menu
 from domain2.Product import Product
 from dto.dto import GenericDTO as wrapperDTO
+from dto.response.MenuResponseDTO import MenuResponseDTO
+from loguru import logger
 
 from repository.entity.ProductEntity import ProductEntity
 
 
-def to_menu_read_response(products: list[ProductEntity]):
+def to_menu_read_response(menu: Menu):
     wrapper_response = wrapperDTO()
-    menu_domain = Menu()
+    menu_response = MenuResponseDTO
 
-    for product in products:
-        product_domain = Product(product.product_dict())
-        category_domain = Category(product.get_category_dict())
-        menu_domain.add_seccion(product_domain, category_domain)
+    for section in menu.sections:
+        logger.info(section)
 
-    wrapper_response.data = menu_domain
+    wrapper_response.data = menu_response
 
     return wrapper_response.__dict__
 

@@ -57,6 +57,7 @@ def save_all_products_menu(db: Session, seccions_list_entity, branch_id):
     finally:
         db.close()
 
+
 def get_products_by_branch(db: Session, branch_id: int):
     try:
         return db \

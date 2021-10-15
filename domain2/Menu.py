@@ -4,20 +4,20 @@ from domain2.SectionMenu import SectionMenu
 
 
 class Menu:
-    menu: list[SectionMenu]
+    sections: list[SectionMenu]
 
     def __init__(self):
-        self.menu = list()
+        self.sections = list()
 
     def add_seccion(self, product: Product, category: Category):
 
         # Verificar si no existe ninguna Seccion
-        if self.menu.__len__() == 0:
+        if self.sections.__len__() == 0:
             return self.create_section(category, product)
 
         # Validar si la seccion es la misma
         # Si es la misma, agregar Product a dicha Seccion
-        for seccion in self.menu:
+        for seccion in self.sections:
             if seccion.is_exit(category):
                 seccion.add_product(product)
                 return seccion
@@ -27,5 +27,5 @@ class Menu:
 
     def create_section(self, category, product):
         section = SectionMenu(product, category)
-        self.menu.append(section)
+        self.sections.append(section)
         return section

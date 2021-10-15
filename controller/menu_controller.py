@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from configuration.database import database
 from dto.request.MenuRequestDTO import MenuRequestDTO
+from dto.response.MenuResponseDTO import MenuResponseDTO
 from service import menu_service
 
 menu_controller = APIRouter(
@@ -20,9 +21,8 @@ async def create_menu(branch_id: int,
     return await menu_service.create_menu(branch_id, db, menu_request)
 
 
-# @menu_router.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=MenuOutput)
 # Obtiene el menu según la sucursal
-@menu_controller.get('/{branch_id}', status_code=status.HTTP_200_OK)
+@menu_controller.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=MenuResponseDTO)
 async def read_menu(branch_id: int,
                     response: Response,
                     db: Session = Depends(database.get_data_base)):
