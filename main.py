@@ -9,7 +9,7 @@ from controller import local_controller, search_controller, menu_controller, ban
 
 # from configuration.database import engine
 
-api = FastAPI(
+api_local = FastAPI(
     docs_url="/v1/docs",
     redoc_url="/v1/redoc",
     title="MS-API-Local",
@@ -19,7 +19,7 @@ api = FastAPI(
 
 origins = ["*"]
 
-api.add_middleware(
+api_local.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_methods=["*"],
@@ -36,7 +36,7 @@ def get_field_error(error: tuple):
         return error[3]
 
 
-@api.exception_handler(RequestValidationError)
+@api_local.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
     error_array = exc.errors()
     error_detail_list = []
@@ -53,7 +53,7 @@ async def validation_exception_handler(request, exc):
     )
 
 
-@api.exception_handler(CustomError)
+@api_local.exception_handler(CustomError)
 async def custom_exception_handler(request: Request, exc: CustomError):
     return JSONResponse(
         status_code=exc.status_code,
@@ -68,13 +68,13 @@ async def custom_exception_handler(request: Request, exc: CustomError):
     )
 
 
-api.include_router(bank_controller.bank_controller)
-api.include_router(local_controller.local_controller)
-api.include_router(menu_controller.menu_controller)
-api.include_router(search_controller.search_controller)
-api.include_router(territory_controller.territory_controller)
+api_local.include_router(bank_controller.bank_controller)
+api_local.include_router(local_controller.local_controller)
+api_local.include_router(menu_controller.menu_controller)
+api_local.include_router(search_controller.search_controller)
+api_local.include_router(territory_controller.territory_controller)
 
 # engine.connect()
 
 if __name__ == "__main__":
-    uvicorn.run("main:api", host="127.0.0.1", port=8001, reload=True)
+    uvicorn.run("main:api_local", host="127.0.0.1", port=8001, reload=True)
