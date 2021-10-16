@@ -4,13 +4,12 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-
 from exception.exceptions import CustomError
-from controller import local_controller, search_controller, menu_controller
+from controller import local_controller, search_controller, menu_controller, bank_controller, territory_controller
 
 # from configuration.database import engine
 
-api_local = FastAPI(
+api = FastAPI(
     docs_url="/v1/docs",
     redoc_url="/v1/redoc",
     title="MS-API-Local",
@@ -20,7 +19,7 @@ api_local = FastAPI(
 
 origins = ["*"]
 
-api_local.add_middleware(
+api.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_methods=["*"],
@@ -37,7 +36,7 @@ def get_field_error(error: tuple):
         return error[3]
 
 
-@api_local.exception_handler(RequestValidationError)
+@api.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
     error_array = exc.errors()
     error_detail_list = []
@@ -54,7 +53,7 @@ async def validation_exception_handler(request, exc):
     )
 
 
-@api_local.exception_handler(CustomError)
+@api.exception_handler(CustomError)
 async def custom_exception_handler(request: Request, exc: CustomError):
     return JSONResponse(
         status_code=exc.status_code,
@@ -69,11 +68,13 @@ async def custom_exception_handler(request: Request, exc: CustomError):
     )
 
 
-api_local.include_router(local_controller.local_controller)
-api_local.include_router(search_controller.search_controller)
-api_local.include_router(menu_controller.menu_controller)
+api.include_router(bank_controller.bank_controller)
+api.include_router(local_controller.local_controller)
+api.include_router(menu_controller.menu_controller)
+api.include_router(search_controller.search_controller)
+api.include_router(territory_controller.territory_controller)
 
 # engine.connect()
 
 if __name__ == "__main__":
-    uvicorn.run("main:api_local", host="127.0.0.1", port=8001, reload=True)
+    uvicorn.run("main:api", host="127.0.0.1", port=8001, reload=True)
