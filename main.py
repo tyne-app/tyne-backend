@@ -69,10 +69,10 @@ async def custom_exception_handler(request: Request, exc: CustomError):
 
 
 api.include_router(bank_controller.bank_controller)
-api.include_router(territory_controller.territory_controller)
 api.include_router(local_controller.local_controller)
-api.include_router(search_controller.search_controller)
 api.include_router(menu_controller.menu_controller)
+api.include_router(search_controller.search_controller)
+api.include_router(territory_controller.territory_controller)
 
 # engine.connect()
 
