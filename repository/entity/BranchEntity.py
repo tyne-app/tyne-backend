@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
 
+
 class BranchEntity(Base):
     __tablename__ = "branch"
     __table_args__ = {'schema': 'tyne'}
