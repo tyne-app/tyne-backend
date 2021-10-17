@@ -3,14 +3,6 @@ from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
 
-from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
-from repository.entity.BranchTypeEntity import BranchTypeEntity
-from repository.entity.BranchScheduleEntity import BranchScheduleEntity
-from repository.entity.ReservationEntity import ReservationEntity
-from repository.entity.ProductEntity import ProductEntity
-from repository.entity.RestaurantEntity import RestaurantEntity
-
-
 class BranchEntity(Base):
     __tablename__ = "branch"
     __table_args__ = {'schema': 'tyne'}
