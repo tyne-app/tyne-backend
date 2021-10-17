@@ -4,7 +4,6 @@ from sqlalchemy.orm import relationship
 from configuration.database.database import Base
 
 from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
-from repository.entity.BankRestaurantEntity import BankRestaurantEntity
 
 
 class BranchBankEntity(Base):
@@ -18,8 +17,3 @@ class BranchBankEntity(Base):
     account_holder_identifier = Column(String(15))
 
     bank_id = Column(Integer, ForeignKey('tyne.bank.id'))
-
-    # Back FK
-    branch_bank_branch = relationship("BranchEntity", back_populates='branch_bank')
-
-

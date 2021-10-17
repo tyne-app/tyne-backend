@@ -4,7 +4,11 @@ from sqlalchemy.orm import relationship
 from configuration.database.database import Base
 
 from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
-from repository.entity.BankRestaurantEntity import BankRestaurantEntity
+from repository.entity.BranchTypeEntity import BranchTypeEntity
+from repository.entity.BranchScheduleEntity import BranchScheduleEntity
+from repository.entity.ReservationEntity import ReservationEntity
+from repository.entity.ProductEntity import ProductEntity
+from repository.entity.RestaurantEntity import RestaurantEntity
 
 
 class BranchEntity(Base):
@@ -27,3 +31,9 @@ class BranchEntity(Base):
     restaurant_id = Column(Integer, ForeignKey('tyne.restaurant.id'))
     branch_type_id = Column(Integer, ForeignKey('tyne.restaurant.id'))
     branch_bank_id = Column(Integer, ForeignKey('tyne.bank_restaurant.id'))
+
+    branch_type = relationship("BranchTypeEntity", back_populates="branches")
+    branches_schedules = relationship("BranchScheduleEntity", back_populates="branch")
+    reservations = relationship("ReservationEntity", back_populates="reservations")
+    products = relationship("ProductEntity", back_populates="branch")
+    restaurant = relationship("RestaurantEntity", back_populates="branches")
