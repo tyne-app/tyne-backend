@@ -34,37 +34,18 @@ async def create_menu(branch_id, db, menu_request):
 
 
 async def read_menu(branch_id, db):
+    logger.info('menu_request - read_menu branch_id: {}', branch_id)
 
-    try:
-        logger.info('menu_request - read_menu branch_id: {}', branch_id)
+    products: list[ProductEntity] = product_dao.get_products_by_branch(db, branch_id)
 
-        products: list[ProductEntity] = product_dao.get_products_by_branch(db, branch_id)
+    if not products:
+        raise CustomError(
+            name="Products not Found",
+            detail="No Products for menu",
+            status_code=status.HTTP_204_NO_CONTENT)
 
-        if not products:
-            raise CustomError(
-                name="Products not Found",
-                detail="No Products for menu",
-                status_code=status.HTTP_204_NO_CONTENT)
+    menu_domain = menu_mapper_domain.to_menu_read_domain(products)
 
-        menu_domain = menu_mapper_domain.to_menu_read_domain(products)
+    logger.info('menu_domain - read_menu: {}', menu_domain)
 
-        # menu_response = menu_mapper_response.to_menu_read_response(menu_domain)
-
-        # return menu_response
-
-        # wrapper_response = wrapperDTO()
-
-        # wrapper_response.data = menu_response
-
-        # return wrapper_response.__dict__
-
-        logger.info('menu_domain - read_menu: {}', menu_domain)
-
-        return menu_domain
-
-    except Exception as error:
-        logger.error(error)
-        raise CustomError(name="Error products",
-                          detail="BD error",
-                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                          cause=error.__cause__)
+    return menu_domain
