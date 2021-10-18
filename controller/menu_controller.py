@@ -20,7 +20,23 @@ async def create_menu(branch_id: int,
                       response: Response,
                       menu_request: MenuRequestDTO,
                       db: Session = Depends(database.get_data_base)):
-    return await menu_service.create_menu(branch_id, db, menu_request)
+
+    try:
+        return await menu_service.create_menu(branch_id, db, menu_request)
+
+    except CustomError as error:
+        logger.error(error.detail)
+        raise CustomError(name=error.name,
+                          detail=error.detail,
+                          status_code=error.status_code,
+                          cause=error.cause)
+
+    except Exception as error:
+        logger.error(error)
+        raise CustomError(name="Error create_menu",
+                          detail="Controller error",
+                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                          cause=error.__cause__)
 
 
 # Obtiene el menu según la sucursal
@@ -31,10 +47,17 @@ async def read_menu(branch_id: int,
     try:
         return await menu_service.read_menu(branch_id, db)
 
+    except CustomError as error:
+        logger.error(error.detail)
+        raise CustomError(name=error.name,
+                          detail=error.detail,
+                          status_code=error.status_code,
+                          cause=error.cause)
+
     except Exception as error:
         logger.error(error)
-        raise CustomError(name="Error products",
-                          detail="BD error",
+        raise CustomError(name="Error read_menu",
+                          detail="Controller error",
                           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                           cause=error.__cause__)
 
