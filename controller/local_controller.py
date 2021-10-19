@@ -10,6 +10,8 @@ local_controller = APIRouter(
     tags=["Local"]
 )
 
+# TODO: Pasar a clase todas las rutas
+
 
 @local_controller.post("/register", response_model=Output, status_code=status.HTTP_201_CREATED)
 async def register_account(response: Response, new_account: CreateAccount):

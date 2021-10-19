@@ -166,7 +166,7 @@ class MSLocalClient:
 
 
 
-class MSBackboneMenu:
+class MSBackboneMenu:  # TODO: Eliminar clase
 
     def __init__(self):
         self.get_menu_url = os.getenv('GET_BRANCH_MENU')

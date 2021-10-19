@@ -9,7 +9,7 @@ from loguru import logger
 load_dotenv()
 
 
-class MSIntegrationApi:
+class IntegrationService:
 
     def __init__(self):
         self.validate_token_url = os.getenv('VALIDATE_TOKEN_URL')
