@@ -1,6 +1,7 @@
 from fastapi import status
 from loguru import logger
 from dto.dto import GenericDTO as ValidatorDTO
+'''
 from integration.integrations import MSIntegrationApi
 
 MSG_UNAUTHORIZED = "Usuario no autorizado"
@@ -17,3 +18,5 @@ async def validate_token(client_token: str):
         validator_dto.error = MSG_UNAUTHORIZED
 
     return validator_dto.__dict__
+
+'''

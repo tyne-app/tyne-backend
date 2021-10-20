@@ -3,8 +3,6 @@ from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
 
-from repository.entity.RestaurantEntity import RestaurantEntity
-
 
 class RestaurantImageEntity(Base):
     __tablename__ = "restaurant_image"
@@ -13,5 +11,3 @@ class RestaurantImageEntity(Base):
     url_image = Column(String)
 
     restaurant_id = Column(Integer, ForeignKey("tyne.restaurant.id"))
-
-    restaurant = relationship("RestaurantEntity", back_populates="restaurant_images")

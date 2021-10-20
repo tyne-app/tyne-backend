@@ -19,6 +19,7 @@ class RestaurantEntity(Base):
     social_reason = Column(String(200))
     commercial_activity = Column(String(100))
     phone = Column(String(15))
-
-    branches = relationship("BranchEntity", back_populates='restaurant')
-    restaurant_images = relationship("RestaurantImageEntity", back_populates="restaurant")
+    street = Column(String(100))
+    street_number = Column(Integer)
+    state_id = Column(Integer, ForeignKey('tyne.state.id'))
+    legal_representative_id = Column(Integer, ForeignKey('tyne.legal_representative.id'))

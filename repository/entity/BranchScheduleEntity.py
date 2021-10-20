@@ -15,6 +15,3 @@ class BranchScheduleEntity(Base):
 
     branch_id = Column(Integer, ForeignKey('tyne.branch.id'))
     schedule_id = Column(Integer, ForeignKey('tyne.schedule.id'))
-
-    branch = relationship('BranchEntity', back_populates="branches_schedules")
-    schedule = relationship('ScheduleEntity', back_populates='branches_schedules')

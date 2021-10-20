@@ -1,9 +1,9 @@
 from fastapi import status, APIRouter, Response, Request
+from fastapi.params import Depends
 from loguru import logger
-from domain.local_domain import create_account, get_branch_profile, get_branch_pre_login, add_new_branch
-from schema.local_schemas import CreateAccount, Output, BranchProfilePreLoginOutput, BranchProfileLoginOutput,\
-    NewBranchOutput, AddBranch
-from validator.integration_validator import validate_token
+from configuration.database.database import SessionLocal, get_data_base
+from service.LocalService import LocalService
+from dto.request.local_request_dto import NewAccount
 
 local_controller = APIRouter(
     prefix="/v1/locals",
@@ -11,19 +11,19 @@ local_controller = APIRouter(
 )
 
 # TODO: Pasar a clase todas las rutas
+# TODO: Validar schemas!!
 
 
-@local_controller.post("/register", response_model=Output, status_code=status.HTTP_201_CREATED)
-async def register_account(response: Response, new_account: CreateAccount):
+@local_controller.post("/register", status_code=status.HTTP_201_CREATED)
+async def register_account(new_account: NewAccount, db: SessionLocal = Depends(get_data_base)):
     logger.info("new_account: {}", new_account)
-    data = await create_account(new_account)
 
-    if 'data' not in data:
-        response.status_code = status.HTTP_400_BAD_REQUEST
+    local_service = LocalService()
+    account_created = await local_service.create_new_account(new_account=new_account, db=db)
 
-    return data
+    return account_created
 
-
+'''
 @local_controller.get('/pre-login/{email}', status_code=status.HTTP_200_OK, response_model=BranchProfilePreLoginOutput)
 async def read_account_pre_login(request: Request, response: Response, email: str):
     logger.info('email: {}', email)
@@ -82,3 +82,4 @@ async def add_branch(request: Request, response: Response, new_branch: AddBranch
         response.status_code = status.HTTP_400_BAD_REQUEST
 
     return data
+'''''

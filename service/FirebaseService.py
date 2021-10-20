@@ -1,10 +1,10 @@
 import json
 import os
-
 from dotenv import load_dotenv
 from fastapi import status
 from httpx import AsyncClient, RequestError
 from loguru import logger
+from exception.exceptions import CustomError
 
 load_dotenv()
 
@@ -28,14 +28,24 @@ class FirebaseService:
                 logger.info("response: {}", response)
                 logger.info("response.text: {}", response.text)
                 data = json.loads(response.text)
+
                 if response.status_code != status.HTTP_200_OK:
+                    logger.error("response.text: {}", response)
                     logger.error("response.text: {}", response.text)
-                    return None
+                    raise CustomError(name="Error al crear redenciales",
+                                      detail=data['error'],
+                                      status_code=response.status_code,
+                                      cause="")   # TODO: Llenar campo
 
                 return data["data"]["uid"]
 
-            except RequestError as exc:
-                return None
+            except RequestError as error:
+                logger.error('error: {}', error)
+                logger.error('error.args: {}', error.args)
+                raise CustomError(name="Error al crear redenciales",
+                                  detail=error.args[0],
+                                  status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                  cause="")  # TODO: Llenar campo
 
     async def delete_account(self, uid: str):
         async with AsyncClient() as client:
@@ -44,8 +54,16 @@ class FirebaseService:
                 response = await client.delete(url=delete_account_url)
                 if response.status_code != 200:
                     logger.error("response.text: {}", response.text)
-                    return None
+                    raise CustomError(name="Error al crear redenciales",
+                                      detail=response.text,
+                                      status_code=response.status_code,
+                                      cause="")  # TODO: Llenar campo
                 logger.info("response.text: {}", response.text)
-                return True  # TODO: Cambiar parámetro
-            except RequestError as exc:
-                return status.HTTP_500_INTERNAL_SERVER_ERROR
+                return True  # TODO: Definir parámetro a retornar
+            except RequestError as error:
+                logger.error('error: {}', error)
+                logger.error('error.args: {}', error.args)
+                raise CustomError(name="Error al crear redenciales",
+                                  detail=error.args[0],
+                                  status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                  cause="")  # TODO: Llenar campo
