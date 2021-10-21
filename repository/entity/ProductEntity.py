@@ -10,6 +10,7 @@ class ProductEntity(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
+    name = Column(String)
     description = Column(String)
     url_image = Column(Text)
     amount = Column(Float(100))

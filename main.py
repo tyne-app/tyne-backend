@@ -4,8 +4,10 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
+
 from exception.exceptions import CustomError
-from controller import local_controller, search_controller, menu_controller, bank_controller, territory_controller
+from controller import local_controller, search_controller, menu_controller, bank_controller, territory_controller, \
+    user_controller
 
 # from configuration.database import engine
 
@@ -73,6 +75,7 @@ api_local.include_router(local_controller.local_controller)
 api_local.include_router(menu_controller.menu_controller)
 api_local.include_router(search_controller.search_controller)
 api_local.include_router(territory_controller.territory_controller)
+api_local.include_router(user_controller.user_controller)
 
 # engine.connect()
 
