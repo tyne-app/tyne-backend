@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+from typing import Optional
 
 class Manager(BaseModel):
     name: str
@@ -28,7 +28,7 @@ class Restaurant(BaseModel):
 
 
 class Branch(BaseModel):
-    name: str
+    name: Optional[str]
     street: str
     street_number: int
     state_id: int
@@ -47,5 +47,11 @@ class NewAccount(BaseModel):
     manager: Manager
     legal_representative: LegalRepresentative
     restaurant: Restaurant
+    branch: Branch
+    branch_bank: BranchBank
+
+
+class NewBranch(BaseModel):
+    manager: Manager
     branch: Branch
     branch_bank: BranchBank

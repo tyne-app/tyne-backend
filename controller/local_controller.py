@@ -6,7 +6,7 @@ from loguru import logger
 from configuration.database.database import SessionLocal, get_data_base
 from service.LocalService import LocalService
 from service.IntegrationService import IntegrationService
-from dto.request.local_request_dto import NewAccount
+from dto.request.local_request_dto import NewAccount, NewBranch
 
 local_controller = APIRouter(
     prefix="/v1/locals",
@@ -55,28 +55,27 @@ async def read_account(request: Request, response: Response, email: str, db: Ses
     branch_profile = local_service.get_account_profile(email=email, db=db)
     return branch_profile
 
-'''
-@local_controller.post('/new-branch', status_code=status.HTTP_201_CREATED, response_model=NewBranchOutput)
-async def add_branch(request: Request, response: Response, new_branch: AddBranch):
-    logger.info('')
+
+@local_controller.post('/new-branch', status_code=status.HTTP_201_CREATED)  # TODO: response_model=NewBranchOutput
+async def add_branch(request: Request, response: Response,
+                     new_branch: NewBranch, db: SessionLocal = Depends(get_data_base)):
+    logger.info('new_branch: {}', new_branch)
 
     if 'authorization' not in request.headers:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {'error': 'Usuario no autorizado'}
 
     token = request.headers['authorization']
-    valid_token = await validate_token(client_token=request.headers['authorization'])
+    integration_service = IntegrationService()
+    await integration_service.validate_token(token=token)
 
-    if 'error' in valid_token:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        return {'error': 'Usuario no autorizado'}
+    local_service = LocalService()
+    branch_profile = local_service.add_new_branch(token=token, db=db)
+    return branch_profile
 
-
-    # TODO: Refactorizar eliminando campo type_lega_representative, se agrega en backend.
     data = await add_new_branch(new_branch=new_branch, client_token=token)
 
     if 'data' not in data:
         response.status_code = status.HTTP_400_BAD_REQUEST
 
     return data
-'''''
