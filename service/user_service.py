@@ -13,6 +13,8 @@ class UserService:
     @classmethod
     def login_user(cls, loginRequest: LoginUserRequest, db: Session):
 
+        loginRequest.validate_fields()
+
         tokenResponse: UserTokenResponse = None
         userDao = UserDao()
         user: UserEntity = userDao.login(loginRequest.email, db)

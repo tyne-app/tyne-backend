@@ -20,7 +20,7 @@ class JwtService:
                 "iat": datetime.now(tz=timezone.utc),
                 "exp": datetime.now(tz=timezone.utc) + timedelta(minutes=30)
             },
-            "MIGEAgEAMBAGByqGSM49AgEGBS",
+            "PLF34EAgEAMB4563449ALLKDMa23",
             algorithm="HS256")
 
         tokenResponse = UserTokenResponse()
