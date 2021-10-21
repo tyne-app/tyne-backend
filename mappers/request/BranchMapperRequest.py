@@ -19,7 +19,11 @@ class BranchMapperRequest:
 
         return branch_entity
 
-    def to_branch_create_response(self):
+    def to_branch_create_response(self, body=None):
         response = wrapperDTO()
-        response.data = [{"message": "Local creado correctamente"}]
+        if not body:
+            response.data = [{"message": "Local creado correctamente"}]
+        else:
+            response.data = [{'message': body}]
+
         return response.__dict__

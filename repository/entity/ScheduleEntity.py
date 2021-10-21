@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
 
-from repository.entity.BranchScheduleEntity import BranchScheduleEntity
 
 
 class ScheduleEntity(Base):
@@ -15,5 +14,3 @@ class ScheduleEntity(Base):
     opening_hour = Column(TIMESTAMP)
     closing_hour = Column(TIMESTAMP)
     day = Column(Integer)
-
-    branches_schedules = relationship("BranchScheduleEntity", back_populates='schedule')

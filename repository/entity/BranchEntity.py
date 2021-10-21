@@ -18,8 +18,7 @@ class BranchEntity(Base):
     is_active = Column(Boolean)
     street_number = Column(Integer)
 
-    # FK
     manager_id = Column(Integer, ForeignKey('tyne.manager.id'))
     state_id = Column(Integer, ForeignKey('tyne.state.id'))
     restaurant_id = Column(Integer, ForeignKey('tyne.restaurant.id'))
-    branch_bank_id = Column(Integer, ForeignKey('tyne.bank_restaurant.id'))
+    branch_bank_id = Column(Integer, ForeignKey('tyne.branch_bank.id'))

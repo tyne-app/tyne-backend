@@ -1,8 +1,11 @@
 from fastapi import status, APIRouter, Response, Request
 from fastapi.params import Depends
+from fastapi_utils.cbv import cbv
+from fastapi_utils.inferring_router import InferringRouter
 from loguru import logger
 from configuration.database.database import SessionLocal, get_data_base
 from service.LocalService import LocalService
+from service.IntegrationService import IntegrationService
 from dto.request.local_request_dto import NewAccount
 
 local_controller = APIRouter(
@@ -23,21 +26,20 @@ async def register_account(new_account: NewAccount, db: SessionLocal = Depends(g
 
     return account_created
 
-'''
-@local_controller.get('/pre-login/{email}', status_code=status.HTTP_200_OK, response_model=BranchProfilePreLoginOutput)
-async def read_account_pre_login(request: Request, response: Response, email: str):
+# TODO: para esa ruta, es necesario los datos pre-login?
+@local_controller.get('/pre-login/{email}', status_code=status.HTTP_200_OK) # TODO: response_model=BranchProfilePreLoginOutput
+def read_account_pre_login(request: Request, response: Response,
+                                 email: str, db: SessionLocal = Depends(get_data_base)):
     logger.info('email: {}', email)
 
-    data = await get_branch_pre_login(email=email)
+    local_service = LocalService()
+    account_pre_login = local_service.get_account_pre_login(email=email, db=db)
 
-    if 'data' not in data:
-        response.status_code = status.HTTP_400_BAD_REQUEST
+    return account_pre_login
 
-    return data
-
-
-@local_controller.get('/{email}', status_code=status.HTTP_200_OK, response_model=BranchProfileLoginOutput)
-async def read_account(request: Request, response: Response, email: str):
+# TODO: Para esta ruta, qué datos necesito retornar exactmente?
+@local_controller.get('/{email}', status_code=status.HTTP_200_OK)  # TODO: response_model=BranchProfileLoginOutput
+async def read_account(request: Request, response: Response, email: str, db: SessionLocal = Depends(get_data_base)):
     logger.info('email: {}', email)
     #TODO: Falta probar con token validar
 
@@ -45,20 +47,15 @@ async def read_account(request: Request, response: Response, email: str):
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {'error': 'Usuario no autorizado'}
 
-    valid_token = await validate_token(client_token=request.headers['authorization'])
+    token = request.headers['authorization']
+    integration_service = IntegrationService()
+    await integration_service.validate_token(token=token)
 
-    if 'error' in valid_token:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        return {'error': 'Usuario no autorizado'}
+    local_service = LocalService()
+    branch_profile = local_service.get_account_profile(email=email, db=db)
+    return branch_profile
 
-    data = await get_branch_profile(email=email)
-
-    if 'data' not in data:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-
-    return data
-
-
+'''
 @local_controller.post('/new-branch', status_code=status.HTTP_201_CREATED, response_model=NewBranchOutput)
 async def add_branch(request: Request, response: Response, new_branch: AddBranch):
     logger.info('')

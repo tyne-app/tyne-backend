@@ -20,7 +20,13 @@ from configuration.database.database import SessionLocal
 
 
 class LocalService:
+
     MSG_ERROR_BRANCH_ADDRESS = "Dirección de local no válida"
+    LEGAL_REPRESENTATIVE_KEY_WORD = 'legal_representative_identifier_key'
+    LEGAL_REPRESENTATIVE_ERROR_MESSAGE = 'Rut representante legal ya está registrado'
+    RESTAURANT_KEY_WORD = 'restaurant_identifier_key'
+    RESTAURANT_ERROR_MESSAGE = 'Rut restaurant ya está registrado'
+    STANDARD_ERROR_MESSAGE = 'Error en base de datos'
 
     async def create_new_account(self, new_account: NewAccount, db: SessionLocal):
         logger.info('new_account: {}', new_account)
@@ -30,10 +36,7 @@ class LocalService:
 
         if validated_data:
             logger.error("validated_data: {}", validated_data)
-            raise CustomError(name="Error validación de datos",
-                              detail=validated_data,
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="")  # TODO: Llenar campo
+            self.raise_custom_error(message=validated_data)
 
         branch = new_account.branch
         logger.info('branch: {}', branch)
@@ -77,10 +80,7 @@ class LocalService:
 
         if type(branch_entity_status) is str:
             await self.delete_credentials(uid=uid)
-            raise CustomError(name="Error al registrar cuenta de local",
-                              detail=branch_entity_status,
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="")  # TODO: Llenar campo
+            self.raise_custom_error(message=branch_entity_status)
 
         return branch_mapper_request.to_branch_create_response()
 
@@ -96,6 +96,7 @@ class LocalService:
         return coordinates
 
     async def create_credentials(self, email: str, password: str):
+        logger.info('email: {}, password: {}', email, password)
         firebase_service = FirebaseService()
         uid = await firebase_service.create_account(email=email, password=password)
         return uid
@@ -117,10 +118,67 @@ class LocalService:
                                                                 branch_bank_entity=branch_bank_entity,
                                                                 db=db)
 
-        # TODO: Definir: Si respuesta a registrar cuenta es String, llamar función para convertir respuesta a español.
+        if type(branch_entity_status) is str:
+            return self.parse_error_response_database(message=branch_entity_status)
+
         return branch_entity_status
 
     async def delete_credentials(self, uid):
+        logger.info('uid: {},', uid)
         firebase_service = FirebaseService()
         await firebase_service.delete_account(uid=uid)
         pass
+
+    def get_account_pre_login(self, email: str, db: SessionLocal):
+        logger.info('email: {}', email)
+        local_validator = LocalValidator()
+        validated_email = local_validator.validate_email(email=email)  # TODO: Refactorizar
+
+        if validated_email:
+            logger.error("validated_data: {}", validated_email)
+            self.raise_custom_error(message=validated_email)
+
+        local_dao = LocalDAO()
+        account_pre_login = local_dao.get_account_pre_login(email=email, db=db)
+
+        if type(account_pre_login) is str or not account_pre_login:
+            logger.error("account_pre_login: {}", account_pre_login)
+            self.raise_custom_error(message=account_pre_login)
+
+        branch_mapper_request = BranchMapperRequest()
+        return branch_mapper_request.to_branch_create_response(body=account_pre_login)
+
+    def get_account_profile(self, email: str, db: SessionLocal):
+        logger.info('email: {}', email)
+        local_validator = LocalValidator()
+        validated_email = local_validator.validate_email(email=email)
+
+        if validated_email: # TODO: Refactorizar
+            logger.error("validated_data: {}", validated_email)
+            self.raise_custom_error(message=validated_email)
+
+        local_dao = LocalDAO()
+        branch_profile = local_dao.get_account_profile(email=email, db=db)
+
+        if type(branch_profile) is str or not branch_profile:
+            logger.error("account_pre_login: {}", branch_profile)
+            self.raise_custom_error(message=branch_profile)
+
+        branch_mapper_request = BranchMapperRequest()
+        return branch_mapper_request.to_branch_create_response(body=branch_profile)
+
+    def raise_custom_error(self, message):
+        raise CustomError(name="Error al registrar cuenta de local",
+                          detail=message,
+                          status_code=status.HTTP_400_BAD_REQUEST if message else status.HTTP_204_NO_CONTENT,
+                          cause="")  # TODO: Llenar campo
+
+    def parse_error_response_database(self, message):
+
+        if self.LEGAL_REPRESENTATIVE_KEY_WORD in message:
+            return self.LEGAL_REPRESENTATIVE_ERROR_MESSAGE
+
+        if self.RESTAURANT_KEY_WORD in message:
+            return self.RESTAURANT_ERROR_MESSAGE
+
+        return self.STANDARD_ERROR_MESSAGE

@@ -1,21 +1,18 @@
-from fastapi import status
-from fastapi.params import Depends
 from loguru import logger
-from datetime import datetime, timezone
+from datetime import datetime
+import pytz
 from repository.entity.ManagerEntity import ManagerEntity
 from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
 from repository.entity.RestaurantEntity import RestaurantEntity
 from repository.entity.BranchEntity import BranchEntity
 from repository.entity.BranchBankEntity import BranchBankEntity
+from repository.entity.ScheduleEntity import ScheduleEntity
+from repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from exception.exceptions import CustomError
 from configuration.database.database import SessionLocal, get_data_base
 
 
 class LocalDAO:
-
-    def get_database_connection(self):
-        # TODO: Retorna conexión a DB
-        pass
 
     def register_account(self,
                          manager_entity: ManagerEntity,
@@ -38,7 +35,9 @@ class LocalDAO:
             db.flush()
 
             restaurant_entity.legal_representative_id = legal_representative_entity.id
-            restaurant_entity.created_date = datetime.now()  # TODO: Ajustar datetime a Chile.
+            chile_pytz = pytz.timezone('Chile/Continental')
+            chile_datetime = datetime.now(chile_pytz)  # TODO: Arreglar horario chile
+            restaurant_entity.created_date = chile_datetime
             db.add(restaurant_entity)
             db.flush()
 
@@ -58,61 +57,65 @@ class LocalDAO:
             db.rollback()
             return error.args[0]
 
-    '''
-    def get_account_pre_login(email: str, db: Session):
+    def get_account_pre_login(self, email: str, db: SessionLocal):
         try:
-            legal_representative = db.query(LegalRepresentative.id).filter(LegalRepresentative.email == email).first()
-            if not legal_representative:
-                return []
-            branch = db.query(Branch.id, Branch.uid, Branch.accept_pet, Branch.description, Branch.street,
-                              Branch.street_number, Restaurant.name, Restaurant.commercial_activity) \
-                .select_from(Branch).join(Restaurant, Restaurant.id == Branch.restaurant_id) \
-                .filter(Branch.legal_representative_id == legal_representative.id).first()
-            if not branch:
-                return []
-            return branch
+            manager_entity_id = db.query(ManagerEntity.id).filter(ManagerEntity.email == email).first()
+            if not manager_entity_id:
+                return None
+            branch_entity = db.query(BranchEntity.id, BranchEntity.uid, BranchEntity.accept_pet,
+                                     BranchEntity.description, BranchEntity.street, BranchEntity.street_number,
+                                     RestaurantEntity.name, RestaurantEntity.commercial_activity) \
+                .select_from(BranchEntity) \
+                .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
+                .filter(BranchEntity.manager_id == manager_entity_id.id) \
+                .filter(BranchEntity.is_active).first()
+            if not branch_entity:
+                return None
+
+            return branch_entity
         except Exception as error:
-            db.close()
             logger.error('error: {}', error)
             logger.error('error.args: {}', error.args)
             return error.args[0]
 
-    def get_account(email: str, db: Session):
+    def get_account_profile(self, email: str, db: SessionLocal):
         # TODO: para el login, yo te mando el email y se devuelves todos los datos del local + del representante
         try:
-            branch_profile = {}
-            legal_representative = db.query(LegalRepresentative.id, LegalRepresentative.name,
-                                            LegalRepresentative.last_name,
-                                            LegalRepresentative.email, LegalRepresentative.phone).select_from(
-                LegalRepresentative) \
-                .filter(LegalRepresentative.email == email).first()
-            branch_profile['legal_representative'] = legal_representative
-            if not legal_representative:
-                return []
+            profile = {}
 
-            branch = db.query(Branch.id, Branch.accept_pet, Branch.description, Branch.street, Branch.street_number,
-                              Restaurant.name,
-                              Restaurant.commercial_activity, State.name.label('state')).select_from(Branch) \
-                .join(Restaurant, Restaurant.id == Branch.restaurant_id).join(State, State.id == Branch.state_id) \
-                .filter(Branch.legal_representative_id == legal_representative.id).first()
-            branch_profile['branch'] = branch
+            manager_entity = db.query(ManagerEntity).filter(ManagerEntity.email == email).first()
+            if not manager_entity:
+                return None
 
-            if not branch:
-                return []
+            profile['manager'] = manager_entity
 
-            schedule_list = db.query(Schedule).join(BranchSchedule, BranchSchedule.schedule_id == Schedule.id) \
-                .join(Branch, Branch.id == BranchSchedule.branch_id) \
-                .filter(Branch.legal_representative_id == legal_representative.id).all()
-            branch_profile['schedule_list'] = schedule_list
+            branch_entity = db.query(BranchEntity.id, BranchEntity.accept_pet, BranchEntity.description,
+                                     BranchEntity.state_id, BranchEntity.street, BranchEntity.street_number,
+                                     RestaurantEntity.name, RestaurantEntity.commercial_activity) \
+                .select_from(BranchEntity).join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
+                .filter(BranchEntity.manager_id == manager_entity.id).filter(BranchEntity.is_active).first()
 
-            db.close()
-            return branch_profile
+            profile['branch'] = branch_entity
+
+            if not branch_entity:
+                return None
+
+            schedule_entity_list = db.query(ScheduleEntity).join(BranchScheduleEntity,
+                                                                 BranchScheduleEntity.schedule_id == ScheduleEntity.id)\
+                .join(BranchEntity, BranchEntity.id == BranchScheduleEntity.branch_id) \
+                .filter(BranchEntity.manager_id == manager_entity.id).all()
+
+            profile['schedule_list'] = schedule_entity_list
+
+            return profile
         except Exception as error:
             logger.error('error: {}', error)
             logger.error('error.args: {}', error.args)
             db.close()
+
             return error.args[0]
 
+    '''
     def add_branch(new_branch: AddBranch, db: Session):
         logger.info('new_branch: {}', dict(new_branch))
         try:
