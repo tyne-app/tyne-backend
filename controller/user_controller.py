@@ -1,4 +1,4 @@
-from fastapi import status, APIRouter, Response, Depends
+from fastapi import status, APIRouter, Response, Depends, Request
 from sqlalchemy.orm import Session
 from configuration.database import database
 from dto.request.LoginUserRequest import LoginUserRequest
@@ -14,12 +14,12 @@ user_controller = APIRouter(
     '/login',
     status_code=status.HTTP_200_OK
 )
-def login(response: Response, loginRequest: LoginUserRequest, db: Session = Depends(database.get_data_base)):
+def login(response: Response, request: Request, loginRequest: LoginUserRequest,
+          db: Session = Depends(database.get_data_base)):
     service = UserService()
-    token = service.login_user(loginRequest=loginRequest, db=db)
+    token = service.login_user(loginRequest=loginRequest, ip=request.client.host, db=db)
 
     if token is None:
         response.status_code = status.HTTP_404_NOT_FOUND
 
     return token
-

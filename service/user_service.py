@@ -11,7 +11,7 @@ from service.jwt_service import JwtService
 class UserService:
 
     @classmethod
-    def login_user(cls, loginRequest: LoginUserRequest, db: Session):
+    def login_user(cls, loginRequest: LoginUserRequest, ip: str, db: Session):
 
         loginRequest.validate_fields()
 
@@ -33,6 +33,6 @@ class UserService:
                                   cause="Contraseña inválida")
 
             tokenService = JwtService()
-            tokenResponse = tokenService.get_token()
+            tokenResponse = tokenService.get_token(id_user=user.id, id_branch=0, rol=user.id_user_type, ip=ip)
 
         return tokenResponse

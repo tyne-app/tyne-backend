@@ -6,21 +6,22 @@ import jwt
 class JwtService:
 
     @classmethod
-    def get_token(cls):
+    def get_token(cls, id_user: int, id_branch: int, rol: int, ip: str):
+        key = "secret"
         token = jwt.encode(
             {
-                "id_user": "1",
-                "id_branch": "0",
-                "id_restaurant": "0",
-                "rol": "customer",
-                "ip": "196.168.94.62",
+                "id_user": id_user,
+                "id_branch": id_branch,
+                "rol": rol,
+                "ip": ip,  # TODO: Hay que encriptar la ip.
                 "iss": "https://www.tyneapp.cl",
                 "iat": datetime.now(tz=timezone.utc),
                 "exp": datetime.now(tz=timezone.utc) + timedelta(minutes=30)
             },
-            "PLF34EAgEAMB4563449ALLKDMa23",
+            key,
             algorithm="HS256")
 
         tokenResponse = UserTokenResponse()
         tokenResponse.access_token = token
+
         return tokenResponse
