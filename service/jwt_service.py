@@ -12,8 +12,6 @@ class JwtService:
                 "id_user": "1",
                 "id_branch": "0",
                 "id_restaurant": "0",
-                "name": "",
-                "last_name": "",
                 "rol": "customer",
                 "ip": "196.168.94.62",
                 "iss": "https://www.tyneapp.cl",
