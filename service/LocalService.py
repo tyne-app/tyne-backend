@@ -148,7 +148,7 @@ class LocalService:
         branch_mapper_request = BranchMapperRequest()
         return branch_mapper_request.to_branch_create_response(body=branch_profile)
 
-    def add_new_branch(self, branch_id, new_branch: NewBranch, db: SessionLocal):
+    async def add_new_branch(self, branch_id, new_branch: NewBranch, db: SessionLocal):
         logger.info('branch_id: {}', branch_id)
         local_validator = LocalValidator()
         validated_data = local_validator.validate_new_branch(new_branch=new_branch)
