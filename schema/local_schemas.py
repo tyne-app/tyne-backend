@@ -2,20 +2,7 @@ from typing import Optional, Union
 from pydantic import BaseModel
 
 
-class Owner(BaseModel):
-    name: str
-    last_name: str
-    identifier: str
-    email: str
-    phone: str
 
-
-class Manager(BaseModel):
-    name: str
-    last_name: str
-    email: str
-    phone: str
-    password: str
 
 
 class LegalRepresentative(BaseModel):
@@ -26,22 +13,7 @@ class LegalRepresentative(BaseModel):
     phone: str
 
 
-class Branch(BaseModel):
-    name: str
-    street: str
-    street_number: int
-    state_id: int
-    accept_pet: bool
 
-
-class Restaurant(BaseModel):
-    social_reason: str
-    commercial_activity: str
-    identifier: str
-    street: str
-    street_number: int
-    phone: str
-    state_id: int
 
 
 class BankRestaurant(BaseModel):
@@ -52,13 +24,6 @@ class BankRestaurant(BaseModel):
     bank_id: int
 
 
-class CreateAccount(BaseModel):
-    legal_representative: tuple[Manager, Owner]
-    restaurant: Restaurant
-    branch: Branch
-    bank_restaurant: BankRestaurant
-
-
 class LocalOutput(BaseModel):
     data: Optional[int] = []
     error: Optional[str] = []
@@ -66,8 +31,8 @@ class LocalOutput(BaseModel):
 
 class CreateAccountMSLocal(BaseModel):
     legal_representative: LegalRepresentative
-    branch: Branch
-    restaurant: Restaurant
+   # branch: Branch
+    #restaurant: Restaurant
     bank_restaurant: BankRestaurant
 
 
@@ -130,7 +95,7 @@ class NewBranch(BaseModel):
 
 
 class AddBranch(BaseModel):
-    legal_representative: Manager
+#    legal_representative: Manager
     new_branch: NewBranch
     bank_restaurant: BankRestaurant
 

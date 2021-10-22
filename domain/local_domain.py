@@ -1,3 +1,4 @@
+'''
 from loguru import logger
 
 from dto.dto import GenericDTO as LocalDTO
@@ -255,4 +256,4 @@ def define_response(data):  # TODO:  Crear funcion para crear respuesta estandar
     logger.info("data: {}", data)
     pass
 
-
+'''

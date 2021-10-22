@@ -73,7 +73,7 @@ async def custom_exception_handler(request: Request, exc: CustomError):
 api_local.include_router(bank_controller.bank_controller)
 api_local.include_router(local_controller.local_controller)
 api_local.include_router(menu_controller.menu_controller)
-api_local.include_router(search_controller.search_controller)
+# api_local.include_router(search_controller.search_controller)
 api_local.include_router(territory_controller.territory_controller)
 api_local.include_router(user_controller.user_controller)
 

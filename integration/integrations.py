@@ -24,48 +24,6 @@ MAPBOX_URL = "https://ms-integration-apis.herokuapp.com/v1/mapbox/getLatitudeLon
 load_dotenv()
 
 
-class FirebaseIntegrationApiClient:
-
-    def __init__(self):
-        self.create_account_integration = os.getenv('CREATE_ACCOUNT_INTEGRATION')
-        self.validate_account_integration = os.getenv('VALIDATE_ACCOUNT_INTEGRATION')
-        self.delete_account_integration = os.getenv('DELETE_ACCOUNT_INTEGRATION')
-
-    async def create_account(self, email: str, password: str):
-        async with AsyncClient() as client:
-            credentials = {
-                "email": email,
-                "password": password
-            }
-            try:
-                response = await client.post(url=self.create_account_integration, json=credentials)
-
-                logger.info("response: {}", response)
-                logger.info("response.text: {}", response.text)
-                data = json.loads(response.text)
-                if response.status_code != status.HTTP_200_OK:
-                    logger.error("response.text: {}", response.text)
-                    return None
-
-                return data["data"]["uid"]
-
-            except RequestError as exc:
-                return None
-
-    async def delete_account(self, uid: str):
-        async with AsyncClient() as client:
-            try:
-                delete_account_url = self.delete_account_integration + "/" + uid
-                response = await client.delete(url=delete_account_url)
-                if response.status_code != 200:
-                    logger.error("response.text: {}", response.text)
-                    return None
-                logger.info("response.text: {}", response.text)
-                return True  # TODO: Cambiar parámetro
-            except RequestError as exc:
-                return status.HTTP_500_INTERNAL_SERVER_ERROR
-
-
 class MSLocalClient:
     def __init__(self):
         self.create_account_local = os.getenv('CREATE_ACCOUNT_LOCAL')
@@ -205,67 +163,10 @@ class MSLocalClient:
                 return None
 
 
-class MapBoxIntegrationClient:
-
-    def __init__(self):
-        self.coordinates_url = os.getenv('MAPBOX_URL')
-
-    async def get_latitude_longitude(self, address: str):
-        async with AsyncClient() as client:
-            try:
-                mapbox_url = self.coordinates_url + "/" + address
-                logger.info("mapbox_url: {}", mapbox_url)
-
-                response = await client.get(url=mapbox_url)
-                logger.info("response: {}", response)
-                logger.info("response.text: {}", response.text)
-
-                if response.status_code != status.HTTP_200_OK:
-                    logger.error("response: {}", response)
-                    logger.error("response.text: {}", response.text)
-                    return None
-                data = json.loads(response.text)
-                logger.info("data: {}", data)
-
-                if 'data' not in data:
-                    return None
-
-                return data["data"]
-            except RequestError as exc:
-                # TODO: Agregar logger
-                print(exc)
-                print(exc.args)
-                return None
 
 
-class MSIntegrationApi:
 
-    def __init__(self):
-        self.validate_token_url = os.getenv('VALIDATE_TOKEN_URL')
-        self.login_url = ''
-        self.token_data_url = os.getenv('TOKEN_DATA_URL')
-
-    async def validate_token(self, client_token: str):
-        async with AsyncClient() as client:
-            try:
-                authorization_header = {'Authorization': client_token}
-                response = await client.post(headers=authorization_header, url=self.validate_token_url)
-
-                if response.status_code != status.HTTP_200_OK:  # TODO: Mejorar manejo respuesta
-                    logger.error('response: {}', response)
-                    logger.error('response.text: {}', response.text)
-
-                logger.info('response: {}', response)
-                logger.info('response.text: {}', response.text)
-
-                return response
-            except RequestError as exc:
-                print(exc)
-                print(exc.args)
-                return None
-
-
-class MSBackboneMenu:
+class MSBackboneMenu:  # TODO: Eliminar clase
 
     def __init__(self):
         self.get_menu_url = os.getenv('GET_BRANCH_MENU')

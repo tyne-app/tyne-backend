@@ -6,6 +6,7 @@ from loguru import logger
 from configuration.openapi.search_openapi import SearchAllBranchOpenAPI, SearchAllBranchByClientOpenAPI
 from domain.search_domain import search_all_branch, search_branch_profile
 from schema.search_schema import PreviewBranchOutput, PreviewBranchOutputClient, BranchProfileOutput
+'''
 from validator.integration_validator import validate_token
 
 search_controller = APIRouter(
@@ -108,3 +109,4 @@ async def read_branch_profile(request: Request, response: Response, branch_id: i
         data['data']['price'] = 0
 
     return data
+'''''
