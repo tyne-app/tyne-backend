@@ -1,7 +1,7 @@
 import re
 from loguru import logger
-from schema.local_schemas import AddBranch, NewBranch
-from dto.request.local_request_dto import NewAccount, Branch, Restaurant, LegalRepresentative, Manager, BranchBank
+from dto.request.local_request_dto import NewAccount, Branch, Restaurant, LegalRepresentative, Manager, BranchBank,\
+    NewBranch
 
 
 class LocalValidator:
@@ -148,21 +148,19 @@ class LocalValidator:
             invalid_data["accept_pet"] = self.INVALID_DATA_MESSAGE
         return invalid_data
 
-    def validate_new_branch(self, new_branch: AddBranch):
+    def validate_new_branch(self, new_branch: NewBranch):
         logger.info('new_branch: {}', new_branch)
 
         data_checked = {}
 
-        manager_checked = self.validate_manager(Manager(**new_branch.legal_representative.dict()))
+        manager_checked = self.validate_manager(manager=new_branch.manager)
         if bool(manager_checked):
-            data_checked["legal_representative"] = manager_checked
-
-        branch_checked = self.validate_second_branch(new_branch.new_branch)
+            data_checked["manager"] = manager_checked
+        branch_checked = self.validate_second_branch(new_branch=new_branch.new_branch)
         if bool(branch_checked):
             data_checked["new_branch"] = branch_checked
-
-        bank_restaurant_checked = self.validate_bank_restaurant(new_branch.bank_restaurant)
-        if bool(bank_restaurant_checked):
-            data_checked["bank_restaurant"] = bank_restaurant_checked
+        branch_bank_checked = self.validate_branch_bank(branch_bank=new_branch.branch_bank)
+        if bool(branch_bank_checked):
+            data_checked["branch_bank"] = branch_bank_checked
 
         return data_checked

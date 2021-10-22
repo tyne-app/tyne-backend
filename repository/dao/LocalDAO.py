@@ -1,6 +1,7 @@
 from loguru import logger
 from datetime import datetime
 import pytz
+from dto.request.local_request_dto import NewBranch
 from repository.entity.ManagerEntity import ManagerEntity
 from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
 from repository.entity.RestaurantEntity import RestaurantEntity
@@ -22,7 +23,7 @@ class LocalDAO:
                          branch_bank_entity: BranchBankEntity,
                          db: SessionLocal):
 
-        logger.info('New manager_entity: {}, legal_representative_entity: {},'
+        logger.info('manager_entity: {}, legal_representative_entity: {},'
                     ' restaurant_entity: {}, branch_entity: {}, branch_bank_entity: {}',
                     manager_entity, legal_representative_entity, restaurant_entity, branch_entity, branch_bank_entity)
 
@@ -48,7 +49,6 @@ class LocalDAO:
             branch_entity.branch_bank_id = branch_bank_entity.id
             branch_entity.manager_id = manager_entity.id
             db.add(branch_entity)
-            db.flush()
             db.commit()
             return True
         except Exception as error:
@@ -115,40 +115,39 @@ class LocalDAO:
 
             return error.args[0]
 
-    '''
-    def add_branch(new_branch: AddBranch, db: Session):
-        logger.info('new_branch: {}', dict(new_branch))
+    def add_new_branch(self,
+                       branch_id: int,
+                       manager_entity: ManagerEntity,
+                       branch_entity: BranchEntity,
+                       branch_bank_entity: BranchBankEntity,
+                       db: SessionLocal):
+        logger.info('branch_id: {}, manager_entity: {}, branch_entity: {}, branch_bank_entity: {}',
+                    branch_id, manager_entity, branch_entity, branch_bank_entity)
         try:
             db.begin()
 
-            restaurant_id = db.query(Branch.restaurant_id).select_from(Branch).filter(
-                Branch.id == new_branch.branch_id).first()
-
-            legal_representative = LegalRepresentative(**new_branch.legal_representative.dict())
-            db.add(legal_representative)
+            db.add(manager_entity)
             db.flush()
 
-            bank_restaurant = BankRestaurant(**new_branch.bank_restaurant.dict())
-            db.add(bank_restaurant)
+            restaurant_entity_id = db.query(BranchEntity.restaurant_id).select_from(BranchEntity).\
+                filter(BranchEntity.id == branch_id).first()
+
+            db.add(branch_bank_entity)
             db.flush()
 
-            branch = Branch(**new_branch.new_branch.dict())
-            branch.legal_representative_id = legal_representative.id
-            branch.restaurant_id = restaurant_id["restaurant_id"]
-            branch.bank_restaurant_id = bank_restaurant.id
-            branch.state = True
-            db.add(branch)
-            db.flush()
+            branch_entity.restaurant_id = restaurant_entity_id
+            branch_entity.manager_id = manager_entity.id
+            db.add(branch_entity)
             db.commit()
-            branch_id = branch.id
             db.close()
-            return branch_id
+            return True
         except Exception as error:
             logger.error('error: {}', error)
             logger.error('error.args: {}', error.args)
             db.close()
             return error.args[0]
 
+    '''
     def update_account(email: str, db: Session, branch_values):
         try:
             # TODO: Saber bien cuales y cómo viene los campos a editar

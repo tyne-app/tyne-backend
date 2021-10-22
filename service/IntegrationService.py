@@ -43,3 +43,33 @@ class IntegrationService:
                                   detail=error.args[0],
                                   status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                   cause="No se puede validar token")  # TODO: Llenar campo
+
+    async def token_data(self, token: str):
+        async with AsyncClient() as client:
+            try:
+                authorization_header = {'Authorization': token}
+                response = await client.get(headers=authorization_header, url=self.token_data_url)
+
+                data = json.loads(response.text)
+
+                if response.status_code != status.HTTP_200_OK:
+                    logger.error('response: {}', response)
+                    logger.error('response.text: {}', response.text)
+                    raise CustomError(name="Error conexión con ms integración",
+                                      detail=data['error'],
+                                      status_code=response.status_code,
+                                      cause="No se puede obtener data del token")  # TODO: Llenar campo
+
+                logger.info('response: {}', response)
+                logger.info('response.text: {}', response.text)
+                logger.info("data: {}", data)
+
+                branch_id = int(data["data"]["id"])
+                return branch_id
+            except RequestError as error:
+                logger.error('error: {}', error)
+                logger.error('error.args: {}', error.args)
+                raise CustomError(name="Error conexión con ms integración",
+                                  detail=error.args[0],
+                                  status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                  cause="")  # TODO: Llenar campo

@@ -20,12 +20,12 @@ local_controller = APIRouter(
 @local_controller.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_account(new_account: NewAccount, db: SessionLocal = Depends(get_data_base)):
     logger.info("new_account: {}", new_account)
-
     local_service = LocalService()
     account_created = await local_service.create_new_account(new_account=new_account, db=db)
 
     return account_created
 
+# TODO: ELIMINAR
 # TODO: para esa ruta, es necesario los datos pre-login?
 @local_controller.get('/pre-login/{email}', status_code=status.HTTP_200_OK) # TODO: response_model=BranchProfilePreLoginOutput
 def read_account_pre_login(request: Request, response: Response,
@@ -69,8 +69,10 @@ async def add_branch(request: Request, response: Response,
     integration_service = IntegrationService()
     await integration_service.validate_token(token=token)
 
+    branch_id = await integration_service.token_data(token=token)
+
     local_service = LocalService()
-    branch_profile = local_service.add_new_branch(token=token, db=db)
+    branch_profile = local_service.add_new_branch(branch_id=branch_id, db=db)
     return branch_profile
 
     data = await add_new_branch(new_branch=new_branch, client_token=token)
