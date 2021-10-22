@@ -1,5 +1,7 @@
+from fastapi import status
 import re
 from loguru import logger
+from exception.exceptions import CustomError
 from dto.request.local_request_dto import NewAccount, Branch, Restaurant, LegalRepresentative, Manager, BranchBank,\
     NewBranch
 
@@ -20,6 +22,8 @@ class LocalValidator:
 
         if not re.fullmatch(self.EMAIL_REGEX, email):
             data_checked["email"] = self.INVALID_DATA_MESSAGE
+            logger.error("data_checked: {}", data_checked)
+            self.raise_custom_error(message=data_checked)
 
         return data_checked
 
@@ -45,6 +49,10 @@ class LocalValidator:
         branch_bank_checked = self.validate_branch_bank(branch_bank=new_account.branch_bank)
         if bool(branch_bank_checked):
             data_checked["branch_bank_checked"] = branch_bank_checked
+
+        if data_checked:
+            logger.error("data_checked: {}", data_checked)
+            self.raise_custom_error(message=data_checked)
 
         return data_checked
 
@@ -163,4 +171,14 @@ class LocalValidator:
         if bool(branch_bank_checked):
             data_checked["branch_bank"] = branch_bank_checked
 
+        if data_checked:
+            logger.error("data_checked: {}", data_checked)
+            self.raise_custom_error(message=data_checked)
+
         return data_checked
+
+    def raise_custom_error(self, message):
+        raise CustomError(name="Error al validar los datos de entrada",
+                          detail=message,
+                          status_code=status.HTTP_400_BAD_REQUEST,
+                          cause="")  # TODO: Llenar campo

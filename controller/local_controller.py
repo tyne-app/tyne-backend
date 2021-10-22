@@ -74,10 +74,3 @@ async def add_branch(request: Request, response: Response,
     local_service = LocalService()
     branch_profile = local_service.add_new_branch(branch_id=branch_id, db=db)
     return branch_profile
-
-    data = await add_new_branch(new_branch=new_branch, client_token=token)
-
-    if 'data' not in data:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-
-    return data

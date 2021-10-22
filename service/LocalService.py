@@ -2,20 +2,11 @@ from loguru import logger
 from dto.request.local_request_dto import NewAccount, NewBranch
 from validator.LocalValidator import LocalValidator
 from exception.exceptions import CustomError
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import status
 from service.MapboxService import MapBoxService
 from service.FirebaseService import FirebaseService
 from repository.dao.LocalDAO import LocalDAO
-from mappers.request.BranchBankMapperRequest import BranchBankMapperRequest
-from mappers.request.ManagerMapperRequest import ManagerMapperRequest
-from mappers.request.LegalRepresentativeMapperRequest import LegalRepresentativeMapperRequest
-from mappers.request.RestaurantMapperRequest import RestaurantMapperRequest
 from mappers.request.BranchMapperRequest import BranchMapperRequest
-from repository.entity.ManagerEntity import ManagerEntity
-from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
-from repository.entity.RestaurantEntity import RestaurantEntity
-from repository.entity.BranchEntity import BranchEntity
-from repository.entity.BranchBankEntity import BranchBankEntity
 from configuration.database.database import SessionLocal
 
 
@@ -31,11 +22,7 @@ class LocalService:
         logger.info('new_account: {}', new_account)
 
         local_validator = LocalValidator()
-        validated_data = local_validator.validate_new_account(new_account=new_account)
-
-        if validated_data:
-            logger.error("validated_data: {}", validated_data)
-            self.raise_custom_error(message=validated_data)
+        local_validator.validate_new_account(new_account=new_account)
 
         branch = new_account.branch
         logger.info('branch: {}', branch)
@@ -47,28 +34,20 @@ class LocalService:
         uid = await self.create_credentials(email=manager.email, password=manager.password)
         logger.info('uid: {}', uid)
 
-        # TODO: Migrar funciones a DTO request.
-        manager_mapper_request = ManagerMapperRequest()
-        manager_entity = manager_mapper_request.to_manager_entity(manager=manager)
+        manager_entity = new_account.to_manager_entity(manager=manager)
 
         legal_representative = new_account.legal_representative
-        legal_representative_mapper_request = LegalRepresentativeMapperRequest()
-        legal_representative_entity = legal_representative_mapper_request. \
+        legal_representative_entity = new_account.\
             to_legal_representative_entity(legal_representative=legal_representative)
 
         restaurant = new_account.restaurant
-        restaurant_mapper_request = RestaurantMapperRequest()
-        restaurant_entity = restaurant_mapper_request.to_restaurant_entity(restaurant=restaurant, name=branch.name)
+        restaurant_entity = new_account.to_restaurant_entity(restaurant=restaurant, name=branch.name)
 
-        branch_mapper_request = BranchMapperRequest()
-        branch_entity = branch_mapper_request.to_branch_entity(branch=branch, branch_geocoding=branch_geocoding,
+        branch_entity = new_account.to_branch_entity(branch=branch, branch_geocoding=branch_geocoding,
                                                                uid=uid)
 
         branch_bank = new_account.branch_bank
-        branch_bank_mapper_request = BranchBankMapperRequest()
-        branch_bank_entity = branch_bank_mapper_request.to_branch_bank_entity(branch_bank=branch_bank)
-
-        # TODO: Definir cómo manejar respuesta
+        branch_bank_entity = new_account.to_branch_bank_entity(branch_bank=branch_bank)
 
         local_dao = LocalDAO()
         branch_entity_status = local_dao.register_account(manager_entity=manager_entity,
@@ -85,7 +64,7 @@ class LocalService:
             branch_entity_status_parsed = self.parse_error_response_database(message=branch_entity_status)
             self.raise_custom_error(message=branch_entity_status_parsed)
 
-        return branch_mapper_request.to_branch_create_response()
+        return new_account.to_branch_create_response()
 
     async def geocoding(self, street: str, street_number: int):
         logger.info('street: {}, street_number: {}', street, street_number)
@@ -132,11 +111,7 @@ class LocalService:
     def get_account_profile(self, email: str, db: SessionLocal):
         logger.info('email: {}', email)
         local_validator = LocalValidator()
-        validated_email = local_validator.validate_email(email=email)
-
-        if validated_email:  # TODO: Refactorizar
-            logger.error("validated_data: {}", validated_email)
-            self.raise_custom_error(message=validated_email)
+        local_validator.validate_email(email=email)
 
         local_dao = LocalDAO()
         branch_profile = local_dao.get_account_profile(email=email, db=db)
@@ -148,14 +123,10 @@ class LocalService:
         branch_mapper_request = BranchMapperRequest()
         return branch_mapper_request.to_branch_create_response(body=branch_profile)
 
-    def add_new_branch(self, branch_id, new_branch: NewBranch, db: SessionLocal):
+    async def add_new_branch(self, branch_id, new_branch: NewBranch, db: SessionLocal):
         logger.info('branch_id: {}', branch_id)
         local_validator = LocalValidator()
-        validated_data = local_validator.validate_new_branch(new_branch=new_branch)
-
-        if validated_data:
-            logger.error("validated_data: {}", validated_data)
-            self.raise_custom_error(message=validated_data)
+        local_validator.validate_new_branch(new_branch=new_branch)
 
         branch = new_branch.branch
         logger.info('branch: {}', branch)
@@ -167,18 +138,13 @@ class LocalService:
         uid = await self.create_credentials(email=manager.email, password=manager.password)
         logger.info('uid: {}', uid)
 
-        # TODO: Mapear objetos dentro de NewBranch y pasar a persistirlos.
+        manager_entity = new_branch.to_manager_entity(manager=manager)
 
-        manager_mapper_request = ManagerMapperRequest()
-        manager_entity = manager_mapper_request.to_manager_entity(manager=manager)
-
-        branch_mapper_request = BranchMapperRequest()
-        branch_entity = branch_mapper_request.to_branch_entity(branch=branch, branch_geocoding=branch_geocoding,
-                                                               uid=uid)
-
+        branch_entity = new_branch.to_branch_entity(branch=branch,
+                                                    branch_geocoding=branch_geocoding,
+                                                    uid=uid)
         branch_bank = new_branch.branch_bank
-        branch_bank_mapper_request = BranchBankMapperRequest()
-        branch_bank_entity = branch_bank_mapper_request.to_branch_bank_entity(branch_bank=branch_bank)
+        branch_bank_entity = new_branch.to_branch_bank_entity(branch_bank=branch_bank)
 
         local_dao = LocalDAO()
         new_branch_status = local_dao.add_new_branch(branch_id=branch_id,
@@ -193,6 +159,8 @@ class LocalService:
             await self.delete_credentials(uid=uid)
             new_branch_status_parsed = self.parse_error_response_database(message=new_branch_status)
             self.raise_custom_error(message=new_branch_status_parsed)
+
+        return new_branch.to_branch_create_response()
 
     def raise_custom_error(self, message):
         raise CustomError(name="Error al registrar cuenta de local",
