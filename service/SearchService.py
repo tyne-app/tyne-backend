@@ -3,6 +3,7 @@ from validator.SearchValidator import SearchValidator
 from repository.dao.SearchDAO import SearchDAO
 from configuration.database.database import SessionLocal
 
+
 class SearchService:
     SORT_BY = {1: "rating", 2: "name", 3: "price"}
     ORDER_BY = {1: "asc", 2: "desc"}
@@ -183,5 +184,3 @@ class SearchService:
             local_dto.error = data
 
         return local_dto.__dict__
-
-
