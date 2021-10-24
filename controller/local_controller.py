@@ -1,7 +1,7 @@
 from fastapi import status, APIRouter, Response, Request
 from fastapi.params import Depends
 from fastapi_utils.cbv import cbv
-from fastapi_utils.inferring_router import InferringRouter
+from fastapi_utils.inferring_router import InferringRouter  # TODO: Eliminar paquete, no funciona por alguna razón
 from loguru import logger
 from configuration.database.database import SessionLocal, get_data_base
 from service.LocalService import LocalService
@@ -13,8 +13,7 @@ local_controller = APIRouter(
     tags=["Local"]
 )
 
-# TODO: Pasar a clase todas las rutas
-# TODO: Validar schemas!!
+# TODO: Ver si el metodo __call__ se puede ocupar en alguna parte, esta funcion se activa cuando se llama a la instancia de la clase
 
 
 @local_controller.post("/register", status_code=status.HTTP_201_CREATED)
@@ -37,7 +36,7 @@ def read_account_pre_login(request: Request, response: Response,
 
     return account_pre_login
 
-# TODO: Para esta ruta, qué datos necesito retornar exactmente?
+# TODO: Remover email, dejar /login estatico y extraer id_branch del token junto con su validación
 @local_controller.get('/{email}', status_code=status.HTTP_200_OK)  # TODO: response_model=BranchProfileLoginOutput
 async def read_account(request: Request, response: Response, email: str, db: SessionLocal = Depends(get_data_base)):
     logger.info('email: {}', email)

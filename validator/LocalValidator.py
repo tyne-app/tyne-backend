@@ -25,8 +25,6 @@ class LocalValidator:
             logger.error("data_checked: {}", data_checked)
             self.raise_custom_error(message=data_checked)
 
-        return data_checked
-
     def validate_new_account(self, new_account: NewAccount):
         data_checked = {}
 
@@ -53,8 +51,6 @@ class LocalValidator:
         if data_checked:
             logger.error("data_checked: {}", data_checked)
             self.raise_custom_error(message=data_checked)
-
-        return data_checked
 
     def validate_manager(self, manager: Manager):
         logger.info('manager: {}', manager)
@@ -174,8 +170,6 @@ class LocalValidator:
         if data_checked:
             logger.error("data_checked: {}", data_checked)
             self.raise_custom_error(message=data_checked)
-
-        return data_checked
 
     def raise_custom_error(self, message):
         raise CustomError(name="Error al validar los datos de entrada",
