@@ -11,6 +11,7 @@ from repository.entity.ScheduleEntity import ScheduleEntity
 from repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from exception.exceptions import CustomError
 from configuration.database.database import SessionLocal, get_data_base
+from repository.entity.UserEntity import UserEntity
 
 
 class LocalDAO:
@@ -101,7 +102,7 @@ class LocalDAO:
                 return None
 
             schedule_entity_list = db.query(ScheduleEntity).join(BranchScheduleEntity,
-                                                                 BranchScheduleEntity.schedule_id == ScheduleEntity.id)\
+                                                                 BranchScheduleEntity.schedule_id == ScheduleEntity.id) \
                 .join(BranchEntity, BranchEntity.id == BranchScheduleEntity.branch_id) \
                 .filter(BranchEntity.manager_id == manager_entity.id).all()
 
@@ -129,7 +130,7 @@ class LocalDAO:
             db.add(manager_entity)
             db.flush()
 
-            restaurant_entity_id = db.query(BranchEntity.restaurant_id).select_from(BranchEntity).\
+            restaurant_entity_id = db.query(BranchEntity.restaurant_id).select_from(BranchEntity). \
                 filter(BranchEntity.id == branch_id).first()
 
             db.add(branch_bank_entity)
@@ -146,6 +147,17 @@ class LocalDAO:
             logger.error('error.args: {}', error.args)
             db.close()
             return error.args[0]
+
+    def find_branch_by_email_user_manager(self, email: str, db: SessionLocal):
+        try:
+            branch = db.query(BranchEntity). \
+                select_from(BranchEntity). \
+                join(ManagerEntity, BranchEntity.manager_id == ManagerEntity.id). \
+                join(UserEntity, ManagerEntity.id_user == UserEntity.id). \
+                filter(UserEntity.email == email).first()
+            return branch
+        except Exception as error:
+            raise error
 
     '''
     def update_account(email: str, db: Session, branch_values):
