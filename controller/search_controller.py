@@ -12,6 +12,10 @@ search_controller = APIRouter(
     tags=["Search"]
 )
 
+# TODO: Crear un dto general en response para crear respuesta y retornarla, discutir con gente en qué paquete debe ir bien.
+# TODO: Próxima semana se discute busqueda de locales, por sucursal o casa matriz!
+
+# TODO: Avanzr en obtene rel perfil local perspectiva cliente por ahora.
 
 @search_controller.get(
     '/all-branches', status_code=status.HTTP_200_OK,

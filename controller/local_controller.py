@@ -5,15 +5,19 @@ from fastapi_utils.inferring_router import InferringRouter  # TODO: Eliminar paq
 from loguru import logger
 from configuration.database.database import SessionLocal, get_data_base
 from service.LocalService import LocalService
-from service.IntegrationService import IntegrationService
 from dto.request.local_request_dto import NewAccount, NewBranch
+from service.JwtService import JwtService
 
 local_controller = APIRouter(
     prefix="/v1/locals",
     tags=["Local"]
 )
 
-# TODO: Ver si el metodo __call__ se puede ocupar en alguna parte, esta funcion se activa cuando se llama a la instancia de la clase
+@local_controller.get('/token')  # TODO: ENdpoint test, se elimina al final.
+def get_token():
+    jwt_service = JwtService()
+    jwt = jwt_service.get_token(id_user=1, id_branch_client=2, rol=1, ip='ip-test')
+    return jwt
 
 
 @local_controller.post("/register", status_code=status.HTTP_201_CREATED)
@@ -24,34 +28,21 @@ async def register_account(new_account: NewAccount, db: SessionLocal = Depends(g
 
     return account_created
 
-# TODO: ELIMINAR
-# TODO: para esa ruta, es necesario los datos pre-login?
-@local_controller.get('/pre-login/{email}', status_code=status.HTTP_200_OK) # TODO: response_model=BranchProfilePreLoginOutput
-def read_account_pre_login(request: Request, response: Response,
-                                 email: str, db: SessionLocal = Depends(get_data_base)):
-    logger.info('email: {}', email)
 
-    local_service = LocalService()
-    account_pre_login = local_service.get_account_pre_login(email=email, db=db)
-
-    return account_pre_login
-
-# TODO: Remover email, dejar /login estatico y extraer id_branch del token junto con su validación
-@local_controller.get('/{email}', status_code=status.HTTP_200_OK)  # TODO: response_model=BranchProfileLoginOutput
-async def read_account(request: Request, response: Response, email: str, db: SessionLocal = Depends(get_data_base)):
-    logger.info('email: {}', email)
-    #TODO: Falta probar con token validar
+@local_controller.get('/login', status_code=status.HTTP_200_OK)  # TODO: response_model=BranchProfileLoginOutput
+async def read_account(request: Request, response: Response, db: SessionLocal = Depends(get_data_base)):
+    logger.info('login')
 
     if 'authorization' not in request.headers:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {'error': 'Usuario no autorizado'}
 
     token = request.headers['authorization']
-    integration_service = IntegrationService()
-    await integration_service.validate_token(token=token)
+    jwt_service = JwtService()
+    branch_id = jwt_service.verify_and_get_token_data(token=token)
 
     local_service = LocalService()
-    branch_profile = local_service.get_account_profile(email=email, db=db)
+    branch_profile = local_service.get_account_profile(branch_id=branch_id, db=db)
     return branch_profile
 
 
@@ -65,10 +56,9 @@ async def add_branch(request: Request, response: Response,
         return {'error': 'Usuario no autorizado'}
 
     token = request.headers['authorization']
-    integration_service = IntegrationService()
-    await integration_service.validate_token(token=token)
 
-    branch_id = await integration_service.token_data(token=token)
+    jwt_service = JwtService()
+    branch_id = jwt_service.verify_and_get_token_data(token=token)
 
     local_service = LocalService()
     branch_profile = local_service.add_new_branch(branch_id=branch_id, db=db)

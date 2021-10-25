@@ -14,8 +14,6 @@ class BranchEntity(Base):
     street = Column(String(100))
     longitude = Column(DECIMAL)
     latitude = Column(DECIMAL)
-    uid = Column(String(250))
-    is_active = Column(Boolean)
     street_number = Column(Integer)
 
     manager_id = Column(Integer, ForeignKey('tyne.manager.id'))

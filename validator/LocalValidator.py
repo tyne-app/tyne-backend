@@ -15,16 +15,6 @@ class LocalValidator:
     EMAIL_REGEX = re.compile(r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.?[A-Za-z]+")
     INVALID_DATA_MESSAGE = "Formato no válido"
 
-    def validate_email(self, email: str):
-        logger.info("email: {}", email)
-
-        data_checked = {}
-
-        if not re.fullmatch(self.EMAIL_REGEX, email):
-            data_checked["email"] = self.INVALID_DATA_MESSAGE
-            logger.error("data_checked: {}", data_checked)
-            self.raise_custom_error(message=data_checked)
-
     def validate_new_account(self, new_account: NewAccount):
         data_checked = {}
 

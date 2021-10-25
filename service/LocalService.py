@@ -6,17 +6,21 @@ from fastapi import status
 from service.MapboxService import MapBoxService
 from service.FirebaseService import FirebaseService
 from repository.dao.LocalDAO import LocalDAO
-from mappers.request.BranchMapperRequest import BranchMapperRequest
+from dto.request.local_request_dto import ParserDTO
 from configuration.database.database import SessionLocal
 
 
 class LocalService:
+    MSG_CREATE_ACCOUNT_SUCCESSFULLY = "Local creado correctamente"
     MSG_ERROR_BRANCH_ADDRESS = "Dirección de local no válida"
     LEGAL_REPRESENTATIVE_KEY_WORD = 'legal_representative_identifier_key'
     LEGAL_REPRESENTATIVE_ERROR_MESSAGE = 'Rut representante legal ya está registrado'
     RESTAURANT_KEY_WORD = 'restaurant_identifier_key'
     RESTAURANT_ERROR_MESSAGE = 'Rut restaurant ya está registrado'
     STANDARD_ERROR_MESSAGE = 'Error en base de datos'
+    CREATE_ACCOUNT_ERROR_MSG = 'Error al registrar cuenta de local'
+    GET_PROFILE_ERROR_MSG = 'Error al obtener perfil sucursal'
+    parser_dto = ParserDTO()
 
     async def create_new_account(self, new_account: NewAccount, db: SessionLocal):
         logger.info('new_account: {}', new_account)
@@ -62,9 +66,9 @@ class LocalService:
         if type(branch_entity_status) is str:
             await self.delete_credentials(uid=uid)
             branch_entity_status_parsed = self.parse_error_response_database(message=branch_entity_status)
-            self.raise_custom_error(message=branch_entity_status_parsed)
+            self.raise_custom_error(name=self.CREATE_ACCOUNT_ERROR_MSG, message=branch_entity_status_parsed)
 
-        return new_account.to_branch_create_response()
+        return new_account.to_branch_create_response(content=self.MSG_CREATE_ACCOUNT_SUCCESSFULLY)
 
     async def geocoding(self, street: str, street_number: int):
         logger.info('street: {}, street_number: {}', street, street_number)
@@ -89,39 +93,17 @@ class LocalService:
         await firebase_service.delete_account(uid=uid)
         pass
 
-    def get_account_pre_login(self, email: str, db: SessionLocal):
-        logger.info('email: {}', email)
-        local_validator = LocalValidator()
-        validated_email = local_validator.validate_email(email=email)  # TODO: Refactorizar
-
-        if validated_email:
-            logger.error("validated_data: {}", validated_email)
-            self.raise_custom_error(message=validated_email)
+    def get_account_profile(self, branch_id: int, db: SessionLocal):
+        logger.info('branch_id: {}', branch_id)
 
         local_dao = LocalDAO()
-        account_pre_login = local_dao.get_account_pre_login(email=email, db=db)
+        branch_profile = local_dao.get_account_profile(branch_id=branch_id, db=db)
+        # TODO: En algún lugar manejar status 204 si no hay contenido.
+        if type(branch_profile) is str:
+            logger.error("branch_profile: {}", branch_profile)
+            self.raise_custom_error(name=self.GET_PROFILE_ERROR_MSG, message=branch_profile)
 
-        if type(account_pre_login) is str or not account_pre_login:
-            logger.error("account_pre_login: {}", account_pre_login)
-            self.raise_custom_error(message=account_pre_login)
-
-        branch_mapper_request = BranchMapperRequest()
-        return branch_mapper_request.to_branch_create_response(body=account_pre_login)
-
-    def get_account_profile(self, email: str, db: SessionLocal):
-        logger.info('email: {}', email)
-        local_validator = LocalValidator()
-        local_validator.validate_email(email=email)
-
-        local_dao = LocalDAO()
-        branch_profile = local_dao.get_account_profile(email=email, db=db)
-
-        if type(branch_profile) is str or not branch_profile:
-            logger.error("account_pre_login: {}", branch_profile)
-            self.raise_custom_error(message=branch_profile)
-
-        branch_mapper_request = BranchMapperRequest()
-        return branch_mapper_request.to_branch_create_response(body=branch_profile)
+        return self.parser_dto.to_branch_create_response(content=branch_profile)
 
     async def add_new_branch(self, branch_id, new_branch: NewBranch, db: SessionLocal):
         logger.info('branch_id: {}', branch_id)
@@ -162,8 +144,8 @@ class LocalService:
 
         return new_branch.to_branch_create_response()
 
-    def raise_custom_error(self, message):
-        raise CustomError(name="Error al registrar cuenta de local",
+    def raise_custom_error(self, name: str, message: str):
+        raise CustomError(name=name,
                           detail=message,
                           status_code=status.HTTP_400_BAD_REQUEST if message else status.HTTP_204_NO_CONTENT,
                           cause="")  # TODO: Llenar campo

@@ -10,7 +10,7 @@ from repository.dao.user_dao import UserDao
 from repository.entity.BranchEntity import BranchEntity
 from repository.entity.ClientEntity import ClientEntity
 from repository.entity.UserEntity import UserEntity
-from service.jwt_service import JwtService
+from service.JwtService import JwtService
 
 
 class UserService:

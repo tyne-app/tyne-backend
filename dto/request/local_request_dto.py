@@ -86,13 +86,9 @@ class ParserDTO:
         branch_bank_entity = BranchBankEntity(**branch_bank.dict())
         return branch_bank_entity
 
-    def to_branch_create_response(self, body=None):
+    def to_branch_create_response(self, content: any):
         response = wrapperDTO()
-        if not body:
-            response.data = [{"message": "Local creado correctamente"}]
-        else:
-            response.data = [{'message': body}]
-
+        response.data = [{'message': content}]
         return response.__dict__
 
 

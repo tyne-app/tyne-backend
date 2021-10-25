@@ -1,5 +1,7 @@
-class SearchDAO:
 
+class SearchDAO:
+    pass
+    '''
     def search_local(raw_query: str, db: Session):
         try:
             all_branch = db.execute(raw_query)
@@ -84,3 +86,4 @@ class SearchDAO:
             logger.error('error: {}', error)
             logger.error('error.args: {}', error.args)
             return error.args[0]
+'''
