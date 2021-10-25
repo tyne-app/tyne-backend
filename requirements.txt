@@ -40,3 +40,5 @@ watchgod==0.7
 websockets==9.1
 win32-setctime==1.0.3
 pyjwt
+cloudinary
+python-multipart
