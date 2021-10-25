@@ -72,7 +72,8 @@ class UserService:
         user = cls._user_dao_.update_profile_image(user_id=user_id, url_image=response.metadata["secure_url"],
                                                    image_id=response.metadata["public_id"], db=db)
 
-        response_dto = UpdateProfileImageDto(url=user.image_url)
+        response_dto = UpdateProfileImageDto()
+        response_dto.url = user.image_url
         return response_dto
 
     @classmethod
