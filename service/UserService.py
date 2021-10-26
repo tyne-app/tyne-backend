@@ -27,6 +27,8 @@ class UserService:
     def login_user(cls, loginRequest: LoginUserRequest, ip: str, db: Session):
 
         id_branch_client = None
+        name = None
+        last_name = None
         loginRequest.validate_fields()
 
         tokenResponse: UserTokenResponse = None
@@ -49,10 +51,14 @@ class UserService:
                 branch: BranchEntity = cls._localDao_.find_branch_by_email_user_manager(email=loginRequest.email, db=db)
                 if branch is not None:
                     id_branch_client = branch.id
+                    name = branch.manager.name
+                    last_name = branch.manager.last_name
             else:
                 client: ClientEntity = cls._clientDao_.find_client_by_email_user(email=loginRequest.email, db=db)
                 if client is not None:
                     id_branch_client = client.id
+                    name = client.name
+                    last_name = client.last_name
                 pass
 
             if id_branch_client is None:
@@ -62,7 +68,7 @@ class UserService:
                                   cause="Usuario no existe")
 
             tokenResponse = cls._tokenService_.get_token(id_user=user.id, id_branch_client=id_branch_client,
-                                                         rol=user.id_user_type, ip=ip)
+                                                         rol=user.id_user_type, ip=ip, name=name, last_name=last_name)
 
         return tokenResponse
 
