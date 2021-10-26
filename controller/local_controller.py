@@ -13,12 +13,6 @@ local_controller = APIRouter(
     tags=["Local"]
 )
 
-@local_controller.get('/token')  # TODO: ENdpoint test, se elimina al final.
-def get_token():
-    jwt_service = JwtService()
-    jwt = jwt_service.get_token(id_user=1, id_branch_client=23, rol=1, ip='ip-test')
-    return jwt
-
 
 @local_controller.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_account(new_account: NewAccount, db: SessionLocal = Depends(get_data_base)):
@@ -29,7 +23,7 @@ async def register_account(new_account: NewAccount, db: SessionLocal = Depends(g
     return account_created
 
 
-@local_controller.get('/login', status_code=status.HTTP_200_OK)  # TODO: response_model=BranchProfileLoginOutput
+@local_controller.get('/', status_code=status.HTTP_200_OK)  # TODO: response_model=BranchProfileLoginOutput
 async def read_account(request: Request, response: Response, db: SessionLocal = Depends(get_data_base)):
     logger.info('login')
 
