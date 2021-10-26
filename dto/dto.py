@@ -4,5 +4,5 @@ T = TypeVar('T')
 
 
 class GenericDTO:
-    data: Generic[T]
-    error: Generic[T]
+    data: Generic[T] = None
+    error: Generic[T] = None

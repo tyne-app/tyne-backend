@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Integer, String, Text, Float, ForeignKey
-from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
 
@@ -19,9 +18,6 @@ class ProductEntity(Base):
     # FK
     category_id = Column(Integer, ForeignKey('tyne.category.id'))
     branch_id = Column(Integer, ForeignKey('tyne.branch.id'))
-
-    category = relationship("CategoryEntity", back_populates='product_category')
-    branch = relationship("BranchEntity", back_populates='product_branch')
 
     def __init__(self, id, category_id, name, description, url_image, amount, commission_tyne, branch_id):
         self.id = id

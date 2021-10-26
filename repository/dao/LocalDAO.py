@@ -1,7 +1,6 @@
 from loguru import logger
-from datetime import datetime
+from datetime import datetime, timezone
 import pytz
-from dto.request.local_request_dto import NewBranch
 from repository.entity.ManagerEntity import ManagerEntity
 from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
 from repository.entity.RestaurantEntity import RestaurantEntity
@@ -9,14 +8,15 @@ from repository.entity.BranchEntity import BranchEntity
 from repository.entity.BranchBankEntity import BranchBankEntity
 from repository.entity.ScheduleEntity import ScheduleEntity
 from repository.entity.BranchScheduleEntity import BranchScheduleEntity
-from exception.exceptions import CustomError
-from configuration.database.database import SessionLocal, get_data_base
+from configuration.database.database import SessionLocal
 from repository.entity.UserEntity import UserEntity
+from repository.entity.UserTypeEntity import UserTypeEntity
 
 
 class LocalDAO:
 
     def register_account(self,
+                         user_entity: UserEntity,
                          manager_entity: ManagerEntity,
                          legal_representative_entity: LegalRepresentativeEntity,
                          restaurant_entity: RestaurantEntity,
@@ -30,6 +30,12 @@ class LocalDAO:
 
         try:
             db.begin()
+
+            user_entity.created_date = datetime.now(tz=timezone.utc)
+            db.add(user_entity)
+            db.flush()
+
+            manager_entity.id_user = user_entity.id
             db.add(manager_entity)
             db.flush()
 
@@ -37,9 +43,7 @@ class LocalDAO:
             db.flush()
 
             restaurant_entity.legal_representative_id = legal_representative_entity.id
-            chile_pytz = pytz.timezone('Chile/Continental')
-            chile_datetime = datetime.now(chile_pytz)  # TODO: Arreglar horario chile
-            restaurant_entity.created_date = chile_datetime
+            restaurant_entity.created_date = datetime.now(tz=timezone.utc)
             db.add(restaurant_entity)
             db.flush()
 
@@ -58,48 +62,30 @@ class LocalDAO:
             db.rollback()
             return error.args[0]
 
-    def get_account_pre_login(self, email: str, db: SessionLocal):
-        try:
-            manager_entity_id = db.query(ManagerEntity.id).filter(ManagerEntity.email == email).first()
-            if not manager_entity_id:
-                return None
-            branch_entity = db.query(BranchEntity.id, BranchEntity.uid, BranchEntity.accept_pet,
-                                     BranchEntity.description, BranchEntity.street, BranchEntity.street_number,
-                                     RestaurantEntity.name, RestaurantEntity.commercial_activity) \
-                .select_from(BranchEntity) \
-                .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
-                .filter(BranchEntity.manager_id == manager_entity_id.id) \
-                .filter(BranchEntity.is_active).first()
-            if not branch_entity:
-                return None
-
-            return branch_entity
-        except Exception as error:
-            logger.error('error: {}', error)
-            logger.error('error.args: {}', error.args)
-            return error.args[0]
-
-    def get_account_profile(self, email: str, db: SessionLocal):
+    def get_account_profile(self, branch_id: int, db: SessionLocal):
         # TODO: para el login, yo te mando el email y se devuelves todos los datos del local + del representante
         try:
             profile = {}
 
-            manager_entity = db.query(ManagerEntity).filter(ManagerEntity.email == email).first()
-            if not manager_entity:
-                return None
-
-            profile['manager'] = manager_entity
-
-            branch_entity = db.query(BranchEntity.id, BranchEntity.accept_pet, BranchEntity.description,
+            branch_entity = db.query(BranchEntity.id, BranchEntity.manager_id, BranchEntity.accept_pet, BranchEntity.description,
                                      BranchEntity.state_id, BranchEntity.street, BranchEntity.street_number,
                                      RestaurantEntity.name, RestaurantEntity.commercial_activity) \
                 .select_from(BranchEntity).join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
-                .filter(BranchEntity.manager_id == manager_entity.id).filter(BranchEntity.is_active).first()
+                .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id)\
+                .join(UserEntity, UserEntity.id == ManagerEntity.id_user) \
+                .filter(UserEntity.is_active)\
+                .filter(BranchEntity.id == branch_id).first()
 
             profile['branch'] = branch_entity
 
             if not branch_entity:
                 return None
+
+            manager_entity = db.query(ManagerEntity).filter(ManagerEntity.id == branch_entity.manager_id).first()
+            if not manager_entity:
+                return None
+
+            profile['manager'] = manager_entity
 
             schedule_entity_list = db.query(ScheduleEntity).join(BranchScheduleEntity,
                                                                  BranchScheduleEntity.schedule_id == ScheduleEntity.id) \
@@ -117,6 +103,7 @@ class LocalDAO:
             return error.args[0]
 
     def add_new_branch(self,
+                       user_entity: UserEntity,
                        branch_id: int,
                        manager_entity: ManagerEntity,
                        branch_entity: BranchEntity,
@@ -127,17 +114,22 @@ class LocalDAO:
         try:
             db.begin()
 
+            user_entity.created_date = datetime.now(tz=timezone.utc)
+            db.add(user_entity)
+            db.flush()
+
+            manager_entity.id_user = user_entity.id
             db.add(manager_entity)
             db.flush()
 
             restaurant_entity_id = db.query(BranchEntity.restaurant_id).select_from(BranchEntity). \
                 filter(BranchEntity.id == branch_id).first()
-
             db.add(branch_bank_entity)
             db.flush()
 
-            branch_entity.restaurant_id = restaurant_entity_id
+            branch_entity.restaurant_id = restaurant_entity_id[0]
             branch_entity.manager_id = manager_entity.id
+            branch_entity.branch_bank_id = branch_bank_entity.id
             db.add(branch_entity)
             db.commit()
             db.close()

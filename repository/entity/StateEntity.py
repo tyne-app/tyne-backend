@@ -3,8 +3,6 @@ from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
 
-from repository.entity.CityEntity import CityEntity
-
 
 class StateEntity(Base):
     __tablename__ = 'state'
@@ -15,4 +13,3 @@ class StateEntity(Base):
     city_id = Column(Integer, ForeignKey('tyne.city.id'))
     city = relationship("CityEntity")
 
-    # state_branch = relationship("BranchEntity", back_populates='state')
