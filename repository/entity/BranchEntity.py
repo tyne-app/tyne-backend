@@ -15,8 +15,11 @@ class BranchEntity(Base):
     description = Column(String(100))
     street = Column(String(100))
     latitude = Column(DECIMAL)
+<<<<<<< HEAD
     longitude = Column(DECIMAL)
 
+=======
+>>>>>>> migration-backbone-local
     street_number = Column(Integer)
 
     state_id = Column(Integer, ForeignKey('tyne.state.id'))

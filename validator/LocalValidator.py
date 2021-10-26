@@ -15,18 +15,6 @@ class LocalValidator:
     EMAIL_REGEX = re.compile(r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.?[A-Za-z]+")
     INVALID_DATA_MESSAGE = "Formato no válido"
 
-    def validate_email(self, email: str):
-        logger.info("email: {}", email)
-
-        data_checked = {}
-
-        if not re.fullmatch(self.EMAIL_REGEX, email):
-            data_checked["email"] = self.INVALID_DATA_MESSAGE
-            logger.error("data_checked: {}", data_checked)
-            self.raise_custom_error(message=data_checked)
-
-        return data_checked
-
     def validate_new_account(self, new_account: NewAccount):
         data_checked = {}
 
@@ -53,8 +41,6 @@ class LocalValidator:
         if data_checked:
             logger.error("data_checked: {}", data_checked)
             self.raise_custom_error(message=data_checked)
-
-        return data_checked
 
     def validate_manager(self, manager: Manager):
         logger.info('manager: {}', manager)
@@ -164,7 +150,7 @@ class LocalValidator:
         manager_checked = self.validate_manager(manager=new_branch.manager)
         if bool(manager_checked):
             data_checked["manager"] = manager_checked
-        branch_checked = self.validate_second_branch(new_branch=new_branch.new_branch)
+        branch_checked = self.validate_second_branch(new_branch=new_branch.branch)
         if bool(branch_checked):
             data_checked["new_branch"] = branch_checked
         branch_bank_checked = self.validate_branch_bank(branch_bank=new_branch.branch_bank)
@@ -174,8 +160,6 @@ class LocalValidator:
         if data_checked:
             logger.error("data_checked: {}", data_checked)
             self.raise_custom_error(message=data_checked)
-
-        return data_checked
 
     def raise_custom_error(self, message):
         raise CustomError(name="Error al validar los datos de entrada",
