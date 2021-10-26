@@ -1,7 +1,7 @@
 from fastapi import status, APIRouter, Response, Depends
 from sqlalchemy.orm import Session
 from configuration.database import database
-from dto.response.generic_response import create_response
+from dto.response.GenericResponse import create_response
 from repository.dao.city_dao import get_cities, get_city_by_id
 from repository.dao.country_dao import get_all_countries, get_country_by_id
 from repository.dao.state_dao import get_states, get_state_by_id

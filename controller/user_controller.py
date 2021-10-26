@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from configuration.database import database
 from dto.request.LoginUserRequest import LoginUserRequest
 from dto.response.SimpleResponse import SimpleResponse
-from dto.response.UpdateProfileImageDto import UpdateProfileImageDto
+from dto.response.UpdateProfileImageResponse import UpdateProfileImageDto
 from dto.response.UserTokenResponse import UserTokenResponse
 from service.UserService import UserService
 
