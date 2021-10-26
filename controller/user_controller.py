@@ -1,12 +1,9 @@
-import os
-
 from fastapi import status, APIRouter, Response, Depends, Request, UploadFile, File
 from sqlalchemy.orm import Session
 from configuration.database import database
 from dto.request.LoginUserRequest import LoginUserRequest
 from dto.response.SimpleResponse import SimpleResponse
-from dto.response.UpdateProfileImageResponse import UpdateProfileImageDto
-from dto.response.UserTokenResponse import UserTokenResponse
+from service.JwtService import JwtService
 from service.UserService import UserService
 
 user_controller = APIRouter(
@@ -15,7 +12,7 @@ user_controller = APIRouter(
 )
 
 _service_ = UserService()
-
+_jwt_service_ = JwtService()
 
 @user_controller.post(
     '/login',
@@ -35,10 +32,17 @@ def login(response: Response, request: Request, loginRequest: LoginUserRequest,
     '/profile-image',
     status_code=status.HTTP_200_OK
 )
-def upload_profile_image(response: Response, image: UploadFile = File(...),
+def upload_profile_image(request: Request, response: Response, image: UploadFile = File(...),
                          db: Session = Depends(database.get_data_base)):
-    user_id = 1  # id se debe sacar del token
-    response = _service_.change_profile_image(user_id, image.file, db)
+
+    if 'authorization' not in request.headers:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return {'error': 'Usuario no autorizado'}
+
+    token = request.headers['authorization']
+    client_id = _jwt_service_.verify_and_get_token_data(token=token)
+
+    response = _service_.change_profile_image(client_id, image.file, db)
     return response
 
 
@@ -46,7 +50,14 @@ def upload_profile_image(response: Response, image: UploadFile = File(...),
     '/profile-image',
     status_code=status.HTTP_200_OK
 )
-def delete_profile_image(response: Response, db: Session = Depends(database.get_data_base)):
-    user_id = 1  # id se debe sacar del token
-    _service_.delete_profile_image(user_id, db)
+def delete_profile_image(request: Request, response: Response, db: Session = Depends(database.get_data_base)):
+
+    if 'authorization' not in request.headers:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return {'error': 'Usuario no autorizado'}
+
+    token = request.headers['authorization']
+    client_id = _jwt_service_.verify_and_get_token_data(token=token)
+
+    _service_.delete_profile_image(client_id, db)
     return SimpleResponse("Imagen borrada exitosamente")
