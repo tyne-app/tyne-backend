@@ -20,6 +20,8 @@ class LocalService:
     STANDARD_ERROR_MESSAGE = 'Error en base de datos'
     CREATE_ACCOUNT_ERROR_MSG = 'Error al registrar cuenta de local'
     GET_PROFILE_ERROR_MSG = 'Error al obtener perfil sucursal'
+    NEW_BRANCH_ERROR_MSG = 'Error al agregar una sucursal nueva'
+    ID_USER_TYPE = 1
     parser_dto = ParserDTO()
 
     async def create_new_account(self, new_account: NewAccount, db: SessionLocal):
@@ -35,8 +37,11 @@ class LocalService:
 
         manager = new_account.manager
         logger.info('manager: {}', manager)
-        uid = await self.create_credentials(email=manager.email, password=manager.password)
-        logger.info('uid: {}', uid)
+
+        user = {'email': manager.email, 'password': manager.password}
+        logger.info('user: {}', user)
+        user_entity = new_account.to_user_entity(user_dict=user, id_user_type=self.ID_USER_TYPE)
+        logger.info('user_entity: {}', user_entity)
 
         manager_entity = new_account.to_manager_entity(manager=manager)
 
@@ -47,14 +52,14 @@ class LocalService:
         restaurant = new_account.restaurant
         restaurant_entity = new_account.to_restaurant_entity(restaurant=restaurant, name=branch.name)
 
-        branch_entity = new_account.to_branch_entity(branch=branch, branch_geocoding=branch_geocoding,
-                                                               uid=uid)
+        branch_entity = new_account.to_branch_entity(branch=branch, branch_geocoding=branch_geocoding)
 
         branch_bank = new_account.branch_bank
         branch_bank_entity = new_account.to_branch_bank_entity(branch_bank=branch_bank)
 
         local_dao = LocalDAO()
-        branch_entity_status = local_dao.register_account(manager_entity=manager_entity,
+        branch_entity_status = local_dao.register_account(user_entity=user_entity,
+                                                          manager_entity=manager_entity,
                                                           legal_representative_entity=legal_representative_entity,
                                                           restaurant_entity=restaurant_entity,
                                                           branch_entity=branch_entity,
@@ -64,7 +69,6 @@ class LocalService:
         logger.info('branch_entity_status: {}', branch_entity_status)
 
         if type(branch_entity_status) is str:
-            await self.delete_credentials(uid=uid)
             branch_entity_status_parsed = self.parse_error_response_database(message=branch_entity_status)
             self.raise_custom_error(name=self.CREATE_ACCOUNT_ERROR_MSG, message=branch_entity_status_parsed)
 
@@ -115,6 +119,7 @@ class LocalService:
         branch_geocoding = await self.geocoding(street=branch.street, street_number=branch.street_number)
         logger.info('branch_geocoding: {}', branch_geocoding)
 
+        # TODO: ELiminar código, ahora sólo se agrega a postgresql. Ver tabla user y userType
         manager = new_branch.manager
         logger.info('manager: {}', manager)
         uid = await self.create_credentials(email=manager.email, password=manager.password)
@@ -140,11 +145,11 @@ class LocalService:
         if type(new_branch_status) is str:
             await self.delete_credentials(uid=uid)
             new_branch_status_parsed = self.parse_error_response_database(message=new_branch_status)
-            self.raise_custom_error(message=new_branch_status_parsed)
+            self.raise_custom_error(name=self.NEW_BRANCH_ERROR_MSG, message=new_branch_status_parsed)
 
         return new_branch.to_branch_create_response()
 
-    def raise_custom_error(self, name: str, message: str):
+    def raise_custom_error(self, name: str, message: str):   # TODO: Esta función debe ser de otra clase creo.
         raise CustomError(name=name,
                           detail=message,
                           status_code=status.HTTP_400_BAD_REQUEST if message else status.HTTP_204_NO_CONTENT,

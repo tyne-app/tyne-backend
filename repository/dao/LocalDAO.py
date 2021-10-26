@@ -1,5 +1,5 @@
 from loguru import logger
-from datetime import datetime
+from datetime import datetime, timezone
 import pytz
 from repository.entity.ManagerEntity import ManagerEntity
 from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
@@ -12,9 +12,11 @@ from configuration.database.database import SessionLocal
 from repository.entity.UserEntity import UserEntity
 from repository.entity.UserTypeEntity import UserTypeEntity
 
+
 class LocalDAO:
 
     def register_account(self,
+                         user_entity: UserEntity,
                          manager_entity: ManagerEntity,
                          legal_representative_entity: LegalRepresentativeEntity,
                          restaurant_entity: RestaurantEntity,
@@ -28,6 +30,12 @@ class LocalDAO:
 
         try:
             db.begin()
+
+            user_entity.created_date = datetime.now(tz=timezone.utc)
+            db.add(user_entity)
+            db.flush()
+
+            manager_entity.id_user = user_entity.id
             db.add(manager_entity)
             db.flush()
 
@@ -35,9 +43,7 @@ class LocalDAO:
             db.flush()
 
             restaurant_entity.legal_representative_id = legal_representative_entity.id
-            chile_pytz = pytz.timezone('Chile/Continental')
-            chile_datetime = datetime.now(chile_pytz)  # TODO: Arreglar horario chile
-            restaurant_entity.created_date = chile_datetime
+            restaurant_entity.created_date = datetime.now(tz=timezone.utc)
             db.add(restaurant_entity)
             db.flush()
 
@@ -106,7 +112,7 @@ class LocalDAO:
                     branch_id, manager_entity, branch_entity, branch_bank_entity)
         try:
             db.begin()
-
+            # TODO: Agregar campos para user y userType cuando se registra una nueva credencial!!!
             db.add(manager_entity)
             db.flush()
 

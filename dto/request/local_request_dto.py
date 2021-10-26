@@ -5,9 +5,13 @@ from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntit
 from repository.entity.RestaurantEntity import RestaurantEntity
 from repository.entity.BranchEntity import BranchEntity
 from repository.entity.BranchBankEntity import BranchBankEntity
+from repository.entity.UserEntity import UserEntity
 from dto.dto import GenericDTO as wrapperDTO
 
 
+class User(BaseModel):
+    email: str
+    password: str
 
 
 class Manager(BaseModel):
@@ -56,6 +60,7 @@ class ParserDTO:
 
     def to_manager_entity(self, manager: Manager):
         manager_dict = manager.dict()
+        del(manager_dict['email'])
         del (manager_dict['password'])
         manager_entity = ManagerEntity(**manager_dict)
         return manager_entity
@@ -70,14 +75,13 @@ class ParserDTO:
 
         return restaurant_entity
 
-    def to_branch_entity(self, branch: Branch, branch_geocoding: dict, uid: str):
+    def to_branch_entity(self, branch: Branch, branch_geocoding: dict):
         branch_dict = branch.dict()
         del (branch_dict['name'])
 
         branch_entity = BranchEntity(**branch_dict)
         branch_entity.latitude = branch_geocoding['latitude']
         branch_entity.longitude = branch_geocoding['longitude']
-        branch_entity.uid = uid
         branch_entity.is_active = True
 
         return branch_entity
@@ -86,7 +90,13 @@ class ParserDTO:
         branch_bank_entity = BranchBankEntity(**branch_bank.dict())
         return branch_bank_entity
 
-    def to_branch_create_response(self, content: any):
+    def to_user_entity(self, user_dict: User, id_user_type: int):
+        user_dict['id_user_type'] = id_user_type
+        user_entity = UserEntity(**user_dict)
+        user_entity.is_active = True
+        return user_entity
+
+    def to_branch_create_response(self, content: any = None):
         response = wrapperDTO()
         response.data = [{'message': content}]
         return response.__dict__
