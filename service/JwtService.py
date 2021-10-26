@@ -1,5 +1,7 @@
 from fastapi import status
 from datetime import datetime, timezone, timedelta
+
+from dto.internal.Token import Token
 from dto.response.UserTokenResponse import UserTokenResponse
 import jwt
 from exception.exceptions import CustomError
@@ -46,7 +48,8 @@ class JwtService:
                                   status_code=status.HTTP_400_BAD_REQUEST,
                                   cause="")
 
-            return int(decoded_token['id_branch_client'])
+            token = Token(int(decoded_token['id_user']), int(decoded_token['id_branch_client']))
+            return token
 
         except (jwt.ExpiredSignatureError, Exception) as error:
             logger.info("error: {}", error)

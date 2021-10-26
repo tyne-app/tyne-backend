@@ -33,10 +33,10 @@ async def read_account(request: Request, response: Response, db: SessionLocal = 
 
     token = request.headers['authorization']
     jwt_service = JwtService()
-    branch_id = jwt_service.verify_and_get_token_data(token=token)
+    token_payload = jwt_service.verify_and_get_token_data(token=token)
 
     local_service = LocalService()
-    branch_profile = local_service.get_account_profile(branch_id=branch_id, db=db)
+    branch_profile = local_service.get_account_profile(branch_id=token_payload.id_branch_client, db=db)
 
     if branch_profile['data'] is None:
         response.status_code = status.HTTP_204_NO_CONTENT
@@ -56,8 +56,8 @@ async def add_branch(request: Request, response: Response,
     token = request.headers['authorization']
 
     jwt_service = JwtService()
-    branch_id = jwt_service.verify_and_get_token_data(token=token)
+    token_payload = jwt_service.verify_and_get_token_data(token=token)
 
     local_service = LocalService()
-    branch_profile = await local_service.add_new_branch(branch_id=branch_id, new_branch=new_branch, db=db)
+    branch_profile = await local_service.add_new_branch(branch_id=token_payload.id_branch_client, new_branch=new_branch, db=db)
     return branch_profile
