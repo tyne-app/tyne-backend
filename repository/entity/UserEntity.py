@@ -13,3 +13,5 @@ class UserEntity(Base):
     is_active = Column(Boolean)
     id_user_type = Column(Integer, ForeignKey('tyne.user_type.id'))
     email = Column(String(100))
+    image_url = Column(String(500))
+    image_id = Column(String(200))

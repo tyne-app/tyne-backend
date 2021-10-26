@@ -23,5 +23,4 @@ class JwtService:
 
         tokenResponse = UserTokenResponse()
         tokenResponse.access_token = token
-
         return tokenResponse
