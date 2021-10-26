@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from exception.exceptions import CustomError
 from controller import local_controller, search_controller, menu_controller, bank_controller, territory_controller, \
-    user_controller
+    user_controller, client_controller
 
 # from configuration.database import engine
 
@@ -71,6 +71,7 @@ async def custom_exception_handler(request: Request, exc: CustomError):
 
 
 api_local.include_router(bank_controller.bank_controller)
+api_local.include_router(client_controller.client_controller)
 api_local.include_router(local_controller.local_controller)
 api_local.include_router(menu_controller.menu_controller)
 # api_local.include_router(search_controller.search_controller)

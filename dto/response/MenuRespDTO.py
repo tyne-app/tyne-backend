@@ -1,6 +1,7 @@
 from typing import Optional, Union
 from pydantic import BaseModel
 
+
 class ProductRespDTO(BaseModel):
     id: str
     name: str

@@ -1,4 +1,5 @@
 from sqlalchemy import Integer, String, Boolean, Column, ForeignKey, TIMESTAMP
+from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
 
@@ -15,3 +16,5 @@ class UserEntity(Base):
     email = Column(String(100))
     image_url = Column(String(500))
     image_id = Column(String(200))
+
+    client = relationship("ClientEntity", back_populates='user')
