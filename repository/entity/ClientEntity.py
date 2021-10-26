@@ -16,4 +16,3 @@ class ClientEntity(Base):
     created_date = Column(TIMESTAMP)
     update_date = Column(TIMESTAMP)
     id_user = Column(Integer, ForeignKey('tyne.user.id'))
-    url_image = Column(String)

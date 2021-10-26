@@ -26,3 +26,4 @@ class BranchEntity(Base):
 
     product_branch = relationship("ProductEntity", back_populates='branch')
     # opinion_branch = relationship("OpinionEntity", back_populates='branch')
+    manager = relationship("ManagerEntity", back_populates='branch')
