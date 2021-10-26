@@ -12,13 +12,32 @@ menu_controller = APIRouter(
 )
 
 
+@menu_controller.get('/all_category', status_code=status.HTTP_200_OK)
+async def all_category(db: Session = Depends(database.get_data_base)):
+    try:
+        return await menu_service.all_category(db)
+
+    except CustomError as error:
+        logger.error(error.detail)
+        raise CustomError(name=error.name,
+                          detail=error.detail,
+                          status_code=error.status_code,
+                          cause=error.cause)
+
+    except Exception as error:
+        logger.error(error)
+        raise CustomError(name="Error all_category",
+                          detail="Controller error",
+                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                          cause=error.__cause__)
+
+
 #  Se creará el menu por productos
 @menu_controller.post('/{branch_id}', status_code=status.HTTP_201_CREATED)
 async def create_menu(branch_id: int,
                       response: Response,
                       menu_request: MenuRequestDTO,
                       db: Session = Depends(database.get_data_base)):
-
     try:
         return await menu_service.create_menu(branch_id, db, menu_request)
 
@@ -58,4 +77,3 @@ async def read_menu(branch_id: int,
                           detail="Controller error",
                           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                           cause=error.__cause__)
-
