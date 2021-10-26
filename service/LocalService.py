@@ -47,17 +47,22 @@ class LocalService:
         logger.info('user_entity: {}', user_entity)
 
         manager_entity = new_account.to_manager_entity(manager=manager)
+        logger.info('manager_entity: {}', manager_entity)
 
         legal_representative = new_account.legal_representative
+        logger.info('legal_representative: {}', legal_representative)
         legal_representative_entity = new_account.\
             to_legal_representative_entity(legal_representative=legal_representative)
 
         restaurant = new_account.restaurant
+        logger.info('restaurant: {}', restaurant)
         restaurant_entity = new_account.to_restaurant_entity(restaurant=restaurant, name=branch.name)
 
         branch_entity = new_account.to_branch_entity(branch=branch, branch_geocoding=branch_geocoding)
+        logger.info('branch_entity: {}', branch_entity)
 
         branch_bank = new_account.branch_bank
+        logger.info('branch_bank: {}', branch_bank)
         branch_bank_entity = new_account.to_branch_bank_entity(branch_bank=branch_bank)
 
         local_dao = LocalDAO()
