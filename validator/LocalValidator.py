@@ -150,7 +150,7 @@ class LocalValidator:
         manager_checked = self.validate_manager(manager=new_branch.manager)
         if bool(manager_checked):
             data_checked["manager"] = manager_checked
-        branch_checked = self.validate_second_branch(new_branch=new_branch.new_branch)
+        branch_checked = self.validate_second_branch(new_branch=new_branch.branch)
         if bool(branch_checked):
             data_checked["new_branch"] = branch_checked
         branch_bank_checked = self.validate_branch_bank(branch_bank=new_branch.branch_bank)

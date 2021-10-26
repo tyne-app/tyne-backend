@@ -90,7 +90,7 @@ class ParserDTO:
         branch_bank_entity = BranchBankEntity(**branch_bank.dict())
         return branch_bank_entity
 
-    def to_user_entity(self, user_dict: User, id_user_type: int):
+    def to_user_entity(self, user_dict: dict, id_user_type: int):
         user_dict['id_user_type'] = id_user_type
         user_entity = UserEntity(**user_dict)
         user_entity.is_active = True

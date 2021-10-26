@@ -12,6 +12,8 @@ class JwtService:
     ALGORITHM = "HS256"
     EXPIRED_KEY_WORD = "expired"
     SIGNATURE_EXPIRED_MSG = "Token expirado"
+    ALGORITHM_KEY_WORD = "alg"
+    ALGORITHM_MSG = "Token entrante no permitido"
 
     @classmethod
     def get_token(cls, id_user: int, id_branch_client: int, rol: int, ip: str):
@@ -48,8 +50,16 @@ class JwtService:
         except (jwt.ExpiredSignatureError, Exception) as error:
             logger.info("error: {}", error)
             logger.info("error.args: {}", error.args)
-            content_detail = self.SIGNATURE_EXPIRED_MSG if self.EXPIRED_KEY_WORD in error.args[0] else error.args[0]
+            content_detail = None
+            message_error = error.args[0]
+
+            if self.EXPIRED_KEY_WORD in message_error:
+                content_detail = self.SIGNATURE_EXPIRED_MSG
+            if self.ALGORITHM_KEY_WORD in message_error:
+                content_detail = self.ALGORITHM_MSG
+            else:
+                content_detail = message_error
             raise CustomError(name="Error al decodificar token",
-                              detail= content_detail,
+                              detail=content_detail,
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="")

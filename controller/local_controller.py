@@ -16,7 +16,7 @@ local_controller = APIRouter(
 @local_controller.get('/token')  # TODO: ENdpoint test, se elimina al final.
 def get_token():
     jwt_service = JwtService()
-    jwt = jwt_service.get_token(id_user=1, id_branch_client=2, rol=1, ip='ip-test')
+    jwt = jwt_service.get_token(id_user=1, id_branch_client=23, rol=1, ip='ip-test')
     return jwt
 
 
@@ -65,5 +65,5 @@ async def add_branch(request: Request, response: Response,
     branch_id = jwt_service.verify_and_get_token_data(token=token)
 
     local_service = LocalService()
-    branch_profile = local_service.add_new_branch(branch_id=branch_id, db=db)
+    branch_profile = await local_service.add_new_branch(branch_id=branch_id, new_branch=new_branch, db=db)
     return branch_profile

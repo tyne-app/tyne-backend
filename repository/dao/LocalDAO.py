@@ -103,6 +103,7 @@ class LocalDAO:
             return error.args[0]
 
     def add_new_branch(self,
+                       user_entity: UserEntity,
                        branch_id: int,
                        manager_entity: ManagerEntity,
                        branch_entity: BranchEntity,
@@ -112,18 +113,23 @@ class LocalDAO:
                     branch_id, manager_entity, branch_entity, branch_bank_entity)
         try:
             db.begin()
-            # TODO: Agregar campos para user y userType cuando se registra una nueva credencial!!!
+
+            user_entity.created_date = datetime.now(tz=timezone.utc)
+            db.add(user_entity)
+            db.flush()
+
+            manager_entity.id_user = user_entity.id
             db.add(manager_entity)
             db.flush()
 
             restaurant_entity_id = db.query(BranchEntity.restaurant_id).select_from(BranchEntity). \
                 filter(BranchEntity.id == branch_id).first()
-
             db.add(branch_bank_entity)
             db.flush()
 
-            branch_entity.restaurant_id = restaurant_entity_id
+            branch_entity.restaurant_id = restaurant_entity_id[0]
             branch_entity.manager_id = manager_entity.id
+            branch_entity.branch_bank_id = branch_bank_entity.id
             db.add(branch_entity)
             db.commit()
             db.close()

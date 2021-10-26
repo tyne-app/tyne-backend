@@ -21,6 +21,9 @@ class LocalService:
     CREATE_ACCOUNT_ERROR_MSG = 'Error al registrar cuenta de local'
     GET_PROFILE_ERROR_MSG = 'Error al obtener perfil sucursal'
     NEW_BRANCH_ERROR_MSG = 'Error al agregar una sucursal nueva'
+    EMAIL_KEY_WORD = 'email'
+    EMAIL_ERROR_MESSAGE = 'Email de usuario ya está registrado'
+    MSG_NEW_BRANCH = 'Sucursal agregado correctamente'
     ID_USER_TYPE = 1
     parser_dto = ParserDTO()
 
@@ -102,7 +105,7 @@ class LocalService:
 
         local_dao = LocalDAO()
         branch_profile = local_dao.get_account_profile(branch_id=branch_id, db=db)
-        # TODO: En algún lugar manejar status 204 si no hay contenido.
+
         if type(branch_profile) is str:
             logger.error("branch_profile: {}", branch_profile)
             self.raise_custom_error(name=self.GET_PROFILE_ERROR_MSG, message=branch_profile)
@@ -119,22 +122,24 @@ class LocalService:
         branch_geocoding = await self.geocoding(street=branch.street, street_number=branch.street_number)
         logger.info('branch_geocoding: {}', branch_geocoding)
 
-        # TODO: ELiminar código, ahora sólo se agrega a postgresql. Ver tabla user y userType
         manager = new_branch.manager
         logger.info('manager: {}', manager)
-        uid = await self.create_credentials(email=manager.email, password=manager.password)
-        logger.info('uid: {}', uid)
+
+        user = {'email': manager.email, 'password': manager.password}
+        logger.info('user: {}', user)
+        user_entity = new_branch.to_user_entity(user_dict=user, id_user_type=self.ID_USER_TYPE)
+        logger.info('user_entity: {}', user_entity)
 
         manager_entity = new_branch.to_manager_entity(manager=manager)
 
         branch_entity = new_branch.to_branch_entity(branch=branch,
-                                                    branch_geocoding=branch_geocoding,
-                                                    uid=uid)
+                                                    branch_geocoding=branch_geocoding)
         branch_bank = new_branch.branch_bank
         branch_bank_entity = new_branch.to_branch_bank_entity(branch_bank=branch_bank)
 
         local_dao = LocalDAO()
-        new_branch_status = local_dao.add_new_branch(branch_id=branch_id,
+        new_branch_status = local_dao.add_new_branch(user_entity=user_entity,
+                                                     branch_id=branch_id,
                                                      manager_entity=manager_entity,
                                                      branch_entity=branch_entity,
                                                      branch_bank_entity=branch_bank_entity,
@@ -143,11 +148,10 @@ class LocalService:
         logger.info('new_branch_status: {}', new_branch_status)
 
         if type(new_branch_status) is str:
-            await self.delete_credentials(uid=uid)
             new_branch_status_parsed = self.parse_error_response_database(message=new_branch_status)
             self.raise_custom_error(name=self.NEW_BRANCH_ERROR_MSG, message=new_branch_status_parsed)
 
-        return new_branch.to_branch_create_response()
+        return new_branch.to_branch_create_response(content=self.MSG_NEW_BRANCH)
 
     def raise_custom_error(self, name: str, message: str):   # TODO: Esta función debe ser de otra clase creo.
         raise CustomError(name=name,
@@ -163,4 +167,6 @@ class LocalService:
         if self.RESTAURANT_KEY_WORD in message:
             return self.RESTAURANT_ERROR_MESSAGE
 
+        if self.EMAIL_KEY_WORD in message:
+            return self.EMAIL_ERROR_MESSAGE
         return self.STANDARD_ERROR_MESSAGE
