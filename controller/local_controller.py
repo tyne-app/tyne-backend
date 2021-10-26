@@ -43,6 +43,10 @@ async def read_account(request: Request, response: Response, db: SessionLocal = 
 
     local_service = LocalService()
     branch_profile = local_service.get_account_profile(branch_id=branch_id, db=db)
+
+    if branch_profile['data'] is None:
+        response.status_code = status.HTTP_204_NO_CONTENT
+
     return branch_profile
 
 

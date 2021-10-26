@@ -37,7 +37,6 @@ class JwtService:
     def verify_and_get_token_data(self, token: str):
         try:
             decoded_token = jwt.decode(jwt=token, key=self.KEY, algorithms=self.ALGORITHM)
-            print(decoded_token)
             if not decoded_token:
                 raise CustomError(name="Error al verificar token",
                                   detail="",

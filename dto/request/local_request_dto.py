@@ -98,7 +98,7 @@ class ParserDTO:
 
     def to_branch_create_response(self, content: any = None):
         response = wrapperDTO()
-        response.data = [{'message': content}]
+        response.data = content
         return response.__dict__
 
 
