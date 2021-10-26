@@ -13,3 +13,6 @@ class Product:
         self.url_image = product_json["image_url"]
         self.amount = product_json["amount"]
         self.commission_tyne = product_json["commission_tyne"]
+
+    def get_amount(self):
+        return self.amount

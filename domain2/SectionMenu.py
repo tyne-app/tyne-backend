@@ -16,3 +16,6 @@ class SectionMenu:
 
     def add_product(self, product: Product):
         self.products.append(product)
+
+    def get_products(self):
+        return self.products

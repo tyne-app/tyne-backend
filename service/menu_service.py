@@ -7,7 +7,8 @@ from exception.exceptions import CustomError
 from mappers.domain import menu_mapper_domain
 from mappers.request import menu_mapper_request
 from mappers.response import menu_mapper_response
-from repository.dao import product_dao, category_dao
+from repository.dao import product_dao, category_dao, branch_dao
+from repository.entity.BranchEntity import BranchEntity
 from repository.entity.ProductEntity import ProductEntity
 
 from dto.dto import GenericDTO as wrapperDTO
@@ -37,6 +38,7 @@ async def read_menu(branch_id, db):
     logger.info('menu_request - read_menu branch_id: {}', branch_id)
 
     products: list[ProductEntity] = product_dao.get_products_by_branch(db, branch_id)
+    branch: BranchEntity = branch_dao.get_branch_by_id(db, branch_id)
 
     if not products:
         raise CustomError(
@@ -44,7 +46,7 @@ async def read_menu(branch_id, db):
             detail="No Products for menu",
             status_code=status.HTTP_204_NO_CONTENT)
 
-    menu_domain = menu_mapper_domain.to_menu_read_domain(products)
+    menu_domain = menu_mapper_domain.to_menu_read_domain(products, branch)
 
     logger.info('menu_domain - read_menu: {}', menu_domain)
 
