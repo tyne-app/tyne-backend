@@ -14,6 +14,7 @@ user_controller = APIRouter(
 _service_ = UserService()
 _jwt_service_ = JwtService()
 
+
 @user_controller.post(
     '/login',
     status_code=status.HTTP_200_OK
