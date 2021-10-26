@@ -1,6 +1,8 @@
 from sqlalchemy import Integer, String, Column, ForeignKey, TIMESTAMP
+from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
+from repository.entity.UserEntity import UserEntity
 
 
 class ClientEntity(Base):
@@ -16,3 +18,5 @@ class ClientEntity(Base):
     created_date = Column(TIMESTAMP)
     update_date = Column(TIMESTAMP)
     id_user = Column(Integer, ForeignKey('tyne.user.id'))
+
+    user: UserEntity = relationship("UserEntity", back_populates='client')

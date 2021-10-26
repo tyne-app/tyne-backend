@@ -2,7 +2,7 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Session
 from starlette import status
 from dto.request.LoginUserRequest import LoginUserRequest
-from dto.response.UpdateProfileImageDto import UpdateProfileImageDto
+from dto.response.UpdateProfileImageResponse import UpdateProfileImageDto
 from dto.response.UserTokenResponse import UserTokenResponse
 from enums.UserTypeEnum import UserTypeEnum
 from exception.exceptions import CustomError

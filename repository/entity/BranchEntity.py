@@ -21,3 +21,5 @@ class BranchEntity(Base):
     branch_bank_id = Column(Integer, ForeignKey('tyne.branch_bank.id'))
     manager_id = Column(Integer, ForeignKey('tyne.manager.id'))
 
+    product_branch = relationship("ProductEntity", back_populates='branch')
+    manager = relationship("ManagerEntity", back_populates='branch')
