@@ -40,9 +40,9 @@ def upload_profile_image(request: Request, response: Response, image: UploadFile
         return {'error': 'Usuario no autorizado'}
 
     token = request.headers['authorization']
-    client_id = _jwt_service_.verify_and_get_token_data(token=token)
+    token_payload = _jwt_service_.verify_and_get_token_data(token=token)
 
-    response = _service_.change_profile_image(client_id, image.file, db)
+    response = _service_.change_profile_image(token_payload.id_user, image.file, db)
     return response
 
 
@@ -57,7 +57,7 @@ def delete_profile_image(request: Request, response: Response, db: Session = Dep
         return {'error': 'Usuario no autorizado'}
 
     token = request.headers['authorization']
-    client_id = _jwt_service_.verify_and_get_token_data(token=token)
+    token_payload = _jwt_service_.verify_and_get_token_data(token=token)
 
-    _service_.delete_profile_image(client_id, db)
+    _service_.delete_profile_image(token_payload.id_user, db)
     return SimpleResponse("Imagen borrada exitosamente")
