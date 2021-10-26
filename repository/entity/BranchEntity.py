@@ -4,8 +4,6 @@ from sqlalchemy.orm import relationship
 from configuration.database.database import Base
 
 
-# from repository.entity.OpinionEntity import OpinionEntity
-
 class BranchEntity(Base):
     __tablename__ = "branch"
     __table_args__ = {'schema': 'tyne'}
@@ -16,7 +14,6 @@ class BranchEntity(Base):
     street = Column(String(100))
     latitude = Column(DECIMAL)
     longitude = Column(DECIMAL)
-
     street_number = Column(Integer)
 
     state_id = Column(Integer, ForeignKey('tyne.state.id'))

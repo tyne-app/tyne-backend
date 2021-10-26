@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Integer, String, Boolean
-from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
 
@@ -13,8 +12,6 @@ class CategoryEntity(Base):
     is_active = Column(Boolean)
     order = Column(Integer)
 
-    # Back FK
-    product_category = relationship("ProductEntity", back_populates='category')
 
     def __init__(self, id=None, name=""):
         self.id = id
