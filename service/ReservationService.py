@@ -28,4 +28,4 @@ class ReservationService:
                               status_code=status.HTTP_401_UNAUTHORIZED,
                               cause="Cliente no autorizado")
 
-        self._khipu_service.create_link(amount=14900, payer_email=client.user.email)
+        self._khipu_service.create_link(amount=14900, payer_email=client.user.email, transaction_id="DDAAD2343")

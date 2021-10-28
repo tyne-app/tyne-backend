@@ -5,7 +5,7 @@ from exception.exceptions import CustomError
 from fastapi import status
 from service.MapboxService import MapBoxService
 from service.FirebaseService import FirebaseService
-from repository.dao.LocalDAO import LocalDAO
+from repository.dao.LocalDao import LocalDAO
 from dto.request.local_request_dto import ParserDTO
 from configuration.database.database import SessionLocal
 

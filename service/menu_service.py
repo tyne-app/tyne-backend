@@ -5,7 +5,7 @@ from dto.response.CategoryResponse import CategoryResponse
 from exception.exceptions import CustomError
 from mappers.request import menu_mapper_request
 from mappers.response import menu_mapper_response
-from repository.dao import product_dao, category_dao, branch_dao
+from repository.dao import ProductDao, CategoryDao, branch_dao
 from repository.entity.BranchEntity import BranchEntity
 from repository.entity.ProductEntity import ProductEntity
 
@@ -15,7 +15,7 @@ async def create_menu(branch_id, db, menu_request):
 
     seccions_list_entity = menu_mapper_request.to_entities(menu_request, branch_id)
 
-    is_saved = product_dao.save_all_products_menu(db, seccions_list_entity, branch_id)
+    is_saved = ProductDao.save_all_products_menu(db, seccions_list_entity, branch_id)
 
     if not is_saved:
         raise CustomError(
@@ -33,7 +33,7 @@ async def create_menu(branch_id, db, menu_request):
 async def read_menu(branch_id, db):
     logger.info('menu_request - read_menu branch_id: {}', branch_id)
 
-    products: list[ProductEntity] = product_dao.get_products_by_branch(db, branch_id)
+    products: list[ProductEntity] = ProductDao.get_products_by_branch(db, branch_id)
     branch: BranchEntity = branch_dao.get_branch_by_id(db, branch_id)
 
     if not products:
@@ -49,7 +49,7 @@ async def read_menu(branch_id, db):
 
 async def all_category(db):
     logger.info('menu_request - all_category')
-    categories = category_dao.get_all(db)
+    categories = CategoryDao.get_all(db)
 
     if not categories:
         raise CustomError(

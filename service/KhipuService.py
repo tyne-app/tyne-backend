@@ -7,7 +7,7 @@ from dto.internal.KhipuResponse import KhipuResponse
 class KhipuService:
     _settings_ = Settings()
 
-    def create_link(self, amount: int, payer_email: str):
+    def create_link(self, amount: int, payer_email: str, transaction_id: str):
         api = Khipupy(receiver_id=self._settings_.KHIPU_RECEIVER_ID, secret=self._settings_.KHIPU_SECRET_ID)
 
         result = api.payments({
@@ -16,7 +16,7 @@ class KhipuService:
             'amount': str(amount),
             'payer_email': payer_email,
             'bank_id': '',
-            'transaction_id': 'T-1000',
+            'transaction_id': transaction_id,
             'custom': '',
             'notify_url': self._settings_.KHIPU_NOTIFY_URL,
             'return_url': self._settings_.KHIPU_RETURN_URL,
