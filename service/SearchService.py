@@ -1,6 +1,6 @@
 from loguru import logger
 from validator.SearchValidator import SearchValidator
-from repository.dao.SearchDAO import SearchDAO
+from repository.dao.SearchDao import SearchDAO
 from configuration.database.database import SessionLocal
 
 

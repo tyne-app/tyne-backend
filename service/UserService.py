@@ -7,7 +7,7 @@ from dto.response.UserTokenResponse import UserTokenResponse
 from enums.UserTypeEnum import UserTypeEnum
 from exception.exceptions import CustomError
 from repository.dao.ClientDao import ClientDao
-from repository.dao.LocalDAO import LocalDAO
+from repository.dao.LocalDao import LocalDAO
 from repository.dao.UserDao import UserDao
 from repository.entity.BranchEntity import BranchEntity
 from repository.entity.ClientEntity import ClientEntity

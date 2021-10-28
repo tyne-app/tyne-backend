@@ -1,5 +1,3 @@
-from typing import Optional, Union
-
 from repository.entity.CategoryEntity import CategoryEntity
 
 

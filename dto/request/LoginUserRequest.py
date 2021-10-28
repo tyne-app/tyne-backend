@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from starlette import status
 from exception.exceptions import CustomError
-from validator.shared_validator import SharedValidator
+from validator.SharedValidator import SharedValidator
 
 
 class LoginUserRequest(BaseModel):

@@ -8,8 +8,6 @@ def get_all_banks(db: Session):
         return banks
     except Exception as error:
         return error.args[0]
-    finally:
-        db.close()
 
 
 def get_bank_by_id(id_bank: int, db: Session):
@@ -18,5 +16,3 @@ def get_bank_by_id(id_bank: int, db: Session):
         return bank
     except Exception as error:
         return error.args[0]
-    finally:
-        db.close()

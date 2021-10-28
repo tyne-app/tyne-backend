@@ -12,6 +12,4 @@ class SharedValidator:
         if re.fullmatch(EMAIL_REGEX, email):
             is_valid = True
 
-        print(is_valid)
-
         return is_valid
