@@ -13,7 +13,6 @@ from controller import local_controller, search_controller, menu_controller, ban
 
 api_local = FastAPI(
     docs_url="/v1/docs",
-    redoc_url="/v1/redoc",
     title="MS-API-Local",
     description="...",  # TODO: Definir descripción
     version="1.0.0"

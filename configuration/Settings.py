@@ -3,6 +3,11 @@ import os
 
 class Settings:
     ENVIRONMENT = os.getenv("ENVIRONMENT")
+    DATABASE_USER = os.getenv("DATABASE_USER")
+    DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD")
+    DATABASE_HOST = os.getenv("DATABASE_HOST")
+    DATABASE_PORT = os.getenv("DATABASE_PORT")
+    DATABASE_NAME = os.getenv("DATABASE_NAME")
     MAPBOX_URL = os.getenv("MAPBOX_URL")
     CONNECTION_STRING_DB = os.getenv("DB_CONN")
     CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
@@ -14,3 +19,4 @@ class Settings:
     KHIPU_RETURN_URL = os.getenv("KHIPU_RECEIVER_ID")
     KHIPU_CANCEL_URL = os.getenv("KHIPU_RECEIVER_ID")
     KHIPU_PICTURE_URL = os.getenv("KHIPU_RECEIVER_ID")
+
