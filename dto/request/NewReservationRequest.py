@@ -15,3 +15,9 @@ class NewReservationRequest(BaseModel):
     hour: str
     preference: str
     products: list[ProductRequest]
+
+    def get_products_ids(self):
+        response: list[int] = []
+        for product in self.products:
+            response.append(product.id)
+        return response

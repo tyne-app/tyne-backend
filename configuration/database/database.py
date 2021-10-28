@@ -19,3 +19,4 @@ def get_data_base():
         yield db
     finally:
         db.close()
+        print("connection closed")
