@@ -84,7 +84,7 @@ class ReservationService:
                                                                             db=db)
 
             response_khipu = self._khipu_service.create_link(amount=amount, payer_email=client.user.email,
-                                                             transaction_id="DDAAD2343")
+                                                             transaction_id="UID-122233")
 
             if response_khipu.status != 201:
                 raise CustomError(name="Error obtener datos khipu",
