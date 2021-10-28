@@ -1,7 +1,6 @@
 from fastapi import status, APIRouter, Response, Depends
 from sqlalchemy.orm import Session
 from configuration.database import database
-from dto.response.GenericResponse import create_response
 from service.ClientService import ClientService
 
 client_controller = APIRouter(

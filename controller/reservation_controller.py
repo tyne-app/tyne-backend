@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, Response, status, Request
 from sqlalchemy.orm import Session
 from configuration.database import database
 from dto.request.NewReservationRequest import NewReservationRequest
-
 from service.JwtService import JwtService
 from service.ReservationService import ReservationService
 

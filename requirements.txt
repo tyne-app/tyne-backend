@@ -42,3 +42,4 @@ win32-setctime==1.0.3
 pyjwt
 cloudinary
 python-multipart
+khipupy

@@ -5,13 +5,15 @@ from dto.request.NewReservationRequest import NewReservationRequest
 from exception.exceptions import CustomError
 from repository.dao.ClientDao import ClientDao
 from repository.entity.ClientEntity import ClientEntity
+from service.KhipuService import KhipuService
 
 
 class ReservationService:
     _client_dao_ = ClientDao()
+    _khipu_service = KhipuService()
 
     def create_reservation(self, client_id: int, reservation: NewReservationRequest, db: Session):
-        # validar que se pueda reservar en el local
+
         client: ClientEntity = self._client_dao_.get_client(client_id=client_id, db=db)
 
         if client is None:
@@ -24,7 +26,6 @@ class ReservationService:
             raise CustomError(name="Cliente no autorizado",
                               detail="Validación",
                               status_code=status.HTTP_401_UNAUTHORIZED,
-                              cause="Cliente no existe")
+                              cause="Cliente no autorizado")
 
-
-    pass
+        self._khipu_service.create_link(amount=14900, payer_email=client.user.email)
