@@ -1,18 +1,13 @@
-import json
-
 from loguru import logger
 from starlette import status
 
+from dto.response.CategoryResponse import CategoryResponse
 from exception.exceptions import CustomError
-from mappers.domain import menu_mapper_domain
 from mappers.request import menu_mapper_request
 from mappers.response import menu_mapper_response
-from dto.response.CategoryResponse import CategoryResponse
 from repository.dao import product_dao, category_dao, branch_dao
 from repository.entity.BranchEntity import BranchEntity
 from repository.entity.ProductEntity import ProductEntity
-
-from dto.dto import GenericDTO as wrapperDTO
 
 
 async def create_menu(branch_id, db, menu_request):
@@ -47,11 +42,9 @@ async def read_menu(branch_id, db):
             detail="No Products for menu",
             status_code=status.HTTP_204_NO_CONTENT)
 
-    menu_domain = menu_mapper_domain.to_menu_read_domain(products, branch)
+    menu_read_response = menu_mapper_response.to_menu_read_response(products, branch)
 
-    logger.info('menu_domain - read_menu: {}', menu_domain)
-
-    return menu_domain
+    return menu_read_response
 
 
 async def all_category(db):

@@ -3,6 +3,8 @@ from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
 
+from repository.entity.OpinionEntity import OpinionEntity
+
 
 class BranchEntity(Base):
     __tablename__ = "branch"
@@ -23,3 +25,4 @@ class BranchEntity(Base):
 
     product_branch = relationship("ProductEntity", back_populates='branch')
     manager = relationship("ManagerEntity", back_populates='branch')
+    opinion_branch = relationship("OpinionEntity", back_populates='branch')
