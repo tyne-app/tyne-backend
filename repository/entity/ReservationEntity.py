@@ -11,7 +11,7 @@ class ReservationEntity(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     reservation_date = Column(TIMESTAMP)
-    status = Column(String(50))
+    is_active = Column(String(50))
     created_date = Column(TIMESTAMP)
     update_date = Column(TIMESTAMP)
     preference = Column(String(50))
@@ -19,3 +19,5 @@ class ReservationEntity(Base):
 
     client_id = Column(Integer, ForeignKey('tyne.client.id'))
     branch_id = Column(Integer, ForeignKey('tyne.branch.id'))
+
+    opinion_reservation = relationship("OpinionEntity", back_populates='reservation')

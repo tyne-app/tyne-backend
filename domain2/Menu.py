@@ -1,6 +1,8 @@
 from domain2.Category import Category
 from domain2.Product import Product
 from domain2.SectionMenu import SectionMenu
+from repository.entity.BranchEntity import BranchEntity
+from repository.entity.ProductEntity import ProductEntity
 
 
 class Menu:
@@ -10,12 +12,59 @@ class Menu:
     rating: str
     rango_precio: []
 
-    def __init__(self, branch_id: '', nombre_local: '', rating=None, rango_precio=None):
+    def __init__(self):
         self.sections = list()
-        self.branch_id = branch_id
-        self.nombre_local = nombre_local
-        self.rating = rating
-        self.rango_precio = rango_precio
+
+    @classmethod
+    def to_menu_read_domain(cls, products: list[ProductEntity], branch: BranchEntity):
+        menu_domain = Menu()
+
+        menu_domain.set_branch_id(branch)
+
+        menu_domain.set_name(branch)
+
+        menu_domain.set_sections_and_rango_precio(products)
+
+        menu_domain.set_rating(branch)
+
+        return menu_domain
+
+    def set_branch_id(self, branch: BranchEntity):
+        self.branch_id = branch.id
+
+    def set_name(self, branch: BranchEntity):
+        self.nombre_local = branch.description
+
+    def set_sections_and_rango_precio(self, products):
+        price_set = list()
+
+        for product in products:
+            product_domain = Product(product.product_dict())
+            category_domain = Category(product.get_category_dict())
+            self.add_seccion(product_domain, category_domain)
+
+            #  TODO: Desacoplar
+            price_set.append(product.amount)
+        max_amount = max(price_set, key=float)
+        min_amount = min(price_set, key=float)
+        avg_amount = sum(price_set) / len(price_set)
+        self.rango_precio = {
+            "max": max_amount,
+            "min": min_amount,
+            "avg": avg_amount,
+        }
+
+        return self
+
+    def set_rating(self, branch):
+        opinions = list()
+
+        for op in list(branch.opinion_branch):
+            opinions.append(op.qualification)
+
+        self.rating = sum(opinions) / len(opinions)
+
+        return self
 
     def add_seccion(self, product: Product, category: Category):
 
@@ -36,7 +85,7 @@ class Menu:
     def create_section(self, category, product):
         section = SectionMenu(product, category)
         self.sections.append(section)
-        return section
+        return self
 
     def calculate_rango_precio(self):
         products = set()
