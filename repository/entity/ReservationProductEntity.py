@@ -1,5 +1,4 @@
-from sqlalchemy import Integer, String, Column, ForeignKey, TIMESTAMP
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, String, Column, ForeignKey, Float
 
 from configuration.database.database import Base
 
@@ -9,6 +8,10 @@ class ReservationProductEntity(Base):
     __table_args__ = {'schema': 'tyne'}
 
     id = Column(Integer, primary_key=True, index=True)
+    reservation_id = Column(Integer, ForeignKey('tyne.reservation.id'))
+    name_product = Column(String)
+    category_product = Column(String)
+    amount = Column(Float(100))
+    commission_tyne = Column(Float(100))
+    quantity = Column(Integer)
 
-    product_id = Column(Integer, ForeignKey("tyne.product.id"))
-    reservation_id = Column(Integer, ForeignKey("tyne.reservation.id"))

@@ -3,12 +3,14 @@ from starlette import status
 from exception.exceptions import CustomError
 from repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
 from repository.entity.ReservationEntity import ReservationEntity
+from repository.entity.ReservationProductEntity import ReservationProductEntity
 
 
 class ReservationDao:
 
     @classmethod
     def create_reservation(cls, reservation: ReservationEntity, reservation_status: ReservationChangeStatusEntity,
+                           products: list[ReservationProductEntity],
                            db: Session):
         try:
             db.add(reservation)
@@ -17,6 +19,12 @@ class ReservationDao:
             reservation_status.reservation_id = reservation.id
 
             db.add(reservation_status)
+            db.flush()
+
+            for x in products:
+                x.reservation_id = reservation.id
+
+            db.bulk_save_objects(products)
             db.flush()
 
             db.commit()

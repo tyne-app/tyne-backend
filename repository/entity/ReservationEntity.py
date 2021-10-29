@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Column, ForeignKey, TIMESTAMP
+from sqlalchemy import Integer, String, Column, ForeignKey, Date
 from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
@@ -11,10 +11,11 @@ class ReservationEntity(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
 
-    reservation_date = Column(TIMESTAMP)
+    reservation_date = Column(Date)
     preference = Column(String(50))
     people = Column(Integer)
     payment_id = Column(String(100))
+    hour = Column(String(5))
 
     client_id = Column(Integer, ForeignKey('tyne.client.id'))
     branch_id = Column(Integer, ForeignKey('tyne.branch.id'))
