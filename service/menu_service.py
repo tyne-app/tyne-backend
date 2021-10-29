@@ -6,8 +6,11 @@ from exception.exceptions import CustomError
 from mappers.request import menu_mapper_request
 from mappers.response import menu_mapper_response
 from repository.dao import ProductDao, CategoryDao, branch_dao
+from repository.dao.OpinionDao import OpinionDao
 from repository.entity.BranchEntity import BranchEntity
 from repository.entity.ProductEntity import ProductEntity
+
+__opinion_dao = OpinionDao()
 
 
 async def create_menu(branch_id, db, menu_request):
@@ -35,6 +38,7 @@ async def read_menu(branch_id, db):
 
     products: list[ProductEntity] = ProductDao.get_products_by_branch(db, branch_id)
     branch: BranchEntity = branch_dao.get_branch_by_id(db, branch_id)
+    opinions = __opinion_dao.find_by_branch_id(db, branch_id)
 
     if not products:
         raise CustomError(
@@ -42,7 +46,7 @@ async def read_menu(branch_id, db):
             detail="No Products for menu",
             status_code=status.HTTP_204_NO_CONTENT)
 
-    menu_read_response = menu_mapper_response.to_menu_read_response(products, branch)
+    menu_read_response = menu_mapper_response.to_menu_read_response(products, branch, opinions)
 
     return menu_read_response
 

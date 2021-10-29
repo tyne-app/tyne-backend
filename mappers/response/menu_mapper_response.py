@@ -5,9 +5,9 @@ from repository.entity.BranchEntity import BranchEntity
 from repository.entity.ProductEntity import ProductEntity
 
 
-def to_menu_read_response(products: list[ProductEntity], branch: BranchEntity):
+def to_menu_read_response(products: list[ProductEntity], branch: BranchEntity, opinions):
     response = wrapperDTO()
-    response.data = Menu.to_menu_read_domain(products, branch)
+    response.data = Menu.to_menu_read_domain(products, branch, opinions)
     return response.__dict__
 
 
