@@ -14,6 +14,7 @@ class ReservationEntity(Base):
     reservation_date = Column(TIMESTAMP)
     preference = Column(String(50))
     people = Column(Integer)
+    payment_id = Column(String(100))
 
     client_id = Column(Integer, ForeignKey('tyne.client.id'))
     branch_id = Column(Integer, ForeignKey('tyne.branch.id'))

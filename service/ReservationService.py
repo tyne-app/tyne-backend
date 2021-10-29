@@ -24,6 +24,8 @@ class ReservationService:
 
     def create_reservation(self, client_id: int, reservation: NewReservationRequest, db: Session):
 
+        reservation_id = 0
+
         try:
             reservation.validate_fields()
 
@@ -66,7 +68,6 @@ class ReservationService:
                                   status_code=status.HTTP_400_BAD_REQUEST,
                                   cause="La compra debe ser mayor a " + str(min_buy))
 
-            # ahora que se validaron los datos, se guarda la reserva
             entity = ReservationEntity()
             entity.reservation_date = reservation.date
             entity.preference = reservation.preference
@@ -79,10 +80,13 @@ class ReservationService:
             reservation_status.datetime = datetime.now(tz=timezone.utc)
             reservation_status.reservation_id = entity.id
 
+            # save reservation
             reservation_response = self._reservation_dao.create_reservation(reservation=entity,
                                                                             reservation_status=reservation_status,
                                                                             db=db)
+            reservation_id = reservation_response.id
 
+            # request payment link
             response_khipu = self._khipu_service.create_link(amount=amount, payer_email=client.user.email,
                                                              transaction_id="UID-122233")
 
@@ -92,5 +96,24 @@ class ReservationService:
                                   status_code=status.HTTP_400_BAD_REQUEST,
                                   cause="Error obtener datos khipu")
 
+            # update reservation with payment_id from khipu
+            self._reservation_dao.update_payment_id_reservation(reservation_id=reservation_id,
+                                                                payment_id=response_khipu.payment_id, db=db)
+
+            # add new reservation change status
+            change_status = ReservationChangeStatusEntity()
+            change_status.status_id = ReservationStatusEnum.reserva_en_proceso.value
+            change_status.datetime = datetime.now(tz=timezone.utc)
+            change_status.reservation_id = reservation_id
+            self._reservation_dao.add_reservation_status(reservation_status=change_status, db=db)
+
         except Exception as error:
+
+            if reservation_id > 0:
+                change_status = ReservationChangeStatusEntity()
+                change_status.status_id = ReservationStatusEnum.reserva_con_problemas.value
+                change_status.datetime = datetime.now(tz=timezone.utc)
+                change_status.reservation_id = reservation_id
+                self._reservation_dao.add_reservation_status(reservation_status=change_status, db=db)
+
             raise error

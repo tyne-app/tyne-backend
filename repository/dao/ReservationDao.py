@@ -30,6 +30,28 @@ class ReservationDao:
                               cause=error)
 
     @classmethod
+    def update_payment_id_reservation(cls, reservation_id: int, payment_id: str, db: Session):
+        try:
+
+            reservation: ReservationEntity = db.query(ReservationEntity) \
+                .filter(ReservationEntity.id == reservation_id) \
+                .first()
+
+            print(reservation.id)
+            if reservation:
+                reservation.payment_id = payment_id
+                db.commit()
+                return reservation
+
+            return reservation
+        except Exception as error:
+            db.rollback()
+            raise CustomError(name="Error al actualizar payment_id reserva",
+                              detail="Error",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause=error)
+
+    @classmethod
     def add_reservation_status(cls, reservation_status: ReservationChangeStatusEntity, db: Session):
         try:
             db.add(reservation_status)
