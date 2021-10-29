@@ -57,10 +57,11 @@ class Menu:
         return self
 
     def set_rating(self, opinions):
+        qualifications = list()
         if opinions:
             for opt in list(opinions):
-                opinions.append(opt.qualification)
-            self.rating = sum(opinions) / len(opinions)
+                qualifications.append(opt.qualification)
+            self.rating = sum(qualifications) / len(qualifications)
             return self
 
         else:
