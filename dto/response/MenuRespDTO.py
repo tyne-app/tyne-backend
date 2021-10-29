@@ -8,7 +8,7 @@ class ProductRespDTO(BaseModel):
     description: str
     url_image: str
     amount: str
-    commision_tyne: str
+    commission_tyne: str
 
 
 class CategoryRespDTO(BaseModel):

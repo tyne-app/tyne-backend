@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from starlette import status
 
 from dto.request.NewReservationRequest import NewReservationRequest
+from dto.response.ReservationResponse import ReservationResponse
 from enums.ReservationStatusEnum import ReservationStatusEnum
 from exception.exceptions import CustomError
 from repository.dao.ClientDao import ClientDao
@@ -13,6 +14,7 @@ from repository.entity.ClientEntity import ClientEntity
 from repository.entity.ProductEntity import ProductEntity
 from repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
 from repository.entity.ReservationEntity import ReservationEntity
+from repository.entity.ReservationProductEntity import ReservationProductEntity
 from service.KhipuService import KhipuService
 
 
@@ -23,6 +25,8 @@ class ReservationService:
     _reservation_dao = ReservationDao()
 
     def create_reservation(self, client_id: int, reservation: NewReservationRequest, db: Session):
+
+        reservation_id = 0
 
         try:
             reservation.validate_fields()
@@ -53,10 +57,19 @@ class ReservationService:
 
             amount = 0
 
+            reservation_products: list[ReservationProductEntity] = []
+
             for product in products:
                 for x in reservation.products:
                     if product.id == x.id:
                         amount += x.quantity * (product.amount + product.commission_tyne)
+                        reservation_product = ReservationProductEntity()
+                        reservation_product.name_product = product.name
+                        reservation_product.category_product = product.category.name
+                        reservation_product.amount = product.amount
+                        reservation_product.commission_tyne = product.commission_tyne
+                        reservation_product.quantity = x.quantity
+                        reservation_products.append(reservation_product)
 
             amount = round(amount)
             min_buy: int = 10000
@@ -66,23 +79,28 @@ class ReservationService:
                                   status_code=status.HTTP_400_BAD_REQUEST,
                                   cause="La compra debe ser mayor a " + str(min_buy))
 
-            # ahora que se validaron los datos, se guarda la reserva
             entity = ReservationEntity()
             entity.reservation_date = reservation.date
             entity.preference = reservation.preference
             entity.client_id = client_id
             entity.branch_id = reservation.branch_id
             entity.people = reservation.people
+            entity.hour = reservation.hour
 
             reservation_status = ReservationChangeStatusEntity()
             reservation_status.status_id = ReservationStatusEnum.reserva_iniciada.value
             reservation_status.datetime = datetime.now(tz=timezone.utc)
             reservation_status.reservation_id = entity.id
 
+            # save reservation
             reservation_response = self._reservation_dao.create_reservation(reservation=entity,
                                                                             reservation_status=reservation_status,
+                                                                            products=reservation_products,
                                                                             db=db)
 
+            reservation_id = reservation_response.id
+
+            # request payment link
             response_khipu = self._khipu_service.create_link(amount=amount, payer_email=client.user.email,
                                                              transaction_id="UID-122233")
 
@@ -92,5 +110,30 @@ class ReservationService:
                                   status_code=status.HTTP_400_BAD_REQUEST,
                                   cause="Error obtener datos khipu")
 
+            # update reservation with payment_id from khipu
+            self._reservation_dao.update_payment_id_reservation(reservation_id=reservation_id,
+                                                                payment_id=response_khipu.payment_id, db=db)
+
+            # add new reservation change status
+            change_status = ReservationChangeStatusEntity()
+            change_status.status_id = ReservationStatusEnum.reserva_en_proceso.value
+            change_status.datetime = datetime.now(tz=timezone.utc)
+            change_status.reservation_id = reservation_id
+            self._reservation_dao.add_reservation_status(reservation_status=change_status, db=db)
+
+            response = ReservationResponse()
+            response.url_payment = response_khipu.url
+            response.reservation_id = reservation_id
+            response.payment_id = response_khipu.payment_id
+            return response
+
         except Exception as error:
+
+            if reservation_id > 0:
+                change_status = ReservationChangeStatusEntity()
+                change_status.status_id = ReservationStatusEnum.reserva_con_problemas.value
+                change_status.datetime = datetime.now(tz=timezone.utc)
+                change_status.reservation_id = reservation_id
+                self._reservation_dao.add_reservation_status(reservation_status=change_status, db=db)
+
             raise error

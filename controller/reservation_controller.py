@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Response, status, Request
 from sqlalchemy.orm import Session
 from configuration.database import database
 from dto.request.NewReservationRequest import NewReservationRequest
+from dto.response.ReservationResponse import ReservationResponse
 from service.JwtService import JwtService
 from service.ReservationService import ReservationService
 
@@ -14,7 +15,7 @@ _jwt_service_ = JwtService()
 _service_ = ReservationService()
 
 
-@reservation_controller.post('/', status_code=status.HTTP_201_CREATED)
+@reservation_controller.post('/', status_code=status.HTTP_200_OK, response_model=ReservationResponse)
 async def create_reservation(request: Request,
                              response: Response,
                              reservation_request: NewReservationRequest,
@@ -26,4 +27,6 @@ async def create_reservation(request: Request,
     token = request.headers['authorization']
     token_payload = _jwt_service_.verify_and_get_token_data(token=token)
 
-    _service_.create_reservation(client_id=token_payload.id_branch_client, reservation=reservation_request, db=db)
+    response = _service_.create_reservation(client_id=token_payload.id_branch_client, reservation=reservation_request,
+                                            db=db)
+    return response
