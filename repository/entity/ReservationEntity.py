@@ -1,8 +1,7 @@
-from sqlalchemy import Integer, String, Column, ForeignKey, Date
+from sqlalchemy import Integer, String, Column, ForeignKey, TIMESTAMP, Date
 from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
-from repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
 
 
 class ReservationEntity(Base):

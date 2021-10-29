@@ -16,7 +16,7 @@ class Menu:
         self.sections = list()
 
     @classmethod
-    def to_menu_read_domain(cls, products: list[ProductEntity], branch: BranchEntity):
+    def to_menu_read_domain(cls, products: list[ProductEntity], branch: BranchEntity, opinions):
         menu_domain = Menu()
 
         menu_domain.set_branch_id(branch)
@@ -25,7 +25,7 @@ class Menu:
 
         menu_domain.set_sections_and_rango_precio(products)
 
-        menu_domain.set_rating(branch)
+        menu_domain.set_rating(opinions)
 
         return menu_domain
 
@@ -56,15 +56,16 @@ class Menu:
 
         return self
 
-    def set_rating(self, branch):
-        opinions = list()
+    def set_rating(self, opinions):
+        if opinions:
+            for opt in list(opinions):
+                opinions.append(opt.qualification)
+            self.rating = sum(opinions) / len(opinions)
+            return self
 
-        for op in list(branch.opinion_branch):
-            opinions.append(op.qualification)
-
-        self.rating = sum(opinions) / len(opinions)
-
-        return self
+        else:
+            self.rating = 0
+            return self
 
     def add_seccion(self, product: Product, category: Category):
 
