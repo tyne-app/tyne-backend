@@ -8,6 +8,8 @@ from schema.search_schema import PreviewBranchOutputClient, BranchProfileOutput
 from dto.response.search_response import ListBranchOutput
 from service.SearchService import SearchService
 from dto.request.search_request_dto import SearchParameter
+from service.JwtService import JwtService
+
 
 search_controller = APIRouter(
     prefix="/v1/locals/search",
@@ -27,8 +29,7 @@ async def search_parameters_params(
         'date_reservation': dateReservation,
         'state_id': stateId,
         'sort_by': sortBy,
-        'order_by': orderBy,
-        'client_id': None
+        'order_by': orderBy
     }
 
 
@@ -45,14 +46,16 @@ async def search_locals(
         db: SessionLocal = Depends(get_data_base)):
     logger.info('search_paramters: {}', search_parameters)
 
+    client_id = None
     if 'authorization' in request.headers:
-        # TODO: Extraer ID del token para agregarlo a query
-        # TODO: Agregar client id al diccionario
-        # TODO: search_parameters['client_id'] = client_id
-        pass
+        token = request.headers['authorization']
+        jwt_service = JwtService()
+        token_payload = jwt_service.verify_and_get_token_data(token=token)
+        client_id = token_payload.id_branch_client
 
     search_service = SearchService()
-    all_branches = await search_service.search_all_branches(parameters=search_parameters, db=db)
+    all_branches = await search_service\
+        .search_all_branches(parameters=search_parameters, client_id=client_id, db=db)
 
     if all_branches['data'] is None:
         response.status_code = status.HTTP_204_NO_CONTENT

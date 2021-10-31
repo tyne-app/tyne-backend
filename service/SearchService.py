@@ -16,7 +16,7 @@ class SearchService:
     search_validator = SearchValidator()
     search_dao = SearchDAO()
 
-    async def search_all_branches(self, parameters: SearchParameter, db: SessionLocal, client_id: int = None):
+    async def search_all_branches(self, parameters: SearchParameter, db: SessionLocal, client_id: int):
         logger.info('parameters: {}, client_id: {}', parameters, client_id)
 
         search_parameters = self.clear_null_values(values=parameters)  # TODO: Formato datetime validar con otra función y no con REGEX
@@ -27,7 +27,8 @@ class SearchService:
             search_parameters['date_reservation'] = search_parameters['date_reservation'].replace("/", "-")
             logger.info('search_parameters[date_reservation]: {}', search_parameters['date_reservation'])
 
-        all_branches = self.search_dao.search_all_branches(search_parameters=search_parameters, db=db)
+        all_branches = self.search_dao\
+            .search_all_branches(search_parameters=search_parameters, client_id=client_id, db=db)
 
         if type(all_branches) is str:
             self.raise_custom_error(name=self.MSG_ERROR_MS_LOCAL, message=all_branches)

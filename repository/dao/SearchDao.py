@@ -14,7 +14,7 @@ from dto.request.search_request_dto import SearchParameter
 
 class SearchDAO:
 
-    def search_all_branches(self, search_parameters: SearchParameter, db: SessionLocal, client_id: int = None):
+    def search_all_branches(self, search_parameters: SearchParameter, db: SessionLocal, client_id: int):
         try:
             logger.info('search_parameters: {}, client_id: {}', search_parameters, client_id)
 

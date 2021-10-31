@@ -19,7 +19,6 @@ class SearchParameter(BaseModel):
     stateId: Optional[int] = None
     sortBy: Optional[Union[int, str]] = None
     orderBy: Optional[Union[int, str]] = None
-    client_id: Optional[int] = None
 
     @classmethod
     def to_search_branches_response(cls, content: list[PreviewBranch]):
