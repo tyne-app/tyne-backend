@@ -1,6 +1,117 @@
+from loguru import logger
+from sqlalchemy import func, distinct, or_
+from configuration.database.database import SessionLocal
+from repository.entity.BranchImageEntity import BranchImageEntity
+from repository.entity.BranchEntity import BranchEntity
+from repository.entity.StateEntity import StateEntity
+from repository.entity.RestaurantEntity import RestaurantEntity
+from repository.entity.OpinionEntity import OpinionEntity
+from repository.entity.ProductEntity import ProductEntity
+from repository.entity.ReservationEntity import ReservationEntity
+from repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
+from dto.request.search_request_dto import SearchParameter
+
 
 class SearchDAO:
-    pass
+
+    def search_all_branches(self, search_parameters: SearchParameter, db: SessionLocal, client_id: int = None):
+        try:
+            logger.info('search_parameters: {}, client_id: {}', search_parameters, client_id)
+
+            branch_image_with_clause = db.query(
+                BranchImageEntity.branch_id,
+                BranchImageEntity.url_image,
+                func.row_number().over(
+                    order_by=BranchImageEntity.id.asc(),
+                    partition_by=BranchImageEntity.branch_id
+                ).label(name='branch_image_number')
+            ).cte(name='branch_image')
+            logger.info('branch_image_with_clause: {}', str(branch_image_with_clause))
+
+            all_branches = None
+
+            if client_id:
+                all_branches = db.query(
+                    distinct(BranchEntity.id),
+                    BranchEntity.id.label(name='branch_id'),
+                    StateEntity.name.label(name='state_name'),
+                    StateEntity.id.label(name='state_id'),
+                    RestaurantEntity.name.label(name='restaurant_name'),
+                    BranchEntity.description,
+                    func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id).label(name='rating'),
+                    func.avg(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='avg_price'),
+                    func.min(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='min_price'),
+                    func.max(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='max_price'),
+                    branch_image_with_clause.c.url_image)
+                logger.info('all_branches: {}', str(all_branches))
+
+            if not client_id:
+                all_branches = db.query(
+                    distinct(BranchEntity.id),
+                    BranchEntity.id.label(name='branch_id'),
+                    StateEntity.name.label(name='state_name'),
+                    StateEntity.id.label(name='state_id'),
+                    RestaurantEntity.name.label(name='restaurant_name'),
+                    BranchEntity.description,
+                    branch_image_with_clause.c.url_image)
+                logger.info('all_branches: {}', str(all_branches))
+
+            all_branches = all_branches.select_from(BranchEntity) \
+                .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
+                .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
+                .join(branch_image_with_clause, branch_image_with_clause.c.branch_id == BranchEntity.id)
+            logger.info('all_branches: {}', str(all_branches))
+
+            if client_id:
+                all_branches = all_branches.join(ProductEntity, ProductEntity.branch_id == BranchEntity.id, isouter=True) \
+                    .join(OpinionEntity, OpinionEntity.branch_id == BranchEntity.id, isouter=True)
+                logger.info('all_branches: {}', str(all_branches))
+
+            all_branches = all_branches.filter(branch_image_with_clause.c.branch_image_number == 1)
+            logger.info('all_branches: {}', str(all_branches))
+
+            if search_parameters['name']:
+                name = search_parameters['name'].lower()
+                logger.info('name: {}', name)
+                all_branches = all_branches.filter(func.lower(RestaurantEntity.name).like("%" + name + "%"))
+
+            if search_parameters['date_reservation']:
+                date_reservation = search_parameters['date_reservation']
+                logger.info('date_reservation: {}', date_reservation)
+                reservation_data = db.query(
+                    ReservationEntity.id.label(name='reservation_id'),
+                    func.max(ReservationChangeStatusEntity.datetime).label(name='last_modify'),
+                    ReservationEntity.branch_id
+                ).select_from(ReservationEntity) \
+                    .join(ReservationChangeStatusEntity,
+                          ReservationChangeStatusEntity.reservation_id == ReservationEntity.id) \
+                    .filter(or_(ReservationChangeStatusEntity.status_id < 3, ReservationChangeStatusEntity == 4)) \
+                    .filter(ReservationEntity.reservation_date == date_reservation) \
+                    .group_by(ReservationEntity.id).cte(name='reservation_data')
+
+                all_branches = all_branches.filter(BranchEntity.id.in_(db.query(reservation_data.c.branch_id) \
+                    .select_from(reservation_data) \
+                    .group_by(reservation_data.c.branch_id) \
+                    .having(
+                    func.count(reservation_data.c.reservation_id) < 4)))
+
+            if search_parameters['state_id']:
+                state_id = search_parameters['state_id']
+                logger.info('state_id: {}', state_id)
+                all_branches = all_branches.filter(StateEntity.id == state_id)
+
+            if search_parameters['sort_by'] and search_parameters['order_by']:  # TODO: Se implementa después
+                pass
+
+            logger.info('all_branches: {}', str(all_branches))
+            all_branches = all_branches.all()
+
+            return all_branches
+        except Exception as error:
+            logger.error('error: {}', error)
+            logger.error('error.args: {}', error.args)
+            return error.args[0]
+
     '''
     def search_local(raw_query: str, db: Session):
         try:

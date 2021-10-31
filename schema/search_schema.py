@@ -11,22 +11,6 @@ class SearchParameters(BaseModel):
     order_by: Optional[int]
 
 
-class PreviewBranch(BaseModel):
-    id: int
-    name: str
-    image_url: Optional[str] = None  # TODO: Definir si es oopcional
-    price: Optional[int] = 0  # TODO: Descartar Optional, por ahora se deja por poca e inconsistente data
-    min_price: Optional[int] = 0
-    max_price: Optional[int] = 0
-    rating: Optional[float] = 0
-    description: Optional[str] = None  # TODO: Creo que es opcional, por confirmar
-
-
-class PreviewBranchOutput(BaseModel):
-    data: Optional[list[PreviewBranch]] = []
-    error: Optional[Union[str, dict]] = []
-
-
 class PreviewBranchClient(BaseModel):
     id: int
     name: str

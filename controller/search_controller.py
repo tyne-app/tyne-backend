@@ -1,56 +1,62 @@
 from typing import Optional, Union
-
-from fastapi import status, APIRouter, Response, Request
+from configuration.database.database import SessionLocal, get_data_base
+from fastapi import status, APIRouter, Response, Request, Depends
 from loguru import logger
-
+from configuration.database.database import SessionLocal, get_data_base
 from configuration.openapi.search_openapi import SearchAllBranchOpenAPI, SearchAllBranchByClientOpenAPI
-from schema.search_schema import PreviewBranchOutput, PreviewBranchOutputClient, BranchProfileOutput
+from schema.search_schema import PreviewBranchOutputClient, BranchProfileOutput
+from dto.response.search_response import ListBranchOutput
 from service.SearchService import SearchService
+from dto.request.search_request_dto import SearchParameter
 
 search_controller = APIRouter(
     prefix="/v1/locals/search",
     tags=["Search"]
 )
 
-# TODO: Crear un dto general en response para crear respuesta y retornarla, discutir con gente en qué paquete debe ir bien.
-# TODO: Próxima semana se discute busqueda de locales, por sucursal o casa matriz!
-
 # TODO: Avanzr en obtene rel perfil local perspectiva cliente por ahora.
+
+async def search_parameters_params(
+        name: Optional[str] = None,
+        dateReservation: Optional[str] = None,
+        stateId: Optional[int] = None,
+        sortBy: Optional[Union[int, str]] = None,
+        orderBy: Optional[Union[int, str]] = None):
+    return {
+        'name': name,
+        'date_reservation': dateReservation,
+        'state_id': stateId,
+        'sort_by': sortBy,
+        'order_by': orderBy,
+        'client_id': None
+    }
+
 
 @search_controller.get(
     '/all-branches', status_code=status.HTTP_200_OK,
+    response_model=ListBranchOutput,
     summary=SearchAllBranchOpenAPI.summary, responses=SearchAllBranchOpenAPI.responses,
     description=SearchAllBranchOpenAPI.description, response_description=SearchAllBranchOpenAPI.response_description
-)  # TODO: response_model=PreviewBranchOutput
+)
 async def search_locals(
         request: Request,
-        name: Optional[str] = None,
-        dateReservation: Optional[str] = None,
-        state: Optional[int] = None,
-        sortBy: Optional[Union[int, str]] = None,
-        orderBy: Optional[Union[int, str]] = None):
-
-    # TODO: Realizar búsqueda con o sin cliente logeado
-    # TODO: Si está logeado se debe extraer el ID del cliente, Para saber si tabla restaurant es favorita o no.
-
-    logger.info('name: {}, dateReservation: {}, state: {}, sortBy: {}, orderBy: {}',
-                name, dateReservation, state, sortBy, orderBy)
-
-    search_parameters = {
-        'name': name,
-        'date_reservation': dateReservation,
-        'state_id': state,
-        'sort_by': sortBy,
-        'order_by': orderBy
-    }
+        response: Response,
+        search_parameters: SearchParameter = Depends(search_parameters_params),
+        db: SessionLocal = Depends(get_data_base)):
     logger.info('search_paramters: {}', search_parameters)
 
     if 'authorization' in request.headers:
         # TODO: Extraer ID del token para agregarlo a query
+        # TODO: Agregar client id al diccionario
+        # TODO: search_parameters['client_id'] = client_id
         pass
 
     search_service = SearchService()
-    all_branches = await search_service.search_all_branches(parameters=search_parameters)
+    all_branches = await search_service.search_all_branches(parameters=search_parameters, db=db)
+
+    if all_branches['data'] is None:
+        response.status_code = status.HTTP_204_NO_CONTENT
+
     return all_branches
 
 '''

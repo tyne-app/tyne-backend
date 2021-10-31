@@ -3,10 +3,6 @@ from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
 
-from repository.entity.StateEntity import StateEntity
-from repository.entity.BranchEntity import BranchEntity
-from repository.entity.RestaurantImageEntity import RestaurantImageEntity
-
 
 class RestaurantEntity(Base):
     __tablename__ = "restaurant"
