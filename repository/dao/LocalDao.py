@@ -10,7 +10,6 @@ from repository.entity.ScheduleEntity import ScheduleEntity
 from repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from configuration.database.database import SessionLocal
 from repository.entity.UserEntity import UserEntity
-from repository.entity.UserTypeEntity import UserTypeEntity
 
 
 class LocalDAO:
