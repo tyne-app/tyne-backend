@@ -5,12 +5,14 @@ from repository.dao.SearchDao import SearchDAO
 from configuration.database.database import SessionLocal
 from exception.exceptions import CustomError
 from dto.request.search_request_dto import SearchParameter
+from dto.dto import GenericDTO as wrapperDTO
 
 
 class SearchService:
     SORT_BY = {1: "rating", 2: "name", 3: "price"}
     ORDER_BY = {1: "asc", 2: "desc"}
-    MSG_ERROR_MS_LOCAL = "Error al buscar locales"
+    MSG_ERROR_ALL_BRANCHES = "Error al buscar locales"
+    MSG_ERROR_BRANCH_PROFILE = "Error al obtener perfil local"
     NOT_BRANCH_MSG_ERROR = "Error, local no existente"
     NOT_BRANCH_RAW_MSG_ERROR = "'NoneType' object has no attribute 'restaurant_id'"
     search_validator = SearchValidator()
@@ -31,22 +33,19 @@ class SearchService:
             .search_all_branches(search_parameters=search_parameters, client_id=client_id, db=db)
 
         if type(all_branches) is str:
-            self.raise_custom_error(name=self.MSG_ERROR_MS_LOCAL, message=all_branches)
+            self.raise_custom_error(name=self.MSG_ERROR_ALL_BRANCHES, message=all_branches)
 
         return SearchParameter.to_search_branches_response(content=all_branches)
 
-    async def search_branch_profile(self, branch_id: int):
+    async def search_branch_profile(self, branch_id: int, client_id: int, db: SessionLocal):
         logger.info('branch_id: {}', branch_id)
-        #search_dto = SearchDTO()
-        #ms_local_client = MSLocalClient()
-        #branch_profile = await ms_local_client.search_branch_profile(branch_id=branch_id)
+        branch_dict = self.search_dao.search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)
 
-        #if type(branch_profile) == str:
-        #    search_dto.error = self.NOT_BRANCH_MSG_ERROR
-        #    return search_dto.__dict__
+        if type(branch_dict) is str:
+            self.raise_custom_error(name=self.MSG_ERROR_BRANCH_PROFILE, message=branch_dict)
 
-        #search_dto.data = branch_profile
-        #return search_dto.__dict__
+        branch_profile_populated = self.populate_branch_profile(branch_dict=branch_dict)
+        return self.to_branch_profile_response(content=branch_profile_populated)
 
     def clear_null_values(self, values: dict):
         logger.info('values: {}', values)
@@ -57,44 +56,37 @@ class SearchService:
         logger.info('clean_values: {}', clean_values)
         return clean_values
 
-    def get_branch(self, branch_id: int, db: SessionLocal):
-        logger.info('branch_id: {}', branch_id)
-        attribute_dict = self.read_branch(branch_id=branch_id, db=db)
-
-        if type(attribute_dict) == list:
-            return self.create_response(data=attribute_dict)
-
-        if type(attribute_dict) != dict:
-            return self.create_response(data=attribute_dict)
-
-        branch = self.populate_branch_profile(attribute_dict=attribute_dict)
-        return self.create_response(branch)
-
-    def populate_branch_profile(self, attribute_dict: dict):
-        logger.info('attribute_dict: {}', attribute_dict)
-        attribute = {
-            'id': attribute_dict['branch']['id'],
-            'name': attribute_dict['branch']['name'],
-            'description': attribute_dict['branch']['description'],
-            'latitude': attribute_dict['branch']['latitude'],
-            'longitude': attribute_dict['branch']['longitude'],
-            'accept_pet': attribute_dict['branch']['accept_pet'],
-            'street': attribute_dict['branch']['street'],
-            'street_number': attribute_dict['branch']['street_number'],
-            'rating': attribute_dict['aggregate_values']['rating'] if attribute_dict['aggregate_values'] else 0,
-            'price': attribute_dict['aggregate_values']['price'] if attribute_dict['aggregate_values'] else 0,
-            'min_price': attribute_dict['aggregate_values']['min_price'] if attribute_dict['aggregate_values'] else 0,
-            'max_price': attribute_dict['aggregate_values']['max_price'] if attribute_dict['aggregate_values'] else 0,
-            'related_branch': attribute_dict['related_branch'],
-            'branch_images': attribute_dict['branch_images'],
-            'opinion_list': attribute_dict['opinion_list'],
-            'schedule_list': attribute_dict['schedule_branch']
+    def populate_branch_profile(self, branch_dict: dict):
+        logger.info('branch_dict: {}', branch_dict)
+        branch_profile = {
+            'id': branch_dict['branch']['id'],
+            'description': branch_dict['branch']['description'],
+            'latitude': branch_dict['branch']['latitude'],
+            'longitude': branch_dict['branch']['longitude'],
+            'street': branch_dict['branch']['street'],
+            'street_number': branch_dict['branch']['street_number'],
+            'accept_pet': branch_dict['branch']['accept_pet'],
+            'name': branch_dict['branch']['name'],
+            'state_name': branch_dict['branch']['state_name'],
+            'rating': branch_dict['aggregate_values']['rating'] if branch_dict['aggregate_values'] else 0,
+            'avg_price': branch_dict['aggregate_values']['avg_price'] if branch_dict['aggregate_values'] else 0,
+            'min_price': branch_dict['aggregate_values']['min_price'] if branch_dict['aggregate_values'] else 0,
+            'max_price': branch_dict['aggregate_values']['max_price'] if branch_dict['aggregate_values'] else 0,
+            'branches': branch_dict['branches'],
+            'images': branch_dict['images'],
+            'schedule': branch_dict['schedule'],
+            'opinions': branch_dict['opinions']
         }
-        logger.info('attribute: {}', attribute)
-        return attribute
+        logger.info('branch_profile: {}', branch_profile)
+        return branch_profile
 
     def raise_custom_error(self, name: str, message: str):
         raise CustomError(name=name,
                           detail=message,
                           status_code=status.HTTP_400_BAD_REQUEST,
                           cause="")  # TODO: Llenar campo
+
+    def to_branch_profile_response(self, content):  # TODO: Mover función a otra clase(?)
+        response = wrapperDTO()
+        response.data = content
+        return response.__dict__
