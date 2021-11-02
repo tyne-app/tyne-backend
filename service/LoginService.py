@@ -32,3 +32,7 @@ class LoginService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return user_created.id
+
+    @classmethod
+    def delete_user_login(cls, email, db):
+        cls._user_dao_.delete_user_by_email(email, db)
