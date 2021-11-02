@@ -80,3 +80,7 @@ class UserDao:
                               detail="BD error",
                               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                               cause=error.__cause__)
+
+    @classmethod
+    def delete_user_by_email(cls, email: str, db: Session):
+        db.query(UserEntity).filter(UserEntity.email == email).delete()

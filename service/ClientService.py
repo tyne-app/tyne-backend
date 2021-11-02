@@ -38,6 +38,7 @@ class ClientService:
         client_is_created = cls._client_dao_.create_client(client_req, id_login_created, db)
 
         if not client_is_created:
+            cls._login_service_.delete_user_login(client_req.email, db)
             raise CustomError(
                 name="Error in create_client",
                 detail="Client not created or updated",
