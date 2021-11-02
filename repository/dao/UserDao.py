@@ -1,8 +1,12 @@
+from datetime import datetime
+
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from starlette import status
 from exception.exceptions import CustomError
 from repository.entity.UserEntity import UserEntity
-from repository.entity.UserTypeEntity import UserTypeEntity  #no eliminar o muere todo
+from loguru import logger
+from repository.entity.UserTypeEntity import UserTypeEntity  # no eliminar o muere todo
 
 
 class UserDao:
@@ -48,3 +52,31 @@ class UserDao:
         except Exception as error:
             raise error
 
+    @classmethod
+    def create_user_login(cls, email: str, password: str, user_type: UserTypeEntity, db: Session):
+        try:
+            user_entity = UserEntity()
+            user_entity.email = email
+            user_entity.password = password
+            user_entity.created_date = datetime.now()
+            user_entity.is_active = True
+            user_entity.id_user_type = user_type.id
+
+            db.add(user_entity)
+            db.flush()
+
+            return user_entity
+
+        except SQLAlchemyError as error:
+            logger.error(error)
+            raise CustomError(name="Error create_user",
+                              detail="BD error",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause=error.__cause__)
+
+        except Exception as error:
+            logger.error(error)
+            raise CustomError(name="Error create_user",
+                              detail="BD error",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause=error.__cause__)
