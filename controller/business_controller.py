@@ -130,10 +130,10 @@ async def read_branch_profile(request: Request,
         client_id = token_payload.id_branch_client
 
     search_service = SearchService()
-    branch_profile = await search_service \
-        .search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)
+    branch_profile = await search_service.search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)
 
-    # if all_branches['data'] is None:
-    #   response.status_code = status.HTTP_204_NO_CONTENT
+    if branch_profile is None:
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return
 
     return branch_profile
