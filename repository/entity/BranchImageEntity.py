@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Column, ForeignKey
+from sqlalchemy import Integer, String, Column, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 from configuration.database.database import Base
@@ -10,3 +10,4 @@ class BranchImageEntity(Base):
     id = Column(Integer, primary_key=True, index=True)
     url_image = Column(String)
     branch_id = Column(Integer, ForeignKey("tyne.branch.id"))
+    is_main_image = Column(Boolean)
