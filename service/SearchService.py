@@ -41,6 +41,12 @@ class SearchService:
         logger.info('branch_id: {}', branch_id)
         branch_dict = self.search_dao.search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)
 
+        if not branch_dict:
+            raise CustomError(name="Sin resultados",
+                              detail="No existe el local",
+                              status_code=status.HTTP_204_NO_CONTENT,
+                              cause="")
+
         if type(branch_dict) is str:
             self.raise_custom_error(name=self.MSG_ERROR_BRANCH_PROFILE, message=branch_dict)
 
