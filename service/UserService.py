@@ -83,12 +83,19 @@ class UserService:
         loginRequest.validate_fields()
 
         # try to verify the token and decode it
-        cls._tokenService_.decode_token_firebase(loginRequest.token)
+        token_firebase = cls._tokenService_.decode_token_firebase(loginRequest.token)
 
         tokenResponse: UserTokenResponse = None
         user: UserEntity = cls._user_dao_.verify_email(loginRequest.email, db)
 
         if user is not None:
+
+            if token_firebase.email != loginRequest.email:
+                raise CustomError(
+                    name="Error al iniciar sesión",
+                    detail="Error al iniciar sesión",
+                    status_code=status.HTTP_400_BAD_REQUEST)
+
             if user.is_active is not True:
                 raise CustomError(name="Usuario no autorizado",
                                   detail="Validación",

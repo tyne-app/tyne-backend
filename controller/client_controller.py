@@ -45,7 +45,6 @@ def get_user_by_id(response: Response, id: int, db: Session = Depends(database.g
 def create_client(response: Response, client_req: ClientRequestDTO, db: Session = Depends(database.get_data_base)):
     try:
         return _client_service_.create_client(client_req, db)
-
     except CustomError as error:
         raise error
 

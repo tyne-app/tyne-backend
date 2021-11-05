@@ -69,8 +69,8 @@ class ClientService:
 
             if token.email != client_request.email:
                 raise CustomError(
-                    name="Emails no coinciden",
-                    detail="Los emails no coinciden",
+                    name="Error al iniciar sesión",
+                    detail="Error al iniciar sesión",
                     status_code=status.HTTP_400_BAD_REQUEST)
 
             # create client entity
