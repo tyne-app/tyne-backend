@@ -25,7 +25,7 @@ def login(response: Response, request: Request, loginRequest: LoginUserRequest,
     token = _service_.login_user(loginRequest=loginRequest, ip=request.client.host, db=db)
 
     if token is None:
-        response.status_code = status.HTTP_404_NOT_FOUND
+        response.status_code = status.HTTP_204_NO_CONTENT
 
     return token
 
@@ -39,9 +39,8 @@ def social_login(response: Response, request: Request, loginRequest: LoginSocial
     token = _service_.social_login_user(loginRequest=loginRequest, ip=request.client.host, db=db)
 
     if token is None:
-        response.status_code = status.HTTP_404_NOT_FOUND
+        response.status_code = status.HTTP_204_NO_CONTENT
 
-    print(token.access_token)
     return token
 
 

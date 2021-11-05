@@ -22,7 +22,7 @@ class UserDao:
             raise error
 
     @classmethod
-    def login(cls, email: str, db: Session):
+    def verify_email(cls, email: str, db: Session):
         try:
             user = db.query(UserEntity) \
                 .filter(UserEntity.email == email) \
@@ -53,7 +53,7 @@ class UserDao:
             raise error
 
     @classmethod
-    def create_user_login(cls, email: str, password: str, user_type: UserTypeEntity, db: Session):
+    def create_user(cls, email: str, password: str, user_type: UserTypeEntity, db: Session):
         try:
             user_entity = UserEntity()
             user_entity.email = email
@@ -64,15 +64,9 @@ class UserDao:
 
             db.add(user_entity)
             db.flush()
+            db.commit()
 
             return user_entity
-
-        except SQLAlchemyError as error:
-            logger.error(error)
-            raise CustomError(name="Error create_user",
-                              detail="BD error",
-                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                              cause=error.__cause__)
 
         except Exception as error:
             logger.error(error)

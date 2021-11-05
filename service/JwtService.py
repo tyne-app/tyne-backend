@@ -57,10 +57,10 @@ class JwtService:
             return token_firebase
         except Exception as exception:
             logger.exception(exception)
-            raise CustomError(name="Error al decodificar token",
-                              detail="",
+            raise CustomError(name="Token inválido",
+                              detail="Token inválido",
                               status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="")
+                              cause="Token inválido")
 
     def verify_and_get_token_data(self, token: str):
         try:
