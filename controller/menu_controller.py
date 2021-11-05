@@ -7,12 +7,12 @@ from service import menu_service
 from loguru import logger
 
 menu_controller = APIRouter(
-    prefix="/v1/locals/menu",
-    tags=["Menu"]
+    prefix="/v1/menus",
+    tags=["Menus"]
 )
 
 
-@menu_controller.get('/all_category', status_code=status.HTTP_200_OK)
+@menu_controller.get('/categories', status_code=status.HTTP_200_OK)
 async def all_category(db: Session = Depends(database.get_data_base)):
     try:
         return await menu_service.all_category(db)

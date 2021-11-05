@@ -132,13 +132,13 @@ class LocalValidator:
         logger.info('new_branch: {}', NewBranch)
 
         invalid_data = {}
-        if not re.fullmatch(self.NUMBER_AND_WORD_REGEX, new_branch.street):
+        if not re.fullmatch(self.NUMBER_AND_WORD_REGEX, new_branch.branch.street):
             invalid_data["street"] = self.INVALID_DATA_MESSAGE
-        if type(new_branch.street_number) != int:
+        if type(new_branch.branch.street_number) != int:
             invalid_data["street_number"] = self.INVALID_DATA_MESSAGE
-        if type(new_branch.state_id) != int:
+        if type(new_branch.branch.state_id) != int:
             invalid_data["state_id"] = self.INVALID_DATA_MESSAGE
-        if type(new_branch.accept_pet) != bool:
+        if type(new_branch.branch.accept_pet) != bool:
             invalid_data["accept_pet"] = self.INVALID_DATA_MESSAGE
         return invalid_data
 
@@ -150,7 +150,7 @@ class LocalValidator:
         manager_checked = self.validate_manager(manager=new_branch.manager)
         if bool(manager_checked):
             data_checked["manager"] = manager_checked
-        branch_checked = self.validate_second_branch(new_branch=new_branch.branch)
+        branch_checked = self.validate_second_branch(new_branch=new_branch)
         if bool(branch_checked):
             data_checked["new_branch"] = branch_checked
         branch_bank_checked = self.validate_branch_bank(branch_bank=new_branch.branch_bank)

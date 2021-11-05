@@ -28,10 +28,11 @@ class SearchDAO:
                 BranchImageEntity.branch_id,
                 BranchImageEntity.url_image,
                 func.row_number().over(
-                    order_by=BranchImageEntity.id.asc(),
-                    partition_by=BranchImageEntity.branch_id
+                    partition_by=BranchImageEntity.branch_id,
                 ).label(name='branch_image_number')
-            ).cte(name='branch_image')
+            ) \
+                .filter(BranchImageEntity.is_main_image) \
+                .cte(name='branch_image')
             logger.info('branch_image_with_clause: {}', str(branch_image_with_clause))
 
             all_branches = None
@@ -71,12 +72,13 @@ class SearchDAO:
             logger.info('all_branches: {}', str(all_branches))
 
             if client_id:
-                all_branches = all_branches.join(ProductEntity, ProductEntity.branch_id == BranchEntity.id, isouter=True) \
+                all_branches = all_branches.join(ProductEntity, ProductEntity.branch_id == BranchEntity.id,
+                                                 isouter=True) \
                     .join(OpinionEntity, OpinionEntity.branch_id == BranchEntity.id, isouter=True)
                 logger.info('all_branches: {}', str(all_branches))
 
             all_branches = all_branches.filter(branch_image_with_clause.c.branch_image_number == 1) \
-                                       .filter(UserEntity.is_active)
+                .filter(UserEntity.is_active)
             logger.info('all_branches: {}', str(all_branches))
 
             if search_parameters['name']:
@@ -139,12 +141,12 @@ class SearchDAO:
                 RestaurantEntity.id.label(name='restaurant_id'),
                 RestaurantEntity.name,
                 StateEntity.name.label(name='state_name')) \
-                .select_from(BranchEntity)\
+                .select_from(BranchEntity) \
                 .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
                 .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
                 .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
                 .join(UserEntity, UserEntity.id == ManagerEntity.id_user) \
-                .filter(BranchEntity.id == branch_id)\
+                .filter(BranchEntity.id == branch_id) \
                 .filter(UserEntity.is_active).first()
 
             if not branch:
@@ -170,7 +172,7 @@ class SearchDAO:
 
             schedule = db.query(
                 ScheduleEntity) \
-                .join(BranchScheduleEntity, BranchScheduleEntity.schedule_id == ScheduleEntity.id)\
+                .join(BranchScheduleEntity, BranchScheduleEntity.schedule_id == ScheduleEntity.id) \
                 .join(BranchEntity, BranchEntity.id == BranchScheduleEntity.branch_id) \
                 .filter(BranchEntity.id == branch.id).all()
 
@@ -181,7 +183,7 @@ class SearchDAO:
                 BranchEntity.id.label(name='branch_id'),
                 RestaurantEntity.name.label(name='restaurant_name'),
                 StateEntity.name.label(name='state_name')) \
-                .select_from(BranchEntity)\
+                .select_from(BranchEntity) \
                 .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
                 .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
                 .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
@@ -193,7 +195,7 @@ class SearchDAO:
             branch_dict['branches'] = branches
             logger.info('branch_dict: {}', branch_dict)
 
-            images = db.query(BranchImageEntity.id, BranchImageEntity.url_image)\
+            images = db.query(BranchImageEntity.id, BranchImageEntity.url_image) \
                 .select_from(BranchImageEntity) \
                 .join(BranchEntity, BranchEntity.id == BranchImageEntity.branch_id) \
                 .filter(BranchEntity.id == branch.id).all()
