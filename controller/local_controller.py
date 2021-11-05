@@ -8,10 +8,25 @@ from service.LocalService import LocalService
 from dto.request.local_request_dto import NewAccount, NewBranch
 from service.JwtService import JwtService
 
+
+from service.MapboxService import MapBoxService
 local_controller = APIRouter(
     prefix="/v1/locals",
     tags=["Local"]
 )
+
+
+@local_controller.get("/test") # TODO: ELIMINAAAAAAAAAAAAARRRRRRRRRRRRR
+async def test_mapbox():
+    map_box = MapBoxService()
+    await map_box.get_latitude_longitude(address="avenida 10 de julio huamachuco 680", state_name="Santiago")
+    # TODO: Para ocupar mapbox, obtener el string del State y el país por defecto Chile
+    # TODO: Meterse a [features] --> Recorrer la lista
+    # TODO: Por cada elemento, entrar a [context]
+    # TODO: Dentro de context ubicar el id que su valor contenga la palabra place para la comuna y filtrarla con el State.name
+    # TODO: Dentro de context ubicar el id que su valor contenga la palabra country para el pais y filtrar por el pais
+    # TODO: AL ser True los 2 puntos anteriores, retornar el valor [center]
+    pass
 
 
 @local_controller.post("/register", status_code=status.HTTP_201_CREATED)
