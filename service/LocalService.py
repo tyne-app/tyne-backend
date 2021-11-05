@@ -4,25 +4,27 @@ from validator.LocalValidator import LocalValidator
 from exception.exceptions import CustomError
 from fastapi import status
 from service.MapboxService import MapBoxService
-from service.FirebaseService import FirebaseService
 from repository.dao.LocalDao import LocalDAO
 from dto.request.local_request_dto import ParserDTO
 from configuration.database.database import SessionLocal
+from repository.dao.StateDao import get_state_by_id
 
 
 class LocalService:
     MSG_CREATE_ACCOUNT_SUCCESSFULLY = "Local creado correctamente"
     MSG_ERROR_BRANCH_ADDRESS = "Dirección de local no válida"
-    LEGAL_REPRESENTATIVE_KEY_WORD = 'legal_representative_identifier_key'
-    LEGAL_REPRESENTATIVE_ERROR_MESSAGE = 'Rut representante legal ya está registrado'
+    LEGAL_REPRESENTATIVE_IDENTIFIER_KEY_WORD = 'legal_representative_identifier_key'
+    LEGAL_REPRESENTATIVE_IDENTIFIER_ERROR_MESSAGE = 'Rut representante legal ya está registrado'
+    LEGAL_REPRESENTATIVE_EMAIL_KEY_WORD = 'legal_representative_email_key'
+    LEGAL_REPRESENTATIVE_EMAIL_ERROR_MESSAGE = 'Email representante legal ya está registrado'
     RESTAURANT_KEY_WORD = 'restaurant_identifier_key'
     RESTAURANT_ERROR_MESSAGE = 'Rut restaurant ya está registrado'
     STANDARD_ERROR_MESSAGE = 'Error en base de datos'
     CREATE_ACCOUNT_ERROR_MSG = 'Error al registrar cuenta de local'
     GET_PROFILE_ERROR_MSG = 'Error al obtener perfil sucursal'
     NEW_BRANCH_ERROR_MSG = 'Error al agregar una sucursal nueva'
-    EMAIL_KEY_WORD = 'email'
-    EMAIL_ERROR_MESSAGE = 'Email de usuario ya está registrado'
+    MANAGER_EMAIL_KEY_WORD = 'user_un_email'
+    MANAGER_EMAIL_ERROR_MESSAGE = 'Email manager ya está registrado'
     MSG_NEW_BRANCH = 'Sucursal agregado correctamente'
     ID_USER_TYPE = 1
     parser_dto = ParserDTO()
@@ -35,7 +37,11 @@ class LocalService:
 
         branch = new_account.branch
         logger.info('branch: {}', branch)
-        branch_geocoding = await self.geocoding(street=branch.street, street_number=branch.street_number)
+
+        state = get_state_by_id(id_state=branch.state_id, db=db)
+        logger.info('state.name: {}', state.name)
+
+        branch_geocoding = await self.geocoding(street=branch.street, street_number=branch.street_number, state_name=state.name)
         logger.info('branch_geocoding: {}', branch_geocoding)
 
         manager = new_account.manager
@@ -82,28 +88,16 @@ class LocalService:
 
         return new_account.to_branch_create_response(content=self.MSG_CREATE_ACCOUNT_SUCCESSFULLY)
 
-    async def geocoding(self, street: str, street_number: int):
+    async def geocoding(self, street: str, street_number: int, state_name: str):
         logger.info('street: {}, street_number: {}', street, street_number)
         mapbox_service = MapBoxService()
 
         address = street + " " + str(street_number)
         logger.info('address: {}', address)
 
-        coordinates = await mapbox_service.get_latitude_longitude(address=address)
+        coordinates = await mapbox_service.get_latitude_longitude(address=address, state_name=state_name)
         logger.info("coordinates: {}", coordinates)
         return coordinates
-
-    async def create_credentials(self, email: str, password: str):
-        logger.info('email: {}, password: {}', email, password)
-        firebase_service = FirebaseService()
-        uid = await firebase_service.create_account(email=email, password=password)
-        return uid
-
-    async def delete_credentials(self, uid):
-        logger.info('uid: {},', uid)
-        firebase_service = FirebaseService()
-        await firebase_service.delete_account(uid=uid)
-        pass
 
     def get_account_profile(self, branch_id: int, db: SessionLocal):
         logger.info('branch_id: {}', branch_id)
@@ -124,7 +118,11 @@ class LocalService:
 
         branch = new_branch.branch
         logger.info('branch: {}', branch)
-        branch_geocoding = await self.geocoding(street=branch.street, street_number=branch.street_number)
+
+        state = get_state_by_id(id_state=branch.state_id, db=db)
+        logger.info('state.name: {}', state.name)
+
+        branch_geocoding = await self.geocoding(street=branch.street, street_number=branch.street_number, state_name=state.name)
         logger.info('branch_geocoding: {}', branch_geocoding)
 
         manager = new_branch.manager
@@ -166,12 +164,16 @@ class LocalService:
 
     def parse_error_response_database(self, message):
 
-        if self.LEGAL_REPRESENTATIVE_KEY_WORD in message:
-            return self.LEGAL_REPRESENTATIVE_ERROR_MESSAGE
+        if self.LEGAL_REPRESENTATIVE_IDENTIFIER_KEY_WORD in message:
+            return self.LEGAL_REPRESENTATIVE_IDENTIFIER_ERROR_MESSAGE
 
         if self.RESTAURANT_KEY_WORD in message:
             return self.RESTAURANT_ERROR_MESSAGE
 
-        if self.EMAIL_KEY_WORD in message:
-            return self.EMAIL_ERROR_MESSAGE
+        if self.MANAGER_EMAIL_KEY_WORD in message:
+            return self.MANAGER_EMAIL_ERROR_MESSAGE
+
+        if self.LEGAL_REPRESENTATIVE_EMAIL_KEY_WORD in message:
+            return self.LEGAL_REPRESENTATIVE_EMAIL_ERROR_MESSAGE
+
         return self.STANDARD_ERROR_MESSAGE

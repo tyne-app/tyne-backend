@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from repository.entity.StateEntity import StateEntity
+from configuration.database.database import SessionLocal
 
 
 def get_states(id_city: int, db: Session):

@@ -24,17 +24,6 @@ class SearchDAO:
         try:
             logger.info('search_parameters: {}, client_id: {}', search_parameters, client_id)
 
-            branch_image_with_clause = db.query(
-                BranchImageEntity.branch_id,
-                BranchImageEntity.url_image,
-                func.row_number().over(
-                    partition_by=BranchImageEntity.branch_id,
-                ).label(name='branch_image_number')
-            ) \
-                .filter(BranchImageEntity.is_main_image) \
-                .cte(name='branch_image')
-            logger.info('branch_image_with_clause: {}', str(branch_image_with_clause))
-
             all_branches = None
 
             if client_id:
@@ -49,7 +38,7 @@ class SearchDAO:
                     func.avg(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='avg_price'),
                     func.min(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='min_price'),
                     func.max(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='max_price'),
-                    branch_image_with_clause.c.url_image)
+                    BranchImageEntity.url_image)
                 logger.info('all_branches: {}', str(all_branches))
 
             if not client_id:
@@ -60,13 +49,13 @@ class SearchDAO:
                     StateEntity.id.label(name='state_id'),
                     RestaurantEntity.name.label(name='restaurant_name'),
                     BranchEntity.description,
-                    branch_image_with_clause.c.url_image)
+                    BranchImageEntity.url_image)
                 logger.info('all_branches: {}', str(all_branches))
 
             all_branches = all_branches.select_from(BranchEntity) \
                 .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
                 .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
-                .join(branch_image_with_clause, branch_image_with_clause.c.branch_id == BranchEntity.id) \
+                .join(BranchImageEntity, BranchImageEntity.branch_id == BranchEntity.id) \
                 .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
                 .join(UserEntity, UserEntity.id == ManagerEntity.id_user)
             logger.info('all_branches: {}', str(all_branches))
@@ -77,7 +66,7 @@ class SearchDAO:
                     .join(OpinionEntity, OpinionEntity.branch_id == BranchEntity.id, isouter=True)
                 logger.info('all_branches: {}', str(all_branches))
 
-            all_branches = all_branches.filter(branch_image_with_clause.c.branch_image_number == 1) \
+            all_branches = all_branches.filter(BranchImageEntity.is_main_image) \
                 .filter(UserEntity.is_active)
             logger.info('all_branches: {}', str(all_branches))
 
