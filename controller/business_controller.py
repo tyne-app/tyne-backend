@@ -18,8 +18,6 @@ business_controller = APIRouter(
 )
 
 
-# TODO: Avanzr en obtene rel perfil local perspectiva cliente por ahora.
-
 async def search_parameters_params(
         name: Optional[str] = None,
         dateReservation: Optional[str] = None,
@@ -65,7 +63,7 @@ async def read_account(request: Request, response: Response, db: SessionLocal = 
     return branch_profile
 
 
-@business_controller.post('/branchs', status_code=status.HTTP_201_CREATED)  # TODO: response_model=NewBranchOutput
+@business_controller.post('/branch', status_code=status.HTTP_201_CREATED)  # TODO: response_model=NewBranchOutput
 async def add_branch(request: Request, response: Response,
                      new_branch: NewBranch, db: SessionLocal = Depends(get_data_base)):
     logger.info('new_branch: {}', new_branch)
