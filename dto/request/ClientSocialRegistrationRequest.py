@@ -45,8 +45,14 @@ class ClientSocialRegistrationRequest(BaseModel):
         if not self._utils_validator_.validate_not_empty(self.name):
             invalid_data["name"] = self._utils_validator_.INVALID_DATA_MESSAGE
 
+        if not self._utils_validator_.validate_not_empty(self.lastName):
+            invalid_data["lastName"] = self._utils_validator_.INVALID_DATA_MESSAGE
+
         if not self._utils_validator_.validate_not_empty(self.email):
             invalid_data["email"] = self._utils_validator_.INVALID_DATA_MESSAGE
+
+        if not self._utils_validator_.validate_not_empty(self.token):
+            invalid_data["token"] = self._utils_validator_.INVALID_DATA_MESSAGE
 
         if invalid_data:
             raise CustomError(name="Validación body",
