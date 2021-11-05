@@ -168,3 +168,8 @@ class UserService:
         cls._user_dao_.update_profile_image(user_id, None, None, db)
 
         return True
+
+    @classmethod
+    def change_password(cls, user_id: int, password: str, db: Session):
+        cls._user_dao_.change_password(user_id=user_id, password=password, db=db)
+        return True
