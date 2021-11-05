@@ -1,6 +1,8 @@
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 from starlette import status
+
+from dto.request.LoginSocialRequest import LoginSocialRequest
 from dto.request.LoginUserRequest import LoginUserRequest
 from dto.response.UpdateProfileImageResponse import UpdateProfileImageDto
 from dto.response.UserTokenResponse import UserTokenResponse
@@ -46,6 +48,59 @@ class UserService:
                                   detail="Validación",
                                   status_code=status.HTTP_401_UNAUTHORIZED,
                                   cause="Contraseña inválida")
+
+            if user.id_user_type == UserTypeEnum.encargado_local.value:
+                branch: BranchEntity = cls._localDao_.find_branch_by_email_user_manager(email=loginRequest.email, db=db)
+                if branch is not None:
+                    id_branch_client = branch.id
+                    name = branch.manager.name
+                    last_name = branch.manager.last_name
+            else:
+                client: ClientEntity = cls._clientDao_.find_client_by_email_user(email=loginRequest.email, db=db)
+                if client is not None:
+                    id_branch_client = client.id
+                    name = client.name
+                    last_name = client.last_name
+                pass
+
+            if id_branch_client is None:
+                raise CustomError(name="Usuario no existe",
+                                  detail="No encontrado",
+                                  status_code=status.HTTP_404_NOT_FOUND,
+                                  cause="Usuario no existe")
+
+            tokenResponse = cls._tokenService_.get_token(id_user=user.id, id_branch_client=id_branch_client,
+                                                         rol=user.id_user_type, ip=ip, name=name, last_name=last_name)
+
+        return tokenResponse
+
+    @classmethod
+    def social_login_user(cls, loginRequest: LoginSocialRequest, ip: str, db: Session):
+
+        id_branch_client = None
+        name = None
+        last_name = None
+        loginRequest.validate_fields()
+
+        cls._tokenService_.decode_token(loginRequest.token)
+        return None
+
+
+        tokenResponse: UserTokenResponse = None
+        user: UserEntity = cls._user_dao_.login(loginRequest.email, db)
+
+        if user is not None:
+            if user.is_active is not True:
+                raise CustomError(name="Usuario desactivado",
+                                  detail="Validación",
+                                  status_code=status.HTTP_401_UNAUTHORIZED,
+                                  cause="Usuario desactivado")
+
+            # if user.password != loginRequest.password:
+            #     raise CustomError(name="Contraseña inválida",
+            #                       detail="Validación",
+            #                       status_code=status.HTTP_401_UNAUTHORIZED,
+            #                       cause="Contraseña inválida")
 
             if user.id_user_type == UserTypeEnum.encargado_local.value:
                 branch: BranchEntity = cls._localDao_.find_branch_by_email_user_manager(email=loginRequest.email, db=db)

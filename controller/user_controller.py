@@ -1,6 +1,7 @@
 from fastapi import status, APIRouter, Response, Depends, Request, UploadFile, File
 from sqlalchemy.orm import Session
 from configuration.database import database
+from dto.request.LoginSocialRequest import LoginSocialRequest
 from dto.request.LoginUserRequest import LoginUserRequest
 from dto.response.SimpleResponse import SimpleResponse
 from service.JwtService import JwtService
@@ -30,12 +31,25 @@ def login(response: Response, request: Request, loginRequest: LoginUserRequest,
 
 
 @user_controller.post(
+    '/social-login',
+    status_code=status.HTTP_200_OK
+)
+def social_login(response: Response, request: Request, loginRequest: LoginSocialRequest,
+                 db: Session = Depends(database.get_data_base)):
+    token = _service_.social_login_user(loginRequest=loginRequest, ip=request.client.host, db=db)
+
+    if token is None:
+        response.status_code = status.HTTP_404_NOT_FOUND
+
+    return token
+
+
+@user_controller.post(
     '/profile-image',
     status_code=status.HTTP_200_OK
 )
 def upload_profile_image(request: Request, response: Response, image: UploadFile = File(...),
                          db: Session = Depends(database.get_data_base)):
-
     if 'authorization' not in request.headers:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {'error': 'Usuario no autorizado'}
@@ -52,7 +66,6 @@ def upload_profile_image(request: Request, response: Response, image: UploadFile
     status_code=status.HTTP_200_OK
 )
 def delete_profile_image(request: Request, response: Response, db: Session = Depends(database.get_data_base)):
-
     if 'authorization' not in request.headers:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {'error': 'Usuario no autorizado'}

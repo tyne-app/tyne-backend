@@ -6,11 +6,12 @@ from dto.response.UserTokenResponse import UserTokenResponse
 import jwt
 from exception.exceptions import CustomError
 from loguru import logger
+from firebase_admin import auth
 
 
 class JwtService:
 
-    KEY = "secret"
+    KEY = "AAmfjZRE563ewniu834Z-e45422-344"
     ALGORITHM = "HS256"
     EXPIRED_KEY_WORD = "expired"
     SIGNATURE_EXPIRED_MSG = "Token expirado"
@@ -38,6 +39,12 @@ class JwtService:
         tokenResponse = UserTokenResponse()
         tokenResponse.access_token = token
         return tokenResponse
+
+    @classmethod
+    def decode_token(cls, token: str):
+        print(token)
+        decoded_token = auth.verify_id_token(token)
+        print(decoded_token)
 
     def verify_and_get_token_data(self, token: str):
         try:
