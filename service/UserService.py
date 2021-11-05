@@ -34,7 +34,7 @@ class UserService:
         loginRequest.validate_fields()
 
         tokenResponse: UserTokenResponse = None
-        user: UserEntity = cls._user_dao_.login(loginRequest.email, db)
+        user: UserEntity = cls._user_dao_.verify_email(loginRequest.email, db)
 
         if user is not None:
             if user.is_active is not True:
@@ -66,7 +66,7 @@ class UserService:
             if id_branch_client is None:
                 raise CustomError(name="Usuario no existe",
                                   detail="No encontrado",
-                                  status_code=status.HTTP_404_NOT_FOUND,
+                                  status_code=status.HTTP_204_NO_CONTENT,
                                   cause="Usuario no existe")
 
             tokenResponse = cls._tokenService_.get_token(id_user=user.id, id_branch_client=id_branch_client,
@@ -86,7 +86,7 @@ class UserService:
         cls._tokenService_.decode_token_firebase(loginRequest.token)
 
         tokenResponse: UserTokenResponse = None
-        user: UserEntity = cls._user_dao_.login(loginRequest.email, db)
+        user: UserEntity = cls._user_dao_.verify_email(loginRequest.email, db)
 
         if user is not None:
             if user.is_active is not True:
@@ -112,7 +112,7 @@ class UserService:
             if id_branch_client is None:
                 raise CustomError(name="Usuario no existe",
                                   detail="No encontrado",
-                                  status_code=status.HTTP_404_NOT_FOUND,
+                                  status_code=status.HTTP_204_NO_CONTENT,
                                   cause="Usuario no existe")
 
             tokenResponse = cls._tokenService_.get_token(id_user=user.id, id_branch_client=id_branch_client,

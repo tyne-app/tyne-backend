@@ -23,7 +23,7 @@ class LoginService:
                 detail="user_type not find",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        user_created = cls._user_dao_.create_user_login(email, password, user_type, db)
+        user_created = cls._user_dao_.create_user(email, password, user_type, db)
 
         if not user_created.id:
             raise CustomError(

@@ -1,5 +1,6 @@
 from sqlalchemy.exc import SQLAlchemyError
 from loguru import logger
+from sqlalchemy.orm import Session
 from starlette import status
 
 from configuration.database.database import SessionLocal
@@ -47,6 +48,26 @@ class ClientDao:
 
         except Exception as error:
             logger.error(error)
+            raise CustomError(name="Error create_client",
+                              detail="BD error",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause=error.__cause__)
+
+    @classmethod
+    def create_client_v2(cls, client: ClientEntity, db: Session):
+        try:
+            db.add(client.user)
+            db.flush()
+
+            client.id_user = client.user.id
+            db.add(client)
+
+            db.commit()
+            return True
+
+        except Exception as error:
+            logger.error(error)
+            db.rollback()
             raise CustomError(name="Error create_client",
                               detail="BD error",
                               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

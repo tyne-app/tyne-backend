@@ -2,9 +2,11 @@ from fastapi import status, APIRouter, Response, Depends
 from sqlalchemy.orm import Session
 from configuration.database import database
 from dto.request.ClientRequestDTO import ClientRequestDTO
+from dto.request.ClientSocialRegistrationRequest import ClientSocialRegistrationRequest
 from exception.exceptions import CustomError
 from service.ClientService import ClientService
 from loguru import logger
+
 client_controller = APIRouter(
     prefix="/v1/clients",
     tags=["Clients"]
@@ -35,16 +37,27 @@ def create_client(response: Response, client_req: ClientRequestDTO, db: Session 
         return _client_service_.create_client(client_req, db)
 
     except CustomError as error:
-        logger.error(error.detail)
-        raise CustomError(name=error.name,
-                          detail=error.detail,
-                          status_code=error.status_code,
-                          cause=error.cause)
+        raise error
 
     except Exception as error:
-        logger.error(error)
         raise CustomError(name="Error create_client",
                           detail="Error al crear cliente",
                           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                           cause=error.__cause__)
 
+
+@client_controller.post(
+    '/social-networks',
+    status_code=status.HTTP_200_OK
+)
+def create_client_with_social_networks(response: Response, client: ClientSocialRegistrationRequest,
+                                       db: Session = Depends(database.get_data_base)):
+    try:
+        return _client_service_.create_client_social_networks(client, db)
+    except CustomError as error:
+        raise error
+    except Exception as error:
+        raise CustomError(name="Error al crear cliente",
+                          detail="Error al crear cliente",
+                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                          cause=error.__cause__)
