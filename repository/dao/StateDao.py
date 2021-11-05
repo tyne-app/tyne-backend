@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from repository.entity.StateEntity import StateEntity
 from configuration.database.database import SessionLocal
 
+
 def get_states(id_city: int, db: Session):
     try:
         states = db.query(StateEntity).filter(StateEntity.city_id == id_city).all()
@@ -20,13 +21,3 @@ def get_state_by_id(id_state: int, db: Session):
         return error.args[0]
     finally:
         db.close()
-
-
-def get_state_name_by_id(state_id: int, db: SessionLocal):
-    try:
-        state_name = db.query(StateEntity.name).filter(StateEntity.id == state_id).first()
-        print("State name")
-        print(state_name)
-        return state_name
-    except Exception as error:
-        return error.args[0]

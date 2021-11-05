@@ -6,7 +6,6 @@ from loguru import logger
 from exception.exceptions import CustomError
 from configuration.Settings import Settings
 
-# TODO: Agregar logger
 # TODO: Verificar si se puede ocupar decorador para no ocupar try catch a cada rato.
 
 
@@ -22,6 +21,7 @@ class MapBoxService:
                 mapbox_api = self.settings.MAPBOX_API
                 mapbox_access_token = self.settings.MAPBOX_ACCESS_TOKEN
                 full_address = address + " " + self.BASE_COUNTRY
+                logger.info("mapbox_appi: {}, mapbox_access_token: {}, full_addres: {}", full_address, mapbox_api, mapbox_access_token)
 
                 mapbox_url = mapbox_api + full_address + ".json?types=address&access_token=" + mapbox_access_token
                 logger.info("mapbox_url: {}", mapbox_url)
