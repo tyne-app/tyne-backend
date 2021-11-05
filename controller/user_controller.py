@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from configuration.database import database
 from dto.request.LoginSocialRequest import LoginSocialRequest
 from dto.request.LoginUserRequest import LoginUserRequest
+from dto.request.UserChangePasswordRequest import UserChangePasswordRequest
 from dto.response.SimpleResponse import SimpleResponse
 from service.JwtService import JwtService
 from service.UserService import UserService
@@ -75,3 +76,20 @@ def delete_profile_image(request: Request, response: Response, db: Session = Dep
 
     _service_.delete_profile_image(token_payload.id_user, db)
     return SimpleResponse("Imagen borrada exitosamente")
+
+
+@user_controller.put(
+    '/password',
+    status_code=status.HTTP_200_OK
+)
+def update_password(request: Request, response: Response, change_password: UserChangePasswordRequest,
+                    db: Session = Depends(database.get_data_base)):
+    if 'authorization' not in request.headers:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return {'error': 'Usuario no autorizado'}
+
+    token = request.headers['authorization']
+    token_payload = _jwt_service_.verify_and_get_token_data(token=token)
+
+    _service_.change_password(token_payload.id_user, change_password.password, db)
+    return SimpleResponse("Contraseña actualizada correctamente")
