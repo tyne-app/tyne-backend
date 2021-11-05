@@ -4,10 +4,14 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
+from firebase_admin import credentials
 
+from configuration.firebase_config import FirebaseConfig
 from exception.exceptions import CustomError
 from controller import business_controller, menu_controller, bank_controller, territory_controller, \
     user_controller, client_controller, reservation_controller
+
+import firebase_admin
 
 # from configuration.database import engine
 
@@ -68,6 +72,8 @@ async def custom_exception_handler(request: Request, exc: CustomError):
         })
     )
 
+# init firebase
+FirebaseConfig.init_firebase()
 
 api_local.include_router(bank_controller.bank_controller)
 api_local.include_router(business_controller.business_controller)
