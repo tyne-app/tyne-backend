@@ -38,10 +38,10 @@ class UserService:
 
         if user is not None:
             if user.is_active is not True:
-                raise CustomError(name="Usuario desactivado",
+                raise CustomError(name="Usuario no autorizado",
                                   detail="Validación",
                                   status_code=status.HTTP_401_UNAUTHORIZED,
-                                  cause="Usuario desactivado")
+                                  cause="Usuario no autorizado")
 
             if user.password != loginRequest.password:
                 raise CustomError(name="Contraseña inválida",
@@ -82,25 +82,18 @@ class UserService:
         last_name = None
         loginRequest.validate_fields()
 
-        cls._tokenService_.decode_token(loginRequest.token)
-        return None
-
+        # try to verify the token and decode it
+        cls._tokenService_.decode_token_firebase(loginRequest.token)
 
         tokenResponse: UserTokenResponse = None
         user: UserEntity = cls._user_dao_.login(loginRequest.email, db)
 
         if user is not None:
             if user.is_active is not True:
-                raise CustomError(name="Usuario desactivado",
+                raise CustomError(name="Usuario no autorizado",
                                   detail="Validación",
                                   status_code=status.HTTP_401_UNAUTHORIZED,
-                                  cause="Usuario desactivado")
-
-            # if user.password != loginRequest.password:
-            #     raise CustomError(name="Contraseña inválida",
-            #                       detail="Validación",
-            #                       status_code=status.HTTP_401_UNAUTHORIZED,
-            #                       cause="Contraseña inválida")
+                                  cause="Usuario no autorizado")
 
             if user.id_user_type == UserTypeEnum.encargado_local.value:
                 branch: BranchEntity = cls._localDao_.find_branch_by_email_user_manager(email=loginRequest.email, db=db)

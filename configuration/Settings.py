@@ -19,4 +19,5 @@ class Settings:
     KHIPU_RETURN_URL = os.getenv("KHIPU_RETURN_URL")
     KHIPU_CANCEL_URL = os.getenv("KHIPU_CANCEL_URL")
     KHIPU_PICTURE_URL = os.getenv("KHIPU_PICTURE_URL")
+    JWT_KEY = os.getenv("JWT_KEY")
 

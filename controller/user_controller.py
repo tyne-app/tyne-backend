@@ -41,6 +41,7 @@ def social_login(response: Response, request: Request, loginRequest: LoginSocial
     if token is None:
         response.status_code = status.HTTP_404_NOT_FOUND
 
+    print(token.access_token)
     return token
 
 
