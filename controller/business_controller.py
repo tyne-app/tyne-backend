@@ -5,10 +5,15 @@ from fastapi.params import Depends
 from loguru import logger
 from configuration.database.database import SessionLocal, get_data_base
 from configuration.openapi.search_openapi import SearchAllBranchOpenAPI
-from dto.request.search_request_dto import SearchParameter
-from dto.response.search_response_dto import ListBranchOutput, BranchProfileOutput
+from dto.request.business_request_dto import SearchParameter
+from dto.response.business_response_dto import ListBranchOutput
+from dto.response.business_response_dto import BranchProfileOutput
+from dto.response.business_response_dto import RegisterAccountOutput
 from service.LocalService import LocalService
-from dto.request.local_request_dto import NewAccount, NewBranch
+from dto.request.business_request_dto import NewAccount
+from dto.request.business_request_dto import NewBranch
+from dto.response.business_response_dto import ReadAccountOutput
+from dto.response.business_response_dto import AddBranchOutput
 from service.JwtService import JwtService
 from service.SearchService import SearchService
 
@@ -33,7 +38,7 @@ async def search_parameters_params(
     }
 
 
-@business_controller.post("/", status_code=status.HTTP_201_CREATED)
+@business_controller.post("/", status_code=status.HTTP_201_CREATED, response_model=RegisterAccountOutput)
 async def register_account(new_account: NewAccount, db: SessionLocal = Depends(get_data_base)):
     logger.info("new_account: {}", new_account)
     local_service = LocalService()
@@ -42,7 +47,7 @@ async def register_account(new_account: NewAccount, db: SessionLocal = Depends(g
     return account_created
 
 
-@business_controller.get('/', status_code=status.HTTP_200_OK)  # TODO: response_model=BranchProfileLoginOutput
+@business_controller.get('/', status_code=status.HTTP_200_OK, response_model=ReadAccountOutput)
 async def read_account(request: Request, response: Response, db: SessionLocal = Depends(get_data_base)):
     logger.info('login')
 
@@ -63,7 +68,7 @@ async def read_account(request: Request, response: Response, db: SessionLocal = 
     return branch_profile
 
 
-@business_controller.post('/branch', status_code=status.HTTP_201_CREATED)  # TODO: response_model=NewBranchOutput
+@business_controller.post('/branch', status_code=status.HTTP_201_CREATED, response_model=AddBranchOutput)  # TODO: response_model=NewBranchOutput
 async def add_branch(request: Request, response: Response,
                      new_branch: NewBranch, db: SessionLocal = Depends(get_data_base)):
     logger.info('new_branch: {}', new_branch)

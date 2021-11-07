@@ -1,62 +1,20 @@
-from pydantic import BaseModel
-from typing import Optional
 from repository.entity.ManagerEntity import ManagerEntity
 from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
 from repository.entity.RestaurantEntity import RestaurantEntity
 from repository.entity.BranchEntity import BranchEntity
 from repository.entity.BranchBankEntity import BranchBankEntity
 from repository.entity.UserEntity import UserEntity
+from repository.entity.BranchImageEntity import BranchImageEntity
 from dto.dto import GenericDTO as wrapperDTO
+from dto.request.business_request_dto import LegalRepresentative
+from dto.request.business_request_dto import Restaurant
+from dto.request.business_request_dto import Branch
+from dto.request.business_request_dto import BranchBank
+from dto.request.business_request_dto import Manager
+from dto.response.business_response_dto import PreviewBranch
 
 
-class User(BaseModel):
-    email: str
-    password: str
-
-
-class Manager(BaseModel):
-    name: str
-    last_name: str
-    phone: str
-    email: str
-    password: str
-
-
-class LegalRepresentative(BaseModel):
-    name: str
-    last_name: str
-    identifier: str
-    email: str
-    phone: str
-
-
-class Restaurant(BaseModel):
-    identifier: str
-    social_reason: str
-    commercial_activity: str
-    phone: str
-    street: str
-    street_number: int
-    state_id: int
-
-
-class Branch(BaseModel):
-    name: Optional[str]
-    street: str
-    street_number: int
-    state_id: int
-    accept_pet: bool
-
-
-class BranchBank(BaseModel):
-    account_holder_identifier: str
-    account_holder_name: str
-    account_number: str
-    account_type: str
-    bank_id: int
-
-
-class ParserDTO:
+class BusinessMapperRequest:
 
     def to_manager_entity(self, manager: Manager):
         manager_dict = manager.dict()
@@ -96,23 +54,18 @@ class ParserDTO:
         user_entity.is_active = True
         return user_entity
 
+    def to_branch_image_entity(self, default_main_image: str):
+        branch_image_entity = BranchImageEntity()
+        branch_image_entity.url_image = default_main_image
+        branch_image_entity.is_main_image = True
+        return branch_image_entity
+
     def to_branch_create_response(self, content: any = None):
         response = wrapperDTO()
         response.data = content
         return response.__dict__
 
-
-class NewAccount(BaseModel, ParserDTO):
-    manager: Manager
-    legal_representative: LegalRepresentative
-    restaurant: Restaurant
-    branch: Branch
-    branch_bank: BranchBank
-
-
-class NewBranch(BaseModel, ParserDTO):
-    manager: Manager
-    branch: Branch
-    branch_bank: BranchBank
-
-
+    def to_search_branches_response(self, content: list[PreviewBranch]):
+        response = wrapperDTO()
+        response.data = content
+        return response.__dict__

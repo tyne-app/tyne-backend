@@ -4,7 +4,8 @@ from validator.SearchValidator import SearchValidator
 from repository.dao.SearchDao import SearchDAO
 from configuration.database.database import SessionLocal
 from exception.exceptions import CustomError
-from dto.request.search_request_dto import SearchParameter
+from dto.request.business_request_dto import SearchParameter
+from mappers.request.BusinessMapperRequest import BusinessMapperRequest
 from dto.dto import GenericDTO as wrapperDTO
 
 
@@ -17,6 +18,7 @@ class SearchService:
     NOT_BRANCH_RAW_MSG_ERROR = "'NoneType' object has no attribute 'restaurant_id'"
     search_validator = SearchValidator()
     search_dao = SearchDAO()
+    _business_mapper_request = BusinessMapperRequest()
 
     async def search_all_branches(self, parameters: SearchParameter, db: SessionLocal, client_id: int):
         logger.info('parameters: {}, client_id: {}', parameters, client_id)
@@ -35,7 +37,7 @@ class SearchService:
         if type(all_branches) is str:
             self.raise_custom_error(name=self.MSG_ERROR_ALL_BRANCHES, message=all_branches)
 
-        return SearchParameter.to_search_branches_response(content=all_branches)
+        return self._business_mapper_request.to_search_branches_response(content=all_branches)
 
     async def search_branch_profile(self, branch_id: int, client_id: int, db: SessionLocal):
         logger.info('branch_id: {}', branch_id)

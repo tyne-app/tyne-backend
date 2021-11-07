@@ -2,7 +2,7 @@ from fastapi import status
 import re
 from loguru import logger
 from exception.exceptions import CustomError
-from dto.request.local_request_dto import NewAccount, Branch, Restaurant, LegalRepresentative, Manager, BranchBank,\
+from dto.request.business_request_dto import NewAccount, Branch, Restaurant, LegalRepresentative, Manager, BranchBank,\
     NewBranch
 
 

@@ -10,7 +10,7 @@ from repository.entity.ScheduleEntity import ScheduleEntity
 from repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from configuration.database.database import SessionLocal
 from repository.entity.UserEntity import UserEntity
-
+from repository.entity.BranchImageEntity import BranchImageEntity
 
 class LocalDAO:
 
@@ -21,11 +21,13 @@ class LocalDAO:
                          restaurant_entity: RestaurantEntity,
                          branch_entity: BranchEntity,
                          branch_bank_entity: BranchBankEntity,
+                         branch_image_entity: BranchImageEntity,
                          db: SessionLocal):
 
         logger.info('manager_entity: {}, legal_representative_entity: {},'
-                    ' restaurant_entity: {}, branch_entity: {}, branch_bank_entity: {}',
-                    manager_entity, legal_representative_entity, restaurant_entity, branch_entity, branch_bank_entity)
+                    ' restaurant_entity: {}, branch_entity: {}, branch_bank_entity: {}, branch_image_entity: {}',
+                    manager_entity, legal_representative_entity, restaurant_entity, branch_entity, branch_bank_entity,
+                    branch_image_entity)
 
         try:
             db.begin()
@@ -53,6 +55,10 @@ class LocalDAO:
             branch_entity.branch_bank_id = branch_bank_entity.id
             branch_entity.manager_id = manager_entity.id
             db.add(branch_entity)
+            db.flush()
+
+            branch_image_entity.branch_id = branch_entity.id
+            db.add(branch_image_entity)
             db.commit()
             return True
         except Exception as error:
@@ -86,6 +92,13 @@ class LocalDAO:
 
             profile['manager'] = manager_entity
 
+            image_list = db.query(BranchImageEntity.id, BranchImageEntity.url_image)\
+                .select_from(BranchImageEntity)\
+                .join(BranchEntity, BranchEntity.id == BranchImageEntity.branch_id)\
+                .filter(BranchImageEntity.branch_id == branch_entity.id).all()
+
+            profile['image_list'] = image_list
+
             schedule_entity_list = db.query(ScheduleEntity).join(BranchScheduleEntity,
                                                                  BranchScheduleEntity.schedule_id == ScheduleEntity.id) \
                 .join(BranchEntity, BranchEntity.id == BranchScheduleEntity.branch_id) \
@@ -107,9 +120,11 @@ class LocalDAO:
                        manager_entity: ManagerEntity,
                        branch_entity: BranchEntity,
                        branch_bank_entity: BranchBankEntity,
+                       branch_image_entity: BranchImageEntity,
                        db: SessionLocal):
-        logger.info('branch_id: {}, manager_entity: {}, branch_entity: {}, branch_bank_entity: {}',
-                    branch_id, manager_entity, branch_entity, branch_bank_entity)
+        logger.info('branch_id: {}, manager_entity: {}, branch_entity: {},'
+                    ' branch_bank_entity: {}, branch_image_entity: {}',
+                    branch_id, manager_entity, branch_entity, branch_bank_entity, branch_image_entity)
         try:
             db.begin()
 
@@ -130,13 +145,15 @@ class LocalDAO:
             branch_entity.manager_id = manager_entity.id
             branch_entity.branch_bank_id = branch_bank_entity.id
             db.add(branch_entity)
+            db.flush()
+
+            branch_image_entity.branch_id = branch_entity.id
+            db.add(branch_image_entity)
             db.commit()
-            db.close()
             return True
         except Exception as error:
             logger.error('error: {}', error)
             logger.error('error.args: {}', error.args)
-            db.close()
             return error.args[0]
 
     def find_branch_by_email_user_manager(self, email: str, db: SessionLocal):
@@ -149,40 +166,3 @@ class LocalDAO:
             return branch
         except Exception as error:
             raise error
-
-    '''
-    def update_account(email: str, db: Session, branch_values):
-        try:
-            # TODO: Saber bien cuales y cómo viene los campos a editar
-            branch = db.query(Branch).filter(Branch.id == email).first()
-            for key, value in vars(branch_values).items():
-                setattr(branch, key, value) if value else None
-            branch.update_date = datetime.now()
-            db.add(branch)
-            branch_id = branch.id
-            db.commit()
-            return branch_id
-        except Exception as error:
-            logger.error('error: {}', error)
-            logger.error('error.args: {}', error.args)
-            db.rollback()
-            db.close()
-            return error.args[0]
-
-    def delete_account(branch_id: int, db: Session):
-        try:
-            branch = db.query(Branch).filter(Branch.id == branch_id).first()
-            if branch.state is False:
-                return branch.id
-            branch.state = False
-            db.add(branch)
-            db.commit()
-            branch_id = branch.id
-            db.close()
-            return branch_id
-        except Exception as error:
-            logger.error('error: {}', error)
-            logger.error('error.args: {}', error.args)
-            db.close()
-            return error.args[0]
-    '''
