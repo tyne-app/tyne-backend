@@ -2,6 +2,7 @@ from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime, time
 
+
 class PreviewBranch(BaseModel):
     branch_id: int
     state_name: str
@@ -19,8 +20,8 @@ class PreviewBranch(BaseModel):
 
 
 class ListBranchOutput(BaseModel):
-    data: Optional[list[PreviewBranch]] = None
-    error: Optional[str] = None
+    data: Optional[list[PreviewBranch]] = []
+    error: Optional[str] = []
 
 
 class Branches(BaseModel):
@@ -75,5 +76,55 @@ class BranchProfileView(BaseModel):
 
 
 class BranchProfileOutput(BaseModel):
-    data: Optional[BranchProfileView] = None
-    error: Optional[str] = None
+    data: Optional[BranchProfileView] = []
+    error: Optional[str] = []
+
+
+class RegisterAccountOutput(BaseModel):
+    data: Optional[str] = []
+    error: Optional[str] = []
+
+
+class Branch(BaseModel):
+    id: int
+    manager_id: int
+    accept_pet: bool
+    description: Optional[str] = None
+    state_id: int
+    street: str
+    street_number: int
+    name: str
+    commercial_activity: str
+
+
+class Manager(BaseModel):
+    phone: str
+    name: str
+    id: int
+    last_name: str
+    id_user: int
+
+    class Config:
+        orm_mode = True
+
+
+class BranchImage(BaseModel):
+    url_image: str
+    id: int
+
+
+class ReadAccount(BaseModel):
+    branch: Branch
+    manager: Manager
+    image_list: list[BranchImage]
+    schedule_list: list[Schedule]
+
+
+class ReadAccountOutput(BaseModel):
+    data: Optional[ReadAccount] = []
+    error: Optional[str] = []
+
+
+class AddBranchOutput(BaseModel):
+    data: Optional[str] = []
+    error: Optional[str] = []

@@ -15,7 +15,7 @@ from repository.entity.ScheduleEntity import ScheduleEntity
 from repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from repository.entity.BranchImageEntity import BranchImageEntity
 from repository.entity.ClientEntity import ClientEntity
-from dto.request.search_request_dto import SearchParameter
+from dto.request.business_request_dto import SearchParameter
 
 
 class SearchDAO:
