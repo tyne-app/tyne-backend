@@ -77,15 +77,16 @@ class JwtService:
         except (jwt.ExpiredSignatureError, Exception) as error:
             logger.info("error: {}", error)
             logger.info("error.args: {}", error.args)
-            content_detail = None
+
             message_error = error.args[0]
+            content_detail = message_error
 
             if self.EXPIRED_KEY_WORD in message_error:
                 content_detail = self.SIGNATURE_EXPIRED_MSG
+
             if self.ALGORITHM_KEY_WORD in message_error:
                 content_detail = self.ALGORITHM_MSG
-            else:
-                content_detail = message_error
+
             raise CustomError(name="Error al decodificar token",
                               detail=content_detail,
                               status_code=status.HTTP_400_BAD_REQUEST,
