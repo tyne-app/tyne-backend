@@ -70,7 +70,7 @@ async def read_account(request: Request, response: Response, db: SessionLocal = 
     return branch_profile
 
 
-@business_controller.post('/branch', status_code=status.HTTP_201_CREATED, response_model=AddBranchOutput)  # TODO: response_model=NewBranchOutput
+@business_controller.post('/branches', status_code=status.HTTP_201_CREATED, response_model=AddBranchOutput)  # TODO: response_model=NewBranchOutput
 async def add_branch(request: Request, response: Response,
                      new_branch: NewBranch, db: SessionLocal = Depends(get_data_base)):
     logger.info('new_branch: {}', new_branch)
@@ -102,11 +102,7 @@ async def search_locals(
         search_parameters: SearchParameter = Depends(search_parameters_params),
         db: SessionLocal = Depends(get_data_base)):
     logger.info('search_paramters: {}', search_parameters)
-    # TODO: Pedir numero de pagina en query params
-    # TODO: Agregar validación para numero de pagina en validador de query params --> Se descarta ya que valida fastAPI como entrada
-    # TODO: Llevar numero de pagina hacia objecto DAO y ragregar .limit() y .offset() al final de todos los filtros
-    # TODO: Armar un diccionario con la estructra sugerida por frontend para que se retorne el schema correspondiente
-    # TODO: Ver cómo se cachea la consulta.
+
     client_id = None
     if 'authorization' in request.headers:
         token = request.headers['authorization']
