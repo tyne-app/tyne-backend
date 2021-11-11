@@ -16,6 +16,7 @@ class SearchService:
     MSG_ERROR_BRANCH_PROFILE = "Error al obtener perfil local"
     NOT_BRANCH_MSG_ERROR = "Error, local no existente"
     NOT_BRANCH_RAW_MSG_ERROR = "'NoneType' object has no attribute 'restaurant_id'"
+    TOTAL_ITEMS_PAGE = 10
     search_validator = SearchValidator()
     search_dao = SearchDAO()
     _business_mapper_request = BusinessMapperRequest()
@@ -31,13 +32,19 @@ class SearchService:
             search_parameters['date_reservation'] = search_parameters['date_reservation'].replace("/", "-")
             logger.info('search_parameters[date_reservation]: {}', search_parameters['date_reservation'])
 
-        all_branches = self.search_dao\
-            .search_all_branches(search_parameters=search_parameters, client_id=client_id, db=db)
+        all_branches_result = self.search_dao\
+            .search_all_branches(search_parameters=search_parameters, client_id=client_id,
+                                 db=db, limit=self.TOTAL_ITEMS_PAGE)
 
-        if type(all_branches) is str:
-            self.raise_custom_error(name=self.MSG_ERROR_ALL_BRANCHES, message=all_branches)
+        if type(all_branches_result) is str:
+            self.raise_custom_error(name=self.MSG_ERROR_ALL_BRANCHES, message=all_branches_result)
 
-        return self._business_mapper_request.to_search_branches_response(content=all_branches)
+        total_number_all_branches = all_branches_result['total_number_all_branches']
+        all_branches = all_branches_result['all_branches']
+
+        return self._business_mapper_request.\
+            to_search_branches_response(content=all_branches, total_items=total_number_all_branches,
+                                        page=search_parameters['page'])
 
     async def search_branch_profile(self, branch_id: int, client_id: int, db: SessionLocal):
         logger.info('branch_id: {}', branch_id)

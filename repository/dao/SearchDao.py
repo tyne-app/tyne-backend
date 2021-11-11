@@ -20,9 +20,11 @@ from dto.request.business_request_dto import SearchParameter
 
 class SearchDAO:
 
-    def search_all_branches(self, search_parameters: SearchParameter, db: SessionLocal, client_id: int):
+    def search_all_branches(self, search_parameters: SearchParameter, db: SessionLocal,
+                            client_id: int, limit: int):
         try:
-            logger.info('search_parameters: {}, client_id: {}', search_parameters, client_id)
+            logger.info('search_parameters: {}, client_id: {}, limit: {}',
+                        search_parameters, client_id, limit)
 
             all_branches = None
 
@@ -103,10 +105,22 @@ class SearchDAO:
             if search_parameters['sort_by'] and search_parameters['order_by']:  # TODO: Se implementa después
                 pass
 
+            total_number_all_branches = all_branches.count()
+            logger.info("total_number_all_branches: {}", total_number_all_branches)
+
+            page = search_parameters['page']
+            offset = (page - 1) * limit
+            all_branches = all_branches.limit(limit).offset(offset)
+
             logger.info('all_branches: {}', str(all_branches))
             all_branches = all_branches.all()
 
-            return all_branches
+            result_dict = {
+                'total_number_all_branches': total_number_all_branches,
+                'all_branches': all_branches
+            }
+
+            return result_dict
         except Exception as error:
             logger.error('error: {}', error)
             logger.error('error.args: {}', error.args)

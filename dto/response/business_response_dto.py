@@ -20,6 +20,9 @@ class PreviewBranch(BaseModel):
 
 
 class ListBranchOutput(BaseModel):
+    total_items: int
+    total_items_page: int
+    page: int
     data: Optional[list[PreviewBranch]] = []
     error: Optional[str] = []
 

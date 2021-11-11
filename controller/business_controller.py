@@ -24,12 +24,14 @@ business_controller = APIRouter(
 
 
 async def search_parameters_params(
+        page: int,
         name: Optional[str] = None,
         dateReservation: Optional[str] = None,
         stateId: Optional[int] = None,
         sortBy: Optional[Union[int, str]] = None,
         orderBy: Optional[Union[int, str]] = None):
     return {
+        'page': page,
         'name': name,
         'date_reservation': dateReservation,
         'state_id': stateId,
@@ -100,7 +102,11 @@ async def search_locals(
         search_parameters: SearchParameter = Depends(search_parameters_params),
         db: SessionLocal = Depends(get_data_base)):
     logger.info('search_paramters: {}', search_parameters)
-
+    # TODO: Pedir numero de pagina en query params
+    # TODO: Agregar validación para numero de pagina en validador de query params --> Se descarta ya que valida fastAPI como entrada
+    # TODO: Llevar numero de pagina hacia objecto DAO y ragregar .limit() y .offset() al final de todos los filtros
+    # TODO: Armar un diccionario con la estructra sugerida por frontend para que se retorne el schema correspondiente
+    # TODO: Ver cómo se cachea la consulta.
     client_id = None
     if 'authorization' in request.headers:
         token = request.headers['authorization']
@@ -109,13 +115,13 @@ async def search_locals(
         client_id = token_payload.id_branch_client
 
     search_service = SearchService()
-    all_branches = await search_service \
+    all_branches_response = await search_service \
         .search_all_branches(parameters=search_parameters, client_id=client_id, db=db)
 
-    if all_branches['data'] is None:
+    if not all_branches_response['data']:
         response.status_code = status.HTTP_204_NO_CONTENT
 
-    return all_branches
+    return all_branches_response
 
 
 @business_controller.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=BranchProfileOutput)
