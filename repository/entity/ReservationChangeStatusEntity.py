@@ -9,9 +9,9 @@ class ReservationChangeStatusEntity(Base):
     __table_args__ = {'schema': 'tyne'}
 
     id = Column(Integer, primary_key=True, index=True)
-    status_id = Column(Integer)
+    status_id = Column(Integer, ForeignKey('tyne.reservation_status.id'))
     datetime = Column(TIMESTAMP)
     reservation_id = Column(Integer, ForeignKey('tyne.reservation.id'))
 
-    # reservation_status = relationship("ReservationStatusEntity", back_populates='reservation_change_status')
-    # reservation = relationship("ReservationEntity", back_populates='reservation_change_status')
+    reservation_status = relationship("ReservationStatusEntity", back_populates='reservation_change_status')
+    reservation = relationship("ReservationEntity", back_populates='reservation_change_status')

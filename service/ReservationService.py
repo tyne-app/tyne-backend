@@ -1,5 +1,7 @@
+import json
 from datetime import timezone, datetime
 
+from loguru import logger
 from sqlalchemy.orm import Session
 from starlette import status
 
@@ -16,6 +18,8 @@ from repository.entity.ReservationChangeStatusEntity import ReservationChangeSta
 from repository.entity.ReservationEntity import ReservationEntity
 from repository.entity.ReservationProductEntity import ReservationProductEntity
 from service.KhipuService import KhipuService
+
+from dto.dto import GenericDTO as responseDTO
 
 
 class ReservationService:
@@ -137,3 +141,29 @@ class ReservationService:
                 self._reservation_dao.add_reservation_status(reservation_status=change_status, db=db)
 
             raise error
+
+    def get_reservations(self, client_id: int, db: Session):
+        try:
+            reservations = self._reservation_dao.get_reservations(client_id, db)
+
+            if not reservations:
+                raise CustomError(name="Error get_reservation",
+                                  detail="reservations not found",
+                                  status_code=status.HTTP_204_NO_CONTENT)
+
+            response = responseDTO()
+            response.data = reservations
+            return response.__dict__
+
+        except CustomError as error:
+            logger.error(error.detail)
+            raise CustomError(name=error.name,
+                              detail=error.detail,
+                              status_code=error.status_code)
+
+        except Exception as e:
+            logger.error(e)
+            raise CustomError(name="Error al obtener reservas",
+                              detail="service Error",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause="Error al obtener reservas")

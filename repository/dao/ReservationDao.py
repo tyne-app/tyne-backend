@@ -1,9 +1,11 @@
+from loguru import logger
 from sqlalchemy.orm import Session
 from starlette import status
 from exception.exceptions import CustomError
 from repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
 from repository.entity.ReservationEntity import ReservationEntity
 from repository.entity.ReservationProductEntity import ReservationProductEntity
+from repository.entity.ReservationStatusEntity import ReservationStatusEntity
 
 
 class ReservationDao:
@@ -66,6 +68,21 @@ class ReservationDao:
             db.commit()
             return reservation_status
         except Exception:
+            raise CustomError(name="Error al guardar estado reserva",
+                              detail="Error",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause="Error al guardar estado reserva")
+
+    @classmethod
+    def get_reservations(cls, client_id, db: Session):
+        try:
+            return db.query(ReservationEntity).filter(ReservationEntity.client_id == client_id). \
+                join(ReservationEntity.reservation_change_status). \
+                join(ReservationChangeStatusEntity.reservation_status).filter(ReservationStatusEntity.id == 4). \
+                all()
+
+        except Exception as e:
+            logger.error(e)
             raise CustomError(name="Error al guardar estado reserva",
                               detail="Error",
                               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
