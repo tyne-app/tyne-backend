@@ -45,7 +45,6 @@ class ReservationDao:
                 .filter(ReservationEntity.id == reservation_id) \
                 .first()
 
-            print(reservation.id)
             if reservation:
                 reservation.payment_id = payment_id
                 db.commit()

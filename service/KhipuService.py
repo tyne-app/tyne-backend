@@ -1,9 +1,13 @@
 from datetime import datetime, timezone, timedelta, time
 
 from khipupy import Khipupy
+from starlette import status
 
 from configuration.Settings import Settings
 from dto.internal.KhipuResponse import KhipuResponse
+from pykhipu.client import Client
+
+from exception.exceptions import CustomError
 
 
 class KhipuService:
@@ -12,7 +16,7 @@ class KhipuService:
     def create_link(self, amount: int, payer_email: str, transaction_id: str):
         api = Khipupy(receiver_id=self._settings_.KHIPU_RECEIVER_ID, secret=self._settings_.KHIPU_SECRET_ID)
 
-        d = (datetime.now() + timedelta(minutes=30)).replace(microsecond=0).timestamp()
+        # d = (datetime.now() + timedelta(minutes=30)).replace(microsecond=0).timestamp()
 
         result = api.payments({
             'subject': 'Pago de reserva - Tyne',
@@ -34,6 +38,15 @@ class KhipuService:
         response = KhipuResponse(payment_id=result["response"].get("payment_id"),
                                  url=result["response"].get("payment_url"), status=result["status"])
 
-        print(result)
-
         return response
+
+    def verify_payment(self, id: str):
+        try:
+            client = Client(receiver_id=self._settings_.KHIPU_RECEIVER_ID, secret=self._settings_.KHIPU_SECRET_ID)
+            payment = client.payments.get_id(id=id)
+            return payment
+        except Exception as exception:
+            raise CustomError(name="Pago no encontrado",
+                              detail="El pago no fue encontrado",
+                              status_code=status.HTTP_400_BAD_REQUEST)
+
