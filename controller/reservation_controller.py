@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, Response, status, Request
+from loguru import logger
 from sqlalchemy.orm import Session
 from configuration.database import database
 from dto.request.NewReservationRequest import NewReservationRequest
 from dto.response.ReservationResponse import ReservationResponse
+from exception.exceptions import CustomError
 from service.JwtService import JwtService
 from service.ReservationService import ReservationService
 from datetime import datetime
@@ -67,3 +69,27 @@ async def create_reservation(request: Request,
     response = _service_.create_reservation(client_id=token_payload.id_branch_client, reservation=reservation_request,
                                             db=db)
     return response
+
+
+@reservation_controller.get('/', status_code=status.HTTP_200_OK)
+async def get_reservations(request: Request, db: Session = Depends(database.get_data_base)):
+    try:
+        # token = request.headers['authorization']
+        # token_payload = _jwt_service_.verify_and_get_token_data(token=token)
+
+        # return await _service_.get_reservations(client_id=token_payload.id_branch_client, db=db)
+        return _service_.get_reservations(client_id=63, db=db)
+
+    except CustomError as error:
+        logger.error(error.detail)
+        raise CustomError(name=error.name,
+                          detail=error.detail,
+                          status_code=error.status_code,
+                          cause=error.cause)
+
+    except Exception as error:
+        logger.error(error)
+        raise CustomError(name="Error get_reservation",
+                          detail="Controller error",
+                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                          cause=error.__cause__)
