@@ -197,7 +197,6 @@ class ReservationService:
     def get_reservations(self, client_id: int, db: Session):
         try:
             reservations = self._reservation_dao.get_reservations(client_id, db)
-
             if not reservations:
                 raise CustomError(name="Error get_reservation",
                                   detail="reservations not found",
@@ -205,7 +204,7 @@ class ReservationService:
 
             response = responseDTO()
             response.data = reservations
-            return response.__dict__
+            return response
 
         except CustomError as error:
             logger.error(error.detail)

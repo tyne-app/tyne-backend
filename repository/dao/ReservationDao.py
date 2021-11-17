@@ -205,7 +205,6 @@ class ReservationDao:
                 all()
 
         except Exception as e:
-            logger.error(e)
             raise CustomError(name="Error al guardar estado reserva",
                               detail="Error",
                               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
