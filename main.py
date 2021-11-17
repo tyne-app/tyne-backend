@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from firebase_admin import credentials
+from loguru import logger
 
 from configuration.firebase_config import FirebaseConfig
 from exception.exceptions import CustomError
@@ -60,15 +61,12 @@ async def validation_exception_handler(request, exc):
 
 @api_local.exception_handler(CustomError)
 async def custom_exception_handler(request: Request, exc: CustomError):
+    logger.error(f" Error {exc.name} | cause: {exc.cause}")
     return JSONResponse(
         status_code=exc.status_code,
         content=jsonable_encoder({
-            'data': [],
-            "error": [{
-                "name": f"{exc.name}",
-                "detail": f"{exc.detail}",
-                "cause": f"{exc.cause}",
-            }]
+            "name": f"{exc.name}",
+            "details": f"{exc.detail}"
         })
     )
 
