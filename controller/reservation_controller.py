@@ -54,6 +54,7 @@ def local_reservations(request: Request,
                                                  status_reservation=status_reservation,
                                                  db=db)
 
+
 @reservation_controller.post('/', status_code=status.HTTP_200_OK, response_model=ReservationResponse)
 async def create_reservation(request: Request,
                              response: Response,
@@ -71,25 +72,4 @@ async def create_reservation(request: Request,
     return response
 
 
-@reservation_controller.get('/', status_code=status.HTTP_200_OK)
-async def get_reservations(request: Request, db: Session = Depends(database.get_data_base)):
-    try:
-        # token = request.headers['authorization']
-        # token_payload = _jwt_service_.verify_and_get_token_data(token=token)
 
-        # return await _service_.get_reservations(client_id=token_payload.id_branch_client, db=db)
-        return _service_.get_reservations(client_id=63, db=db)
-
-    except CustomError as error:
-        logger.error(error.detail)
-        raise CustomError(name=error.name,
-                          detail=error.detail,
-                          status_code=error.status_code,
-                          cause=error.cause)
-
-    except Exception as error:
-        logger.error(error)
-        raise CustomError(name="Error get_reservation",
-                          detail="Controller error",
-                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                          cause=error.__cause__)
