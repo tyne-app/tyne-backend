@@ -15,6 +15,7 @@ from controller import business_controller, menu_controller, bank_controller, te
 import firebase_admin
 
 # from configuration.database import engine
+from util.constants import Constants
 
 api_local = FastAPI(
     docs_url="/v1/docs",
@@ -24,6 +25,22 @@ api_local = FastAPI(
 )
 
 origins = ["*"]
+
+
+@api_local.middleware("http")
+async def catch_exceptions_middleware(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception as e:
+        logger.error(e)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=jsonable_encoder({
+                "name": Constants.INTERNAL_ERROR,
+                "details": Constants.INTERNAL_ERROR_DETAIL
+            })
+        )
+
 
 api_local.add_middleware(
     CORSMiddleware,
