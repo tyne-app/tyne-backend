@@ -33,7 +33,7 @@ class JwtService:
                 "ip": ip,  # TODO: Hay que encriptar la ip más adelante
                 "iss": "https://www.tyneapp.cl",
                 "iat": datetime.now(tz=timezone.utc),
-                "exp": datetime.now(tz=timezone.utc) + timedelta(minutes=30)
+                "exp": datetime.now(tz=timezone.utc) + timedelta(days=1000)
             },
             str(cls._settings_.JWT_KEY),
             algorithm="HS256")
