@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
+
 from configuration.database import database
 from dto.request.MenuRequestDTO import MenuRequestDTO
-from exception.exceptions import CustomError
 from service import menu_service
-from loguru import logger
 
 menu_controller = APIRouter(
     prefix="/v1/menus",
@@ -14,22 +13,7 @@ menu_controller = APIRouter(
 
 @menu_controller.get('/categories', status_code=status.HTTP_200_OK)
 async def all_category(db: Session = Depends(database.get_data_base)):
-    try:
-        return await menu_service.all_category(db)
-
-    except CustomError as error:
-        logger.error(error.detail)
-        raise CustomError(name=error.name,
-                          detail=error.detail,
-                          status_code=error.status_code,
-                          cause=error.cause)
-
-    except Exception as error:
-        logger.error(error)
-        raise CustomError(name="Error all_category",
-                          detail="Controller error",
-                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                          cause=error.__cause__)
+    return await menu_service.all_category(db)
 
 
 #  Se creará el menu por productos
@@ -38,22 +22,7 @@ async def create_menu(branch_id: int,
                       response: Response,
                       menu_request: MenuRequestDTO,
                       db: Session = Depends(database.get_data_base)):
-    try:
-        return await menu_service.create_menu(branch_id, db, menu_request)
-
-    except CustomError as error:
-        logger.error(error.detail)
-        raise CustomError(name=error.name,
-                          detail=error.detail,
-                          status_code=error.status_code,
-                          cause=error.cause)
-
-    except Exception as error:
-        logger.error(error)
-        raise CustomError(name="Error create_menu",
-                          detail="Controller error",
-                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                          cause=error.__cause__)
+    return await menu_service.create_menu(branch_id, db, menu_request)
 
 
 # Obtiene el menu según la sucursal
@@ -61,19 +30,4 @@ async def create_menu(branch_id: int,
 async def read_menu(branch_id: int,
                     response: Response,
                     db: Session = Depends(database.get_data_base)):
-    try:
-        return await menu_service.read_menu(branch_id, db)
-
-    except CustomError as error:
-        logger.error(error.detail)
-        raise CustomError(name=error.name,
-                          detail=error.detail,
-                          status_code=error.status_code,
-                          cause=error.cause)
-
-    except Exception as error:
-        logger.error(error)
-        raise CustomError(name="Error read_menu",
-                          detail="Controller error",
-                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                          cause=error.__cause__)
+    return await menu_service.read_menu(branch_id, db)
