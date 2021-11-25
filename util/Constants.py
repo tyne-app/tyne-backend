@@ -9,3 +9,6 @@ class Constants:
     MENU_CREATE_ERROR_DETAIL = "Error al guardar los productos para el menu"
     MENU_ALL_CATEGORY_ERROR = "Error al obtener categorias"
     MENU_ALL_CATEGORY_ERROR_DETAIL = "Categorias no encontradas para el menu"
+
+    BANK_READ_ERROR = "Error al obtener banco"
+    BANK_READ_ERROR_DETAIL = "Banco no encontrados"
