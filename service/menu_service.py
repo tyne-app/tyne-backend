@@ -21,10 +21,9 @@ async def create_menu(branch_id, db, menu_request):
     is_saved = ProductDao.save_all_products_menu(db, seccions_list_entity, branch_id)
 
     if not is_saved:
-        raise CustomError(
-            name=Constants.MENU_CREATE_ERROR,
-            detail=Constants.MENU_CREATE_ERROR,
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        await _throwerExceptions.throw_custom_exception(name=Constants.MENU_CREATE_ERROR,
+                                                        detail=Constants.MENU_CREATE_ERROR,
+                                                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     menu_response = menu_mapper_response.to_menu_create_response()
 
@@ -50,10 +49,9 @@ async def all_category(db):
     categories = CategoryDao.get_all(db)
 
     if not categories:
-        raise CustomError(
-            name=Constants.MENU_ALL_CATEGORY_ERROR,
-            detail=Constants.MENU_ALL_CATEGORY_ERROR_DETAIL,
-            status_code=status.HTTP_204_NO_CONTENT)
+        await _throwerExceptions.throw_custom_exception(name=Constants.MENU_ALL_CATEGORY_ERROR,
+                                                        detail=Constants.MENU_ALL_CATEGORY_ERROR_DETAIL,
+                                                        status_code=status.HTTP_204_NO_CONTENT)
 
     category_response = CategoryResponse()
     response = category_response.to_all_categories(categories)
