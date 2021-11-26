@@ -12,3 +12,17 @@ class Constants:
 
     BANK_READ_ERROR = "Error al obtener banco"
     BANK_READ_ERROR_DETAIL = "Banco no encontrados"
+
+    BRANCH_READ_ERROR = "Error al obtener branch"
+    BRANCH_NOT_FOUND_ERROR_DETAIL = "Branch no encontrado"
+    BRANCH_ADD_ERROR = "Error al agregar branch"
+
+    MANAGER_NOT_FOUND_ERROR_DETAIL = "Manager no encontrado"
+
+    USER_NO_AUTH = "Usuario no autorizado"
+    USER_NO_AUTH_DETAIL = "X"
+
+    ACCOUNT_PROFILE_GET_ERROR = "Error al obtener el perfil"
+    ACCOUNT_PROFILE_ERROR = "Error get_account_profile"
+
+    FIELDS_VALIDATOR_ERROR = "Los datos no son validos"

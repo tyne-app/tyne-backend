@@ -158,7 +158,6 @@ class LocalValidator:
             data_checked["branch_bank"] = branch_bank_checked
 
         if data_checked:
-            logger.error("data_checked: {}", data_checked)
             self.raise_custom_error(message=data_checked)
 
     def raise_custom_error(self, message):

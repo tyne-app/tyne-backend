@@ -31,6 +31,8 @@ class LocalService:
     _business_mapper_request = BusinessMapperRequest()
     DEFAULT_LOCAL_IMAGE_PROFILE = "https://res.cloudinary.com/dqdtvbynk/image/upload/v1636295279/Development/users/default%20main%20local%20image/Sart%C3%A9n_Tyne_Fondo_Transparente_zflbrr.png"
 
+    _local_dao = LocalDAO()
+
     async def create_new_account(self, new_account: NewAccount, db: SessionLocal):
         logger.info('new_account: {}', new_account)
 
@@ -89,10 +91,6 @@ class LocalService:
 
         logger.info('branch_entity_status: {}', branch_entity_status)
 
-        if type(branch_entity_status) is str:
-            branch_entity_status_parsed = self.parse_error_response_database(message=branch_entity_status)
-            self.raise_custom_error(name=self.CREATE_ACCOUNT_ERROR_MSG, message=branch_entity_status_parsed)
-
         return self._business_mapper_request.to_branch_create_response(content=self.MSG_CREATE_ACCOUNT_SUCCESSFULLY)
 
     async def geocoding(self, street: str, street_number: int, state_name: str):
@@ -107,16 +105,7 @@ class LocalService:
         return coordinates
 
     def get_account_profile(self, branch_id: int, db: SessionLocal):
-        logger.info('branch_id: {}', branch_id)
-
-        local_dao = LocalDAO()
-        branch_profile = local_dao.get_account_profile(branch_id=branch_id, db=db)
-
-        if type(branch_profile) is str:
-            logger.error("branch_profile: {}", branch_profile)
-            self.raise_custom_error(name=self.GET_PROFILE_ERROR_MSG, message=branch_profile)
-
-        return self._business_mapper_request.to_branch_create_response(content=branch_profile)
+        return self._local_dao.get_account_profile(branch_id=branch_id, db=db)
 
     async def add_new_branch(self, branch_id, new_branch: NewBranch, db: SessionLocal):
         logger.info('branch_id: {}', branch_id)
@@ -144,48 +133,21 @@ class LocalService:
         manager_entity = self._business_mapper_request.to_manager_entity(manager=manager)
 
         branch_entity = self._business_mapper_request.to_branch_entity(branch=branch,
-                                                                    branch_geocoding=branch_geocoding)
+                                                                       branch_geocoding=branch_geocoding)
         branch_bank = new_branch.branch_bank
         branch_bank_entity = self._business_mapper_request.to_branch_bank_entity(branch_bank=branch_bank)
 
-        branch_image_entity = self._business_mapper_request\
+        branch_image_entity = self._business_mapper_request \
             .to_branch_image_entity(default_main_image=self.DEFAULT_LOCAL_IMAGE_PROFILE)
 
-        local_dao = LocalDAO()
-        new_branch_status = local_dao.add_new_branch(user_entity=user_entity,
-                                                     branch_id=branch_id,
-                                                     manager_entity=manager_entity,
-                                                     branch_entity=branch_entity,
-                                                     branch_bank_entity=branch_bank_entity,
-                                                     branch_image_entity=branch_image_entity,
-                                                     db=db)
+        new_branch_status = self._local_dao.add_new_branch(user_entity=user_entity,
+                                                           branch_id=branch_id,
+                                                           manager_entity=manager_entity,
+                                                           branch_entity=branch_entity,
+                                                           branch_bank_entity=branch_bank_entity,
+                                                           branch_image_entity=branch_image_entity,
+                                                           db=db)
 
         logger.info('new_branch_status: {}', new_branch_status)
 
-        if type(new_branch_status) is str:
-            new_branch_status_parsed = self.parse_error_response_database(message=new_branch_status)
-            self.raise_custom_error(name=self.NEW_BRANCH_ERROR_MSG, message=new_branch_status_parsed)
-
-        return self._business_mapper_request.to_branch_create_response(content=self.MSG_NEW_BRANCH)
-
-    def raise_custom_error(self, name: str, message: str):  # TODO: Esta función debe ser de otra clase creo.
-        raise CustomError(name=name,
-                          detail=message,
-                          status_code=status.HTTP_400_BAD_REQUEST if message else status.HTTP_204_NO_CONTENT,
-                          cause="")  # TODO: Llenar campo
-
-    def parse_error_response_database(self, message):
-
-        if self.LEGAL_REPRESENTATIVE_IDENTIFIER_KEY_WORD in message:
-            return self.LEGAL_REPRESENTATIVE_IDENTIFIER_ERROR_MESSAGE
-
-        if self.RESTAURANT_KEY_WORD in message:
-            return self.RESTAURANT_ERROR_MESSAGE
-
-        if self.MANAGER_EMAIL_KEY_WORD in message:
-            return self.MANAGER_EMAIL_ERROR_MESSAGE
-
-        if self.LEGAL_REPRESENTATIVE_EMAIL_KEY_WORD in message:
-            return self.LEGAL_REPRESENTATIVE_EMAIL_ERROR_MESSAGE
-
-        return self.STANDARD_ERROR_MESSAGE
+        return True

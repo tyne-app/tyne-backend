@@ -74,6 +74,7 @@ async def catch_exceptions_middleware(request: Request, call_next):
             "path_params": f"{request.path_params}",
             "cause": f"{e}",
         }
+        logger.exception(e)
         logger.error(json.dumps(error_detail, indent=4))
         return await _throwerExceptions.response_internal_exception()
 
