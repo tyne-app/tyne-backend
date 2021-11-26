@@ -23,8 +23,6 @@ class SearchDAO:
     def search_all_branches(self, search_parameters: SearchParameter, db: SessionLocal,
                             client_id: int, limit: int):
         try:
-            logger.info('search_parameters: {}, client_id: {}, limit: {}',
-                        search_parameters, client_id, limit)
 
             all_branches = None
 
@@ -41,7 +39,6 @@ class SearchDAO:
                     func.min(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='min_price'),
                     func.max(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='max_price'),
                     BranchImageEntity.url_image)
-                logger.info('all_branches: {}', str(all_branches))
 
             if not client_id:
                 all_branches = db.query(
@@ -52,7 +49,6 @@ class SearchDAO:
                     RestaurantEntity.name.label(name='restaurant_name'),
                     BranchEntity.description,
                     BranchImageEntity.url_image)
-                logger.info('all_branches: {}', str(all_branches))
 
             all_branches = all_branches.select_from(BranchEntity) \
                 .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
@@ -60,26 +56,21 @@ class SearchDAO:
                 .join(BranchImageEntity, BranchImageEntity.branch_id == BranchEntity.id) \
                 .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
                 .join(UserEntity, UserEntity.id == ManagerEntity.id_user)
-            logger.info('all_branches: {}', str(all_branches))
 
             if client_id:
                 all_branches = all_branches.join(ProductEntity, ProductEntity.branch_id == BranchEntity.id,
                                                  isouter=True) \
                     .join(OpinionEntity, OpinionEntity.branch_id == BranchEntity.id, isouter=True)
-                logger.info('all_branches: {}', str(all_branches))
 
             all_branches = all_branches.filter(BranchImageEntity.is_main_image) \
                 .filter(UserEntity.is_active)
-            logger.info('all_branches: {}', str(all_branches))
 
             if search_parameters['name']:
                 name = search_parameters['name'].lower()
-                logger.info('name: {}', name)
                 all_branches = all_branches.filter(func.lower(RestaurantEntity.name).like("%" + name + "%"))
 
             if search_parameters['date_reservation']:
                 date_reservation = search_parameters['date_reservation']
-                logger.info('date_reservation: {}', date_reservation)
                 reservation_data = db.query(
                     ReservationEntity.id.label(name='reservation_id'),
                     func.max(ReservationChangeStatusEntity.datetime).label(name='last_modify'),
@@ -99,20 +90,22 @@ class SearchDAO:
 
             if search_parameters['state_id']:
                 state_id = search_parameters['state_id']
-                logger.info('state_id: {}', state_id)
                 all_branches = all_branches.filter(StateEntity.id == state_id)
 
             if search_parameters['sort_by'] and search_parameters['order_by']:  # TODO: Se implementa después
                 pass
 
             total_number_all_branches = all_branches.count()
-            logger.info("total_number_all_branches: {}", total_number_all_branches)
 
             page = search_parameters['page']
-            offset = (page - 1) * limit
-            all_branches = all_branches.limit(limit).offset(offset)
+            result_for_page = search_parameters['result_for_page']
 
-            logger.info('all_branches: {}', str(all_branches))
+            if result_for_page == total_number_all_branches and page == 1:
+                result_for_page = result_for_page + 1
+
+            all_branches = all_branches.slice((page - 1) * result_for_page, (
+                    (page - 1) * result_for_page) + result_for_page)
+
             all_branches = all_branches.all()
 
             result_dict = {

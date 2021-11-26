@@ -65,11 +65,11 @@ class BusinessMapperRequest:
         response.data = content
         return response.__dict__
 
-    def to_search_branches_response(self, content: list[PreviewBranch], total_items: int, page: int):
+    def to_search_branches_response(self, content: list[PreviewBranch], total_items: int, page: int,result_for_page: int):
         response = wrapperDTO()
         response_dict = response.__dict__
         response_dict['total_items'] = total_items
-        response_dict['total_items_page'] = len(content)
+        response_dict['total_items_page'] = result_for_page
         response_dict['page'] = page
         response_dict['data'] = content
 
