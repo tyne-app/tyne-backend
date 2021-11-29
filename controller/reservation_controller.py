@@ -51,6 +51,6 @@ async def create_reservation(request: Request,
                              reservation_request: NewReservationRequest,
                              db: Session = Depends(database.get_data_base)):
     token_payload = await _jwt_service_.verify_and_get_token_data(request)
-    return _service_.create_reservation(client_id=63,
+    return _service_.create_reservation(client_id=token_payload.id_branch_client,
                                         reservation=reservation_request,
                                         db=db)
