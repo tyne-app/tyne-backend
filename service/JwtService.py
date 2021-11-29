@@ -1,24 +1,27 @@
-from fastapi import status
 from datetime import datetime, timezone, timedelta
+
+import jwt
+from fastapi import status
+from firebase_admin import auth
+from loguru import logger
 
 from configuration.Settings import Settings
 from dto.internal.Token import Token
 from dto.internal.TokenFirebase import TokenFirebase
 from dto.response.UserTokenResponse import UserTokenResponse
-import jwt
 from exception.exceptions import CustomError
-from loguru import logger
-from firebase_admin import auth
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
 
 
 class JwtService:
-
     _settings_ = Settings()
+    _throwerExceptions = ThrowerExceptions()
 
     ALGORITHM = "HS256"
     EXPIRED_KEY_WORD = "expired"
-    SIGNATURE_EXPIRED_MSG = "Token expirado"
     ALGORITHM_KEY_WORD = "alg"
+    SIGNATURE_EXPIRED_MSG = "Token expirado"
     ALGORITHM_MSG = "Token entrante no permitido"
 
     @classmethod
@@ -56,38 +59,48 @@ class JwtService:
             token_firebase.email_verified = decoded_token['email_verified']
             return token_firebase
         except Exception as exception:
-            logger.exception(exception)
-            raise CustomError(name="Token inválido",
-                              detail="Token inválido",
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="Token inválido")
+            await cls._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_INVALID_ERROR,
+                                                                detail=Constants.TOKEN_INVALID_ERROR,
+                                                                status_code=status.HTTP_400_BAD_REQUEST)
 
-    def verify_and_get_token_data(self, token: str):
+    @classmethod
+    async def verify_and_get_token_data(cls, request):
         try:
-            decoded_token = jwt.decode(jwt=token, key=str(self._settings_.JWT_KEY), algorithms=self.ALGORITHM)
+            if 'authorization' not in request.headers:
+                await cls._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_NOT_EXIST,
+                                                                    detail=Constants.TOKEN_NOT_EXIST_DETAIL,
+                                                                    status_code=status.HTTP_400_BAD_REQUEST,
+                                                                    cause=Constants.TOKEN_NOT_EXIST_DETAIL)
+            token = request.headers['authorization']
+
+            decoded_token = jwt.decode(jwt=token, key=str(cls._settings_.JWT_KEY), algorithms=cls.ALGORITHM)
             if not decoded_token:
-                raise CustomError(name="Error al verificar token",
-                                  detail="",
-                                  status_code=status.HTTP_400_BAD_REQUEST,
-                                  cause="")
+                await cls._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_VERIFY_ERROR,
+                                                                    detail=Constants.TOKEN_VERIFY_ERROR,
+                                                                    status_code=status.HTTP_400_BAD_REQUEST,
+                                                                    cause="decoded_token is None")
 
             token = Token(int(decoded_token['id_user']), int(decoded_token['id_branch_client']))
             return token
 
         except (jwt.ExpiredSignatureError, Exception) as error:
+            # TODO: Deuda tecnica, refactorizar.
+            if type(error) is CustomError:
+                raise error
+
             logger.info("error: {}", error)
             logger.info("error.args: {}", error.args)
 
             message_error = error.args[0]
             content_detail = message_error
 
-            if self.EXPIRED_KEY_WORD in message_error:
-                content_detail = self.SIGNATURE_EXPIRED_MSG
+            if cls.EXPIRED_KEY_WORD in message_error:
+                content_detail = Constants.SIGNATURE_EXPIRED_MSG
 
-            if self.ALGORITHM_KEY_WORD in message_error:
-                content_detail = self.ALGORITHM_MSG
+            if cls.ALGORITHM_KEY_WORD in message_error:
+                content_detail = Constants.ALGORITHM_MSG
 
-            raise CustomError(name="Error al decodificar token",
-                              detail=content_detail,
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="")
+            await cls._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_DECODE_ERROR,
+                                                                detail=Constants.TOKEN_DECODE_ERROR,
+                                                                status_code=status.HTTP_400_BAD_REQUEST,
+                                                                cause=content_detail)

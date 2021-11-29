@@ -160,12 +160,9 @@ class LocalDAO:
 
 
 def find_branch_by_email_user_manager(self, email: str, db: SessionLocal):
-    try:
-        branch: BranchEntity = db.query(BranchEntity). \
-            select_from(BranchEntity). \
-            join(ManagerEntity, BranchEntity.manager_id == ManagerEntity.id). \
-            join(UserEntity, ManagerEntity.id_user == UserEntity.id). \
-            filter(UserEntity.email == email).first()
-        return branch
-    except Exception as error:
-        raise error
+    branch: BranchEntity = db.query(BranchEntity). \
+        select_from(BranchEntity). \
+        join(ManagerEntity, BranchEntity.manager_id == ManagerEntity.id). \
+        join(UserEntity, ManagerEntity.id_user == UserEntity.id). \
+        filter(UserEntity.email == email).first()
+    return branch

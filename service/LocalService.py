@@ -1,14 +1,13 @@
 from loguru import logger
+
+from configuration.database.database import SessionLocal
 from dto.request.business_request_dto import NewAccount
 from dto.request.business_request_dto import NewBranch
-from validator.LocalValidator import LocalValidator
-from exception.exceptions import CustomError
-from fastapi import status
-from service.MapboxService import MapBoxService
-from repository.dao.LocalDao import LocalDAO
-from configuration.database.database import SessionLocal
-from repository.dao.StateDao import get_state_by_id
 from mappers.request.BusinessMapperRequest import BusinessMapperRequest
+from repository.dao.LocalDao import LocalDAO
+from repository.dao.StateDao import get_state_by_id
+from service.MapboxService import MapBoxService
+from validator.LocalValidator import LocalValidator
 
 
 class LocalService:

@@ -1,21 +1,21 @@
 from loguru import logger
 from sqlalchemy import func, distinct, or_
+
 from configuration.database.database import SessionLocal
-from repository.entity.BranchImageEntity import BranchImageEntity
+from dto.request.business_request_dto import SearchParameter
 from repository.entity.BranchEntity import BranchEntity
-from repository.entity.StateEntity import StateEntity
-from repository.entity.RestaurantEntity import RestaurantEntity
+from repository.entity.BranchImageEntity import BranchImageEntity
+from repository.entity.BranchScheduleEntity import BranchScheduleEntity
+from repository.entity.ClientEntity import ClientEntity
+from repository.entity.ManagerEntity import ManagerEntity
 from repository.entity.OpinionEntity import OpinionEntity
 from repository.entity.ProductEntity import ProductEntity
-from repository.entity.ReservationEntity import ReservationEntity
-from repository.entity.ManagerEntity import ManagerEntity
-from repository.entity.UserEntity import UserEntity
 from repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
+from repository.entity.ReservationEntity import ReservationEntity
+from repository.entity.RestaurantEntity import RestaurantEntity
 from repository.entity.ScheduleEntity import ScheduleEntity
-from repository.entity.BranchScheduleEntity import BranchScheduleEntity
-from repository.entity.BranchImageEntity import BranchImageEntity
-from repository.entity.ClientEntity import ClientEntity
-from dto.request.business_request_dto import SearchParameter
+from repository.entity.StateEntity import StateEntity
+from repository.entity.UserEntity import UserEntity
 
 
 class SearchDAO:
@@ -125,103 +125,97 @@ class SearchDAO:
         return result_dict
 
     def search_branch_profile(self, branch_id: int, client_id: int, db: SessionLocal):
-        try:
-            logger.info('branch_id: {}, client_id: {}', branch_id, client_id)
+        logger.info('branch_id: {}, client_id: {}', branch_id, client_id)
 
-            branch_dict = {}
-            logger.info('branch_dict: {}', branch_dict)
+        branch_dict = {}
+        logger.info('branch_dict: {}', branch_dict)
 
-            branch = db.query(
-                BranchEntity.id,
-                BranchEntity.description,
-                BranchEntity.latitude,
-                BranchEntity.longitude,
-                BranchEntity.street,
-                BranchEntity.street_number,
-                BranchEntity.accept_pet,
-                RestaurantEntity.id.label(name='restaurant_id'),
-                RestaurantEntity.name,
-                StateEntity.name.label(name='state_name')) \
+        branch = db.query(
+            BranchEntity.id,
+            BranchEntity.description,
+            BranchEntity.latitude,
+            BranchEntity.longitude,
+            BranchEntity.street,
+            BranchEntity.street_number,
+            BranchEntity.accept_pet,
+            RestaurantEntity.id.label(name='restaurant_id'),
+            RestaurantEntity.name,
+            StateEntity.name.label(name='state_name')) \
+            .select_from(BranchEntity) \
+            .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
+            .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
+            .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
+            .join(UserEntity, UserEntity.id == ManagerEntity.id_user) \
+            .filter(BranchEntity.id == branch_id) \
+            .filter(UserEntity.is_active).first()
+
+        if not branch:
+            return []
+        branch_dict['branch'] = branch
+        logger.info('branch_dict: {}', branch_dict)
+
+        aggregate_values = None
+
+        if client_id:
+            aggregate_values = db.query(
+                func.avg(OpinionEntity.qualification).label("rating"),
+                func.avg(ProductEntity.amount).label("avg_price"),
+                func.max(ProductEntity.amount).label("max_price"),
+                func.min(ProductEntity.amount).label("min_price")) \
                 .select_from(BranchEntity) \
-                .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
-                .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
-                .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
-                .join(UserEntity, UserEntity.id == ManagerEntity.id_user) \
-                .filter(BranchEntity.id == branch_id) \
-                .filter(UserEntity.is_active).first()
+                .join(OpinionEntity, OpinionEntity.branch_id == BranchEntity.id) \
+                .join(ProductEntity, ProductEntity.branch_id == BranchEntity.id) \
+                .filter(BranchEntity.id == branch.id).first()
 
-            if not branch:
-                return []
-            branch_dict['branch'] = branch
-            logger.info('branch_dict: {}', branch_dict)
+        branch_dict['aggregate_values'] = aggregate_values
+        logger.info('branch_dict: {}', branch_dict)
 
-            aggregate_values = None
+        schedule = db.query(
+            ScheduleEntity) \
+            .join(BranchScheduleEntity, BranchScheduleEntity.schedule_id == ScheduleEntity.id) \
+            .join(BranchEntity, BranchEntity.id == BranchScheduleEntity.branch_id) \
+            .filter(BranchEntity.id == branch.id).all()
 
-            if client_id:
-                aggregate_values = db.query(
-                    func.avg(OpinionEntity.qualification).label("rating"),
-                    func.avg(ProductEntity.amount).label("avg_price"),
-                    func.max(ProductEntity.amount).label("max_price"),
-                    func.min(ProductEntity.amount).label("min_price")) \
-                    .select_from(BranchEntity) \
-                    .join(OpinionEntity, OpinionEntity.branch_id == BranchEntity.id) \
-                    .join(ProductEntity, ProductEntity.branch_id == BranchEntity.id) \
-                    .filter(BranchEntity.id == branch.id).first()
+        branch_dict['schedule'] = schedule
+        logger.info('branch_dict: {}', branch_dict)
 
-            branch_dict['aggregate_values'] = aggregate_values
-            logger.info('branch_dict: {}', branch_dict)
+        branches = db.query(
+            BranchEntity.id.label(name='branch_id'),
+            RestaurantEntity.name.label(name='restaurant_name'),
+            StateEntity.name.label(name='state_name')) \
+            .select_from(BranchEntity) \
+            .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
+            .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
+            .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
+            .join(UserEntity, UserEntity.id == ManagerEntity.id_user) \
+            .filter(RestaurantEntity.id == branch.restaurant_id) \
+            .filter(BranchEntity.id != branch.id) \
+            .filter(UserEntity.is_active).all()
 
-            schedule = db.query(
-                ScheduleEntity) \
-                .join(BranchScheduleEntity, BranchScheduleEntity.schedule_id == ScheduleEntity.id) \
-                .join(BranchEntity, BranchEntity.id == BranchScheduleEntity.branch_id) \
-                .filter(BranchEntity.id == branch.id).all()
+        branch_dict['branches'] = branches
+        logger.info('branch_dict: {}', branch_dict)
 
-            branch_dict['schedule'] = schedule
-            logger.info('branch_dict: {}', branch_dict)
+        images = db.query(BranchImageEntity.id, BranchImageEntity.url_image) \
+            .select_from(BranchImageEntity) \
+            .join(BranchEntity, BranchEntity.id == BranchImageEntity.branch_id) \
+            .filter(BranchEntity.id == branch.id).all()
 
-            branches = db.query(
-                BranchEntity.id.label(name='branch_id'),
-                RestaurantEntity.name.label(name='restaurant_name'),
-                StateEntity.name.label(name='state_name')) \
-                .select_from(BranchEntity) \
-                .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
-                .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
-                .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
-                .join(UserEntity, UserEntity.id == ManagerEntity.id_user) \
-                .filter(RestaurantEntity.id == branch.restaurant_id) \
-                .filter(BranchEntity.id != branch.id) \
-                .filter(UserEntity.is_active).all()
+        branch_dict['images'] = images
+        logger.info('branch_dict: {}', branch_dict)
 
-            branch_dict['branches'] = branches
-            logger.info('branch_dict: {}', branch_dict)
+        opinions = db.query(OpinionEntity.id,
+                            OpinionEntity.description,
+                            OpinionEntity.qualification,
+                            OpinionEntity.creation_date,
+                            ClientEntity.name.label(name='client_name')) \
+            .select_from(OpinionEntity) \
+            .join(ClientEntity, ClientEntity.id == OpinionEntity.client_id) \
+            .join(BranchEntity, BranchEntity.id == OpinionEntity.branch_id) \
+            .filter(BranchEntity.id == branch.id).all()
 
-            images = db.query(BranchImageEntity.id, BranchImageEntity.url_image) \
-                .select_from(BranchImageEntity) \
-                .join(BranchEntity, BranchEntity.id == BranchImageEntity.branch_id) \
-                .filter(BranchEntity.id == branch.id).all()
-
-            branch_dict['images'] = images
-            logger.info('branch_dict: {}', branch_dict)
-
-            opinions = db.query(OpinionEntity.id,
-                                OpinionEntity.description,
-                                OpinionEntity.qualification,
-                                OpinionEntity.creation_date,
-                                ClientEntity.name.label(name='client_name')) \
-                .select_from(OpinionEntity) \
-                .join(ClientEntity, ClientEntity.id == OpinionEntity.client_id) \
-                .join(BranchEntity, BranchEntity.id == OpinionEntity.branch_id) \
-                .filter(BranchEntity.id == branch.id).all()
-
-            branch_dict['opinions'] = opinions
-            logger.info('branch_dict: {}', branch_dict)
-            return branch_dict
-
-        except Exception as error:
-            logger.error('error: {}', error)
-            logger.error('error.args: {}', error.args)
-            return error.args[0]
+        branch_dict['opinions'] = opinions
+        logger.info('branch_dict: {}', branch_dict)
+        return branch_dict
 
     '''
     def read_branch(branch_id: int, db: Session):

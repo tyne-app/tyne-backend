@@ -1,8 +1,11 @@
-from pydantic import BaseModel
-from starlette import status
-from exception.exceptions import CustomError
-from validator.SharedValidator import SharedValidator
 import datetime
+
+from starlette import status
+
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
+
+_throwerExceptions = ThrowerExceptions()
 
 
 class LocalReservationRequest:
@@ -12,29 +15,24 @@ class LocalReservationRequest:
     status_reservation: int
 
     @classmethod
-    def validate_fields(cls, local_reservation_request):
+    async def validate_fields(cls, local_reservation_request):
 
         if not local_reservation_request.reservation_date:
-            raise CustomError(name="Validación body",
-                              detail="Fecha de reserva no puede estar vacia",
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="Fecha de reserva no puede estar vacia")
+            await _throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
+                                                            detail=Constants.DATE_EMPTY_ERROR,
+                                                            status_code=status.HTTP_400_BAD_REQUEST)
 
         if local_reservation_request.page_number < 1:
-            raise CustomError(name="Validación body",
-                              detail="N° de página debe ser mayor a 0",
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="N° de  página debe ser mayor a 0")
+            await _throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
+                                                            detail=Constants.PAGE_LEN_ERROR,
+                                                            status_code=status.HTTP_400_BAD_REQUEST)
 
         if local_reservation_request.result_for_page < 1:
-            raise CustomError(name="Validación body",
-                              detail="Resultado por página debe ser mayor a 0",
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="Resultado por página debe ser mayor a 0")
+            await _throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
+                                                            detail=Constants.RESULT_PAGE_LEN_ERROR,
+                                                            status_code=status.HTTP_400_BAD_REQUEST)
 
         if local_reservation_request.status_reservation < 0:
-            raise CustomError(name="Validación body",
-                              detail="Estado de la reserva debe ser mayor a 0",
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="Estado de la reserva debe ser mayor a 0")
-
+            await _throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
+                                                            detail=Constants.STATUS_RESERVATION_LEN_ERROR,
+                                                            status_code=status.HTTP_400_BAD_REQUEST)

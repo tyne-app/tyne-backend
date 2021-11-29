@@ -1,14 +1,13 @@
 from fastapi import status
 from loguru import logger
 
-from util.Constants import Constants
-from validator.SearchValidator import SearchValidator
-from repository.dao.SearchDao import SearchDAO
 from configuration.database.database import SessionLocal
-from exception.exceptions import CustomError
 from dto.request.business_request_dto import SearchParameter
 from mappers.request.BusinessMapperRequest import BusinessMapperRequest
-from dto.dto import GenericDTO as wrapperDTO
+from repository.dao.SearchDao import SearchDAO
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
+from validator.SearchValidator import SearchValidator
 
 
 class SearchService:
@@ -22,11 +21,13 @@ class SearchService:
     search_validator = SearchValidator()
     _search_dao = SearchDAO()
     _business_mapper_request = BusinessMapperRequest()
+    _throwerExceptions = ThrowerExceptions()
 
     async def search_all_branches(self, parameters: SearchParameter, db: SessionLocal, client_id: int):
         logger.info('parameters: {}, client_id: {}', parameters, client_id)
 
-        search_parameters = self.clear_null_values(values=parameters)  # TODO: Formato datetime validar con otra función y no con REGEX
+        search_parameters = self.clear_null_values(
+            values=parameters)  # TODO: Formato datetime validar con otra función y no con REGEX
 
         self.search_validator.validate_search_parameters(search_parameters=search_parameters)
 
@@ -36,15 +37,15 @@ class SearchService:
 
         all_branches_result = self._search_dao \
             .search_all_branches(
-                search_parameters=search_parameters,
-                client_id=client_id,
-                db=db,
-                limit=self.TOTAL_ITEMS_PAGE)
+            search_parameters=search_parameters,
+            client_id=client_id,
+            db=db,
+            limit=self.TOTAL_ITEMS_PAGE)
 
         total_number_all_branches = all_branches_result['total_number_all_branches']
         all_branches = all_branches_result['all_branches']
 
-        return self._business_mapper_request.\
+        return self._business_mapper_request. \
             to_search_branches_response(content=all_branches,
                                         total_items=total_number_all_branches,
                                         page=search_parameters['page'])
@@ -53,10 +54,9 @@ class SearchService:
         branch_dict = self._search_dao.search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)
 
         if not branch_dict:
-            raise CustomError(name=Constants.BRANCH_READ_ERROR,
-                              detail=Constants.BRANCH_NOT_FOUND_ERROR_DETAIL,
-                              status_code=status.HTTP_204_NO_CONTENT,
-                              cause="")
+            await self._throwerExceptions.throw_custom_exception(name=Constants.BRANCH_READ_ERROR,
+                                                                 detail=Constants.BRANCH_NOT_FOUND_ERROR_DETAIL,
+                                                                 status_code=status.HTTP_204_NO_CONTENT)
 
         return self.populate_branch_profile(branch_dict=branch_dict)
 
@@ -92,14 +92,3 @@ class SearchService:
         }
         logger.info('branch_profile: {}', branch_profile)
         return branch_profile
-
-    def raise_custom_error(self, name: str, message: str):
-        raise CustomError(name=name,
-                          detail=message,
-                          status_code=status.HTTP_400_BAD_REQUEST,
-                          cause="")  # TODO: Llenar campo
-
-    def to_branch_profile_response(self, content):  # TODO: Mover función a otra clase(?)
-        response = wrapperDTO()
-        response.data = content
-        return response.__dict__

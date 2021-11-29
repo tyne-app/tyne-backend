@@ -1,15 +1,16 @@
 from starlette import status
 
-from exception.exceptions import CustomError
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
 from validator.UtilsValidator import UtilsValidator
 
 
 class UserValidator:
-
     _utils_validator_ = UtilsValidator()
+    _throwerExceptions = ThrowerExceptions()
 
     @classmethod
-    def validate_fields(cls, fields):
+    async def validate_fields(cls, fields):
 
         invalid_data = {}
 
@@ -21,8 +22,8 @@ class UserValidator:
             invalid_data["password"] = cls._utils_validator_.INVALID_DATA_MESSAGE
 
         if invalid_data:
-            raise CustomError(name="Error al validar los datos de entrada",
-                              detail=invalid_data,
-                              status_code=status.HTTP_400_BAD_REQUEST)
+            await cls._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
+                                                                detail=invalid_data,
+                                                                status_code=status.HTTP_400_BAD_REQUEST)
 
         return True

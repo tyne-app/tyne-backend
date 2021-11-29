@@ -1,4 +1,3 @@
-from loguru import logger
 from sqlalchemy.orm import Session
 from starlette import status
 
@@ -6,15 +5,15 @@ from dto.request.ClientRequestDTO import ClientRequestDTO
 from dto.request.ClientSocialRegistrationRequest import ClientSocialRegistrationRequest
 from dto.response.ClientResponse import ClientResponse
 from dto.response.SimpleResponse import SimpleResponse
-from exception.exceptions import CustomError
 from repository.dao.ClientDao import ClientDao
 from repository.dao.UserDao import UserDao
 from repository.entity.ClientEntity import ClientEntity
 from repository.entity.UserEntity import UserEntity
 from service.JwtService import JwtService
 from service.LoginService import LoginService
-from dto.dto import GenericDTO as wrapperDTO
 from service.PasswordService import PasswordService
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
 from validator.ClientValidator import ClientValidator
 
 
@@ -24,36 +23,38 @@ class ClientService:
     _client_validator_ = ClientValidator()
     _login_service_ = LoginService()
     _tokenService_ = JwtService()
+    _throwerExceptions = ThrowerExceptions()
 
     @classmethod
-    def get_client_by_id(cls, client_id: int, db: Session):
-        client: ClientEntity = cls._client_dao_.get_client(client_id=client_id, db=db)
+    async def get_client_by_id(cls, client_id: int, db: Session):
+        client: ClientEntity = cls._client_dao_.get_client_by_id(client_id=client_id, db=db)
 
-        if client is not None:
-            client_dto = ClientResponse()
-            response = client_dto.map(client_entity=client)
-            return response
+        if client is None:
+            await cls._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_NOT_FOUND_ERROR_DETAIL,
+                                                                detail=Constants.CLIENT_NOT_FOUND_ERROR_DETAIL,
+                                                                status_code=status.HTTP_204_NO_CONTENT)
 
-        return None
+        client_dto = ClientResponse()
+        response = client_dto.map(client_entity=client)
+        return response
 
     @classmethod
-    def create_client(cls, client_req: ClientRequestDTO, db: Session):
-        response = wrapperDTO()
-
-        id_login_created = cls._login_service_.create_user_login(client_req.email, client_req.password, "Cliente", db)
-
+    async def create_client(cls, client_req: ClientRequestDTO, db: Session):
         cls._client_validator_.validate_fields(client_req.__dict__)
+        id_login_created = await cls._login_service_.create_user_login(client_req.email, client_req.password, "Cliente",
+                                                                       db)
         client_is_created = cls._client_dao_.create_client(client_req, id_login_created, db)
 
         if not client_is_created:
+            # TODO: Validar como hacer reversa si existe una excep no controlada
+            cls._user_dao_.delete_user_by_id(id_login_created, db)
             cls._login_service_.delete_user_login(client_req.email, db)
-            raise CustomError(
-                name="Error in create_client",
-                detail="Client not created or updated",
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        response.data = [{"message": "Cliente creado correctamente"}]
-        return response.__dict__
+            await cls._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_CREATE_ERROR_DETAIL,
+                                                                detail=Constants.CLIENT_CREATE_ERROR_DETAIL,
+                                                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return client_is_created
 
     def create_client_social_networks(self, client_request: ClientSocialRegistrationRequest, db: Session):
 
@@ -68,10 +69,10 @@ class ClientService:
             token = self._tokenService_.decode_token_firebase(client_request.token)
 
             if token.email != client_request.email:
-                raise CustomError(
-                    name="Error al iniciar sesión",
-                    detail="Error al iniciar sesión",
-                    status_code=status.HTTP_400_BAD_REQUEST)
+                await self._throwerExceptions.throw_custom_exception(name=Constants.LOGIN_ERROR,
+                                                                     detail=Constants.LOGIN_ERROR,
+                                                                     status_code=status.HTTP_400_BAD_REQUEST,
+                                                                     cause=f"token.email: {token.email} es diferente a client_request.email: {client_request.email}")
 
             # create client entity
             new_user = client_request.to_user_entity(image_url=token.picture,
@@ -81,7 +82,7 @@ class ClientService:
 
             return SimpleResponse("Cliente creado correctamente")
         else:
-            raise CustomError(
-                name="Usuario ya existe",
-                detail="Usuario ya existe en el sistema",
-                status_code=status.HTTP_400_BAD_REQUEST)
+            await self._throwerExceptions.throw_custom_exception(name=Constants.USER_ALREADY_EXIST,
+                                                                 detail=Constants.USER_ALREADY_EXIST,
+                                                                 status_code=status.HTTP_400_BAD_REQUEST,
+                                                                 cause=f"El usuario con id: {user.id} ya existe en el sistema")

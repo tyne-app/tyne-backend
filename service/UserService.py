@@ -7,7 +7,6 @@ from dto.request.LoginUserRequest import LoginUserRequest
 from dto.response.UpdateProfileImageResponse import UpdateProfileImageDto
 from dto.response.UserTokenResponse import UserTokenResponse
 from enums.UserTypeEnum import UserTypeEnum
-from exception.exceptions import CustomError
 from repository.dao.ClientDao import ClientDao
 from repository.dao.LocalDao import LocalDAO
 from repository.dao.UserDao import UserDao
@@ -16,6 +15,8 @@ from repository.entity.ClientEntity import ClientEntity
 from repository.entity.UserEntity import UserEntity
 from service.CloudinaryService import CloudinaryService
 from service.JwtService import JwtService
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
 
 
 class UserService:
@@ -24,9 +25,10 @@ class UserService:
     _tokenService_ = JwtService()
     _clientDao_ = ClientDao()
     _localDao_ = LocalDAO()
+    _throwerExceptions = ThrowerExceptions()
 
     @classmethod
-    def login_user(cls, loginRequest: LoginUserRequest, ip: str, db: Session):
+    async def login_user(cls, loginRequest: LoginUserRequest, ip: str, db: Session):
 
         id_branch_client = None
         name = None
@@ -38,16 +40,14 @@ class UserService:
 
         if user is not None:
             if user.is_active is not True:
-                raise CustomError(name="Usuario no autorizado",
-                                  detail="Validación",
-                                  status_code=status.HTTP_401_UNAUTHORIZED,
-                                  cause="Usuario no autorizado")
+                await cls._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_UNAUTHORIZED,
+                                                                    detail=Constants.TOKEN_NOT_EXIST_DETAIL,
+                                                                    status_code=status.HTTP_401_UNAUTHORIZED)
 
             if user.password != loginRequest.password:
-                raise CustomError(name="Contraseña inválida",
-                                  detail="Validación",
-                                  status_code=status.HTTP_401_UNAUTHORIZED,
-                                  cause="Contraseña inválida")
+                await cls._throwerExceptions.throw_custom_exception(name=Constants.PASSWORD_INVALID_ERROR,
+                                                                    detail=Constants.PASSWORD_INVALID_ERROR,
+                                                                    status_code=status.HTTP_401_UNAUTHORIZED)
 
             if user.id_user_type == UserTypeEnum.encargado_local.value:
                 branch: BranchEntity = cls._localDao_.find_branch_by_email_user_manager(email=loginRequest.email, db=db)
@@ -64,10 +64,9 @@ class UserService:
                 pass
 
             if id_branch_client is None:
-                raise CustomError(name="Usuario no existe",
-                                  detail="No encontrado",
-                                  status_code=status.HTTP_204_NO_CONTENT,
-                                  cause="Usuario no existe")
+                await cls._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_NOT_FOUND_ERROR_DETAIL,
+                                                                    detail=Constants.CLIENT_NOT_FOUND_ERROR_DETAIL,
+                                                                    status_code=status.HTTP_204_NO_CONTENT)
 
             tokenResponse = cls._tokenService_.get_token(id_user=user.id, id_branch_client=id_branch_client,
                                                          rol=user.id_user_type, ip=ip, name=name, last_name=last_name)
@@ -91,16 +90,14 @@ class UserService:
         if user is not None:
 
             if token_firebase.email != loginRequest.email:
-                raise CustomError(
-                    name="Error al iniciar sesión",
-                    detail="Error al iniciar sesión",
-                    status_code=status.HTTP_400_BAD_REQUEST)
+                await cls._throwerExceptions.throw_custom_exception(name=Constants.LOGIN_ERROR,
+                                                                    detail=Constants.LOGIN_ERROR,
+                                                                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             if user.is_active is not True:
-                raise CustomError(name="Usuario no autorizado",
-                                  detail="Validación",
-                                  status_code=status.HTTP_401_UNAUTHORIZED,
-                                  cause="Usuario no autorizado")
+                await cls._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_UNAUTHORIZED,
+                                                                    detail=Constants.CLIENT_UNAUTHORIZED,
+                                                                    status_code=status.HTTP_401_UNAUTHORIZED)
 
             if user.id_user_type == UserTypeEnum.encargado_local.value:
                 branch: BranchEntity = cls._localDao_.find_branch_by_email_user_manager(email=loginRequest.email, db=db)
@@ -117,10 +114,9 @@ class UserService:
                 pass
 
             if id_branch_client is None:
-                raise CustomError(name="Usuario no existe",
-                                  detail="No encontrado",
-                                  status_code=status.HTTP_204_NO_CONTENT,
-                                  cause="Usuario no existe")
+                await cls._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_NOT_EXIST,
+                                                                    detail=Constants.CLIENT_NOT_EXIST,
+                                                                    status_code=status.HTTP_204_NO_CONTENT)
 
             tokenResponse = cls._tokenService_.get_token(id_user=user.id, id_branch_client=id_branch_client,
                                                          rol=user.id_user_type, ip=ip, name=name, last_name=last_name)
@@ -153,16 +149,14 @@ class UserService:
         user: UserEntity = cls._user_dao_.get_user(user_id, db)
 
         if user is None:
-            raise CustomError(name="Usuario no existe",
-                              detail="No encontrado",
-                              status_code=status.HTTP_404_NOT_FOUND,
-                              cause="Usuario no existe")
+            await cls._throwerExceptions.throw_custom_exception(name=Constants.USER_NOT_EXIST,
+                                                                detail=Constants.USER_NOT_EXIST,
+                                                                status_code=status.HTTP_204_NO_CONTENT)
 
         if user.image_id is None:
-            raise CustomError(name="Error eliminar imagen",
-                              detail="Usuario no posee imagen de perfil",
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="Usuario no existe")
+            await cls._throwerExceptions.throw_custom_exception(name=Constants.USER_NOT_IMAGE_ERROR,
+                                                                detail=Constants.USER_NOT_IMAGE_ERROR,
+                                                                status_code=status.HTTP_400_BAD_REQUEST)
 
         cls._cloudinary_service_.delete_file(user.image_id)
         cls._user_dao_.update_profile_image(user_id, None, None, db)

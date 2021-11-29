@@ -3,7 +3,10 @@ from datetime import datetime
 from pydantic import BaseModel
 from starlette import status
 
-from exception.exceptions import CustomError
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
+
+_throwerExceptions = ThrowerExceptions()
 
 
 class ProductRequest(BaseModel):
@@ -25,9 +28,8 @@ class NewReservationRequest(BaseModel):
             response.append(product.id)
         return response
 
-    def validate_fields(self):
+    async def validate_fields(self):
         if self.people <= 0 or self.people > 10:
-            raise CustomError(name="Campo people debe ser mayor a 0 y menor a 11",
-                              detail="Validación",
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="Campo people debe ser mayor a 0 y menor a 11")
+            await _throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
+                                                            detail=Constants.PEOPLE_FIELD_LEN_ERROR,
+                                                            status_code=status.HTTP_400_BAD_REQUEST)

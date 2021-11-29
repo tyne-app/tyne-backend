@@ -9,11 +9,6 @@ from configuration.openapi.search_openapi import SearchAllBranchOpenAPI
 from dto.request.business_request_dto import NewAccount
 from dto.request.business_request_dto import NewBranch
 from dto.request.business_request_dto import SearchParameter
-from dto.response.business_response_dto import AddBranchOutput
-from dto.response.business_response_dto import BranchProfileOutput
-from dto.response.business_response_dto import ListBranchOutput
-from dto.response.business_response_dto import ReadAccountOutput
-from dto.response.business_response_dto import RegisterAccountOutput
 from service.JwtService import JwtService
 from service.LocalService import LocalService
 from service.SearchService import SearchService
@@ -30,6 +25,7 @@ _localService = LocalService()
 _jwt_service = JwtService()
 _local_service = LocalService()
 _search_service = SearchService()
+
 
 async def search_parameters_params(
         page: int,
@@ -57,13 +53,7 @@ async def register_account(new_account: NewAccount, db: SessionLocal = Depends(g
 async def read_account(request: Request, response: Response, db: SessionLocal = Depends(get_data_base)):
     logger.info('login')
 
-    if 'authorization' not in request.headers:
-        await _throwerExceptions.throw_custom_exception(name=Constants.USER_NO_AUTH,
-                                                        detail=Constants.USER_NO_AUTH,
-                                                        status_code=status.HTTP_401_UNAUTHORIZED)
-
-    token = request.headers['authorization']
-    token_payload = _jwt_service.verify_and_get_token_data(token=token)
+    token_payload = await _jwt_service.verify_and_get_token_data(request)
 
     branch_profile = await _local_service.get_account_profile(branch_id=2, db=db)
 
@@ -82,14 +72,7 @@ async def add_branch(request: Request, response: Response,
                      db: SessionLocal = Depends(get_data_base)):
     logger.info('new_branch: {}', new_branch)
 
-    if 'authorization' not in request.headers:
-        await _throwerExceptions.throw_custom_exception(name=Constants.BRANCH_ADD_ERROR,
-                                                        detail=Constants.USER_NO_AUTH,
-                                                        status_code=status.HTTP_401_UNAUTHORIZED)
-
-    token = request.headers['authorization']
-
-    token_payload = _jwt_service.verify_and_get_token_data(token=token)
+    token_payload = await _jwt_service.verify_and_get_token_data(request)
 
     await _local_service.add_new_branch(branch_id=2, new_branch=new_branch, db=db)
 
@@ -115,8 +98,7 @@ async def search_locals(
     client_id = None
 
     if 'authorization' in request.headers:
-        token = request.headers['authorization']
-        token_payload = _jwt_service.verify_and_get_token_data(token=token)
+        token_payload = await _jwt_service.verify_and_get_token_data(request)
         client_id = token_payload.id_branch_client
 
     return await _search_service.search_all_branches(parameters=search_parameters, client_id=client_id, db=db)
@@ -132,9 +114,7 @@ async def read_branch_profile(request: Request,
     client_id = None
 
     if 'authorization' in request.headers:
-        token = request.headers['authorization']
-        jwt_service = JwtService()
-        token_payload = jwt_service.verify_and_get_token_data(token=token)
+        token_payload = await _jwt_service.verify_and_get_token_data(request)
         client_id = token_payload.id_branch_client
 
     return await _search_service.search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)

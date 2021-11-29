@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 from starlette import status
-from exception.exceptions import CustomError
+
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
 from validator.SharedValidator import SharedValidator
 
 
@@ -8,17 +10,17 @@ class LoginUserRequest(BaseModel):
     email: str
     password: str
 
-    def validate_fields(self):
+    _throwerExceptions = ThrowerExceptions()
+
+    async def validate_fields(self):
         validator = SharedValidator()
 
         if not validator.is_email_valid(self.email):
-            raise CustomError(name="Validación body",
-                              detail="Email no es válido",
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="Email no es válido")
+            await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
+                                                                 detail=Constants.EMAIL_INVALID_ERROR,
+                                                                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if not self.password:
-            raise CustomError(name="Validación body",
-                              detail="Contraseña no puede estar vacia",
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="Contraseña no puede estar vacia")
+            await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
+                                                                 detail=Constants.PASSWORD_EMPTY_ERROR,
+                                                                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

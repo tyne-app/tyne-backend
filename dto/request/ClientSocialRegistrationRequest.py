@@ -4,9 +4,10 @@ from pydantic import BaseModel
 from starlette import status
 
 from enums.UserTypeEnum import UserTypeEnum
-from exception.exceptions import CustomError
 from repository.entity.ClientEntity import ClientEntity
 from repository.entity.UserEntity import UserEntity
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
 from validator.UtilsValidator import UtilsValidator
 
 
@@ -17,6 +18,7 @@ class ClientSocialRegistrationRequest(BaseModel):
     token: str
 
     _utils_validator_ = UtilsValidator()
+    _throwerExceptions = ThrowerExceptions()
 
     def to_client_entity(self, user: UserEntity):
         entity = ClientEntity()
@@ -39,7 +41,7 @@ class ClientSocialRegistrationRequest(BaseModel):
         entity.image_url = image_url
         return entity
 
-    def validate_fields(self):
+    async def validate_fields(self):
         invalid_data = {}
 
         if not self._utils_validator_.validate_not_empty(self.name):
@@ -55,8 +57,9 @@ class ClientSocialRegistrationRequest(BaseModel):
             invalid_data["token"] = self._utils_validator_.INVALID_DATA_MESSAGE
 
         if invalid_data:
-            raise CustomError(name="Validación body",
-                              detail=invalid_data,
-                              status_code=status.HTTP_400_BAD_REQUEST)
+            await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
+                                                                 detail=invalid_data,
+                                                                 status_code=status.HTTP_400_BAD_REQUEST,
+                                                                 cause=invalid_data)
 
         return True

@@ -1,7 +1,6 @@
 from starlette import status
 
 from dto.response.CategoryResponse import CategoryResponse
-from exception.exceptions import CustomError
 from mappers.request import menu_mapper_request
 from mappers.response import menu_mapper_response
 from repository.dao import ProductDao, CategoryDao, branch_dao

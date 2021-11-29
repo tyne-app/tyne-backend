@@ -1,11 +1,8 @@
 from datetime import datetime
 
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
-from starlette import status
-from exception.exceptions import CustomError
+
 from repository.entity.UserEntity import UserEntity
-from loguru import logger
 from repository.entity.UserTypeEntity import UserTypeEntity  # no eliminar o muere todo
 
 
@@ -13,21 +10,20 @@ class UserDao:
 
     @classmethod
     def get_user(cls, user_id: int, db: Session):
-        user = db.query(UserEntity) \
+        return db.query(UserEntity) \
             .filter(UserEntity.id == user_id) \
             .first()
-        return user
 
     @classmethod
     def verify_email(cls, email: str, db: Session):
-        user = db.query(UserEntity) \
+        return db.query(UserEntity) \
             .filter(UserEntity.email == email) \
             .first()
-        return user
 
     @classmethod
     def update_profile_image(cls, user_id: int, url_image: str, image_id: str, db: Session):
-        user: UserEntity = db.query(UserEntity) \
+        user: UserEntity = db \
+            .query(UserEntity) \
             .filter(UserEntity.id == user_id) \
             .first()
 
@@ -37,10 +33,7 @@ class UserDao:
             db.commit()
             return user
 
-        raise CustomError(name="Usuario no existe",
-                          detail="No existe el usuario " + str(user_id),
-                          status_code=status.HTTP_400_BAD_REQUEST,
-                          cause="")
+        return None
 
     @classmethod
     def create_user(cls, email: str, password: str, user_type: UserTypeEntity, db: Session):
@@ -59,7 +52,17 @@ class UserDao:
 
     @classmethod
     def delete_user_by_email(cls, email: str, db: Session):
-        db.query(UserEntity).filter(UserEntity.email == email).delete()
+        db \
+            .query(UserEntity) \
+            .filter(UserEntity.email == email) \
+            .delete()
+
+    @classmethod
+    def delete_user_by_id(cls, user_id: str, db: Session):
+        db \
+            .query(UserEntity) \
+            .filter(UserEntity.id == user_id) \
+            .delete()
 
     @classmethod
     def change_password(cls, user_id: int, password: str, db: Session):
@@ -72,7 +75,4 @@ class UserDao:
             db.commit()
             return user
 
-        raise CustomError(name="Usuario no existe",
-                          detail="No existe el usuario " + str(user_id),
-                          status_code=status.HTTP_400_BAD_REQUEST,
-                          cause="")
+        return None
