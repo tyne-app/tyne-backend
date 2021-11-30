@@ -1,7 +1,6 @@
 from loguru import logger
 from sqlalchemy import func, distinct, or_
 from configuration.database.database import SessionLocal
-from repository.entity.BranchImageEntity import BranchImageEntity
 from repository.entity.BranchEntity import BranchEntity
 from repository.entity.StateEntity import StateEntity
 from repository.entity.RestaurantEntity import RestaurantEntity
@@ -11,7 +10,6 @@ from repository.entity.ReservationEntity import ReservationEntity
 from repository.entity.ManagerEntity import ManagerEntity
 from repository.entity.UserEntity import UserEntity
 from repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
-from repository.entity.ScheduleEntity import ScheduleEntity
 from repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from repository.entity.BranchImageEntity import BranchImageEntity
 from repository.entity.ClientEntity import ClientEntity
@@ -166,11 +164,8 @@ class SearchDAO:
             branch_dict['aggregate_values'] = aggregate_values
             logger.info('branch_dict: {}', branch_dict)
 
-            schedule = db.query(
-                ScheduleEntity) \
-                .join(BranchScheduleEntity, BranchScheduleEntity.schedule_id == ScheduleEntity.id) \
-                .join(BranchEntity, BranchEntity.id == BranchScheduleEntity.branch_id) \
-                .filter(BranchEntity.id == branch.id).all()
+            schedule = db.query(BranchScheduleEntity).filter(
+                BranchScheduleEntity.branch_id == branch_id).filter(BranchScheduleEntity.active).all()
 
             branch_dict['schedule'] = schedule
             logger.info('branch_dict: {}', branch_dict)

@@ -5,7 +5,6 @@ from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntit
 from repository.entity.RestaurantEntity import RestaurantEntity
 from repository.entity.BranchEntity import BranchEntity
 from repository.entity.BranchBankEntity import BranchBankEntity
-from repository.entity.ScheduleEntity import ScheduleEntity
 from repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from configuration.database.database import SessionLocal
 from repository.entity.UserEntity import UserEntity
