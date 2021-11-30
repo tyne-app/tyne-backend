@@ -1,27 +1,28 @@
 from datetime import timezone, datetime
-
 from loguru import logger
 from sqlalchemy.orm import Session
 from starlette import status
-
 from dto.request.NewReservationRequest import NewReservationRequest
 from dto.request.LocalReservationsRequest import LocalReservationRequest
+from dto.request.UpdateReservationRequest import UpdateReservationRequest
 from dto.response.ReservationResponse import ReservationResponse
 from dto.response.LocalReservationsResponse import LocalReservationsResponse
 from dto.response.ReservationDetailResponse import ReservationDetailResponse
 from enums.ReservationStatusEnum import ReservationStatusEnum
 from exception.exceptions import CustomError
 from repository.dao.ClientDao import ClientDao
+from repository.dao.PaymentDao import PaymentDao
 from repository.dao.Product2Dao import ProductDao
 from repository.dao.ReservationDao import ReservationDao
 from repository.entity.ClientEntity import ClientEntity
+from repository.entity.PaymentEntity import PaymentEntity
 from repository.entity.ProductEntity import ProductEntity
 from repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
 from repository.entity.ReservationEntity import ReservationEntity
 from repository.entity.ReservationProductEntity import ReservationProductEntity
 from service.KhipuService import KhipuService
-
 from dto.dto import GenericDTO as responseDTO
+import uuid
 
 
 class ReservationService:
@@ -29,6 +30,7 @@ class ReservationService:
     _khipu_service = KhipuService()
     _product_dao_ = ProductDao()
     _reservation_dao = ReservationDao()
+    _payment_dao_ = PaymentDao()
 
     def create_reservation(self, client_id: int, reservation: NewReservationRequest, db: Session):
 
@@ -93,6 +95,7 @@ class ReservationService:
             entity.branch_id = reservation.branch_id
             entity.people = reservation.people
             entity.hour = reservation.hour
+            entity.transaction_id = str(uuid.uuid4())
 
             reservation_status = ReservationChangeStatusEntity()
             reservation_status.status_id = ReservationStatusEnum.reserva_iniciada.value
@@ -109,7 +112,7 @@ class ReservationService:
 
             # request payment link
             response_khipu = self._khipu_service.create_link(amount=amount, payer_email=client.user.email,
-                                                             transaction_id="UID-122233")
+                                                             transaction_id=entity.transaction_id)
 
             if response_khipu.status != 201:
                 raise CustomError(name="Error obtener datos khipu",
@@ -218,3 +221,23 @@ class ReservationService:
                               detail="service Error",
                               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                               cause="Error al obtener reservas")
+
+    def update_reservation(self, reservation_updated: UpdateReservationRequest, db: Session):
+        payment_khipu = self._khipu_service.verify_payment(reservation_updated.payment_id)
+
+        payment = PaymentEntity()
+        payment.date = datetime.now(tz=timezone.utc)
+        payment.method = "Khipu"
+        payment.amount = payment_khipu.amount
+        payment.type_coin_id = 1
+        payment.receipt_url = payment_khipu.receipt_url
+        payment.reservation_id = reservation_updated.reservation_id
+
+        reservation_status = ReservationChangeStatusEntity()
+        reservation_status.status_id = ReservationStatusEnum.pago_exitoso.value
+        reservation_status.datetime = datetime.now(tz=timezone.utc)
+        reservation_status.reservation_id = reservation_updated.reservation_id
+
+        payment_response = self._payment_dao_.create_payment(payment=payment, reservation_status=reservation_status,
+                                                             db=db)
+        return payment_khipu

@@ -215,3 +215,16 @@ class ReservationDao:
                               detail="Error",
                               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                               cause="Error al guardar estado reserva")
+
+    @classmethod
+    def get_reservation(cls, reservation_id: int, payment_id: int, db: Session):
+        try:
+            return db.query(ReservationEntity).filter(ReservationEntity.id == reservation_id) \
+                .filter(ReservationEntity.payment_id == payment_id) \
+                .first()
+
+        except Exception as e:
+            raise CustomError(name="Error al guardar estado reserva",
+                              detail="Error",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause="Error al guardar estado reserva")

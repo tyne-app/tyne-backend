@@ -1,13 +1,11 @@
 from datetime import datetime, timezone, timedelta, time
-
 from khipupy import Khipupy
 from starlette import status
-
 from configuration.Settings import Settings
 from dto.internal.KhipuResponse import KhipuResponse
 from pykhipu.client import Client
-
 from exception.exceptions import CustomError
+import time
 
 
 class KhipuService:
@@ -40,13 +38,26 @@ class KhipuService:
 
         return response
 
-    def verify_payment(self, id: str):
+    def verify_payment(self, payment_id: str):
         try:
-            client = Client(receiver_id=self._settings_.KHIPU_RECEIVER_ID, secret=self._settings_.KHIPU_SECRET_ID)
-            payment = client.payments.get_id(id=id)
-            return payment
-        except Exception as exception:
+            for x in range(3):
+                client = Client(receiver_id=self._settings_.KHIPU_RECEIVER_ID, secret=self._settings_.KHIPU_SECRET_ID)
+                payment = client.payments.get_id(id=payment_id)
+
+                print(payment.status)
+
+                if payment.status == "done":
+                    return payment
+                elif payment.status == "pending":
+                    raise CustomError(name="Pago aún está pendiente",
+                                      detail="Pago aún está pendiente",
+                                      status_code=status.HTTP_400_BAD_REQUEST)
+
+                time.sleep(5)
+
+        except CustomError as ex:
+            raise ex
+        except Exception:
             raise CustomError(name="Pago no encontrado",
                               detail="El pago no fue encontrado",
                               status_code=status.HTTP_400_BAD_REQUEST)
-
