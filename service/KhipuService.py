@@ -53,7 +53,7 @@ class KhipuService:
                                       detail="Pago aún está pendiente",
                                       status_code=status.HTTP_400_BAD_REQUEST)
 
-                time.sleep(5)
+                time.sleep(10)
 
         except CustomError as ex:
             raise ex
