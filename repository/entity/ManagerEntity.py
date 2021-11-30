@@ -1,7 +1,8 @@
 from sqlalchemy import Integer, String, Column, ForeignKey
 from sqlalchemy.orm import relationship
-
 from configuration.database.database import Base
+from repository.entity.BranchEntity import BranchEntity
+from repository.entity.UserEntity import UserEntity
 
 
 class ManagerEntity(Base):
@@ -14,4 +15,5 @@ class ManagerEntity(Base):
     phone = Column(String(100))
     id_user = Column(Integer, ForeignKey('tyne.user.id'))
 
-    branch = relationship('BranchEntity', back_populates='manager')
+    branch: BranchEntity = relationship('BranchEntity', back_populates='manager')
+    user: UserEntity = relationship('UserEntity', back_populates='manager')

@@ -4,7 +4,6 @@ from sqlalchemy.orm import relationship
 from configuration.database.database import Base
 
 
-
 class ScheduleEntity(Base):
     __tablename__ = "schedule"
     __table_args__ = {'schema': 'tyne'}
