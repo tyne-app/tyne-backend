@@ -151,18 +151,25 @@ class ReservationDao:
             .join(sub_query, sub_query.c.id == ReservationChangeStatusEntity.id) \
             .label("total_items")
 
-        reservations_date = db.query(ReservationEntity.reservation_date, total_items) \
-            .group_by(ReservationEntity.reservation_date) \
+        reservations_date_response = db.query(ReservationEntity.reservation_date, total_items) \
             .order_by(ReservationEntity.reservation_date.asc()) \
             .filter(ReservationEntity.branch_id == branch_id,
                     extract("month", ReservationEntity.reservation_date) == reservation_date.month,
                     extract("year", ReservationEntity.reservation_date) == reservation_date.year) \
             .join(ReservationChangeStatusEntity, ReservationChangeStatusEntity.reservation_id == ReservationEntity.id) \
-            .join(sub_query, sub_query.c.id == ReservationChangeStatusEntity.id) \
-            .slice((page_number - 1) * result_for_page, ((page_number - 1) * result_for_page) + result_for_page) \
+            .join(sub_query, sub_query.c.id == ReservationChangeStatusEntity.id)
+
+        reservations_date_response = reservations_date_response.group_by(ReservationEntity.reservation_date)
+
+        total_items_aux = db.query(total_items).first()
+        if result_for_page == total_items_aux[0] and page_number == 1:
+            result_for_page = result_for_page + 1
+
+        reservations_date_response = reservations_date_response.slice((page_number - 1) * result_for_page, (
+                (page_number - 1) * result_for_page) + result_for_page) \
             .all()
 
-        return reservations_date
+        return reservations_date_response
 
     @classmethod
     def reservation_detail(cls, db: Session, reservation_id: int):

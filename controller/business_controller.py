@@ -24,6 +24,7 @@ business_controller = APIRouter(
 
 
 async def search_parameters_params(
+        result_for_page: int,
         page: int,
         name: Optional[str] = None,
         dateReservation: Optional[str] = None,
@@ -31,6 +32,7 @@ async def search_parameters_params(
         sortBy: Optional[Union[int, str]] = None,
         orderBy: Optional[Union[int, str]] = None):
     return {
+        'result_for_page': result_for_page,
         'page': page,
         'name': name,
         'date_reservation': dateReservation,
@@ -70,7 +72,8 @@ async def read_account(request: Request, response: Response, db: SessionLocal = 
     return branch_profile
 
 
-@business_controller.post('/branches', status_code=status.HTTP_201_CREATED, response_model=AddBranchOutput)  # TODO: response_model=NewBranchOutput
+@business_controller.post('/branches', status_code=status.HTTP_201_CREATED,
+                          response_model=AddBranchOutput)  # TODO: response_model=NewBranchOutput
 async def add_branch(request: Request, response: Response,
                      new_branch: NewBranch, db: SessionLocal = Depends(get_data_base)):
     logger.info('new_branch: {}', new_branch)
