@@ -24,12 +24,16 @@ business_controller = APIRouter(
 
 
 async def search_parameters_params(
+        result_for_page: int,
+        page: int,
         name: Optional[str] = None,
         dateReservation: Optional[str] = None,
         stateId: Optional[int] = None,
         sortBy: Optional[Union[int, str]] = None,
         orderBy: Optional[Union[int, str]] = None):
     return {
+        'result_for_page': result_for_page,
+        'page': page,
         'name': name,
         'date_reservation': dateReservation,
         'state_id': stateId,
@@ -68,7 +72,8 @@ async def read_account(request: Request, response: Response, db: SessionLocal = 
     return branch_profile
 
 
-@business_controller.post('/branch', status_code=status.HTTP_201_CREATED, response_model=AddBranchOutput)  # TODO: response_model=NewBranchOutput
+@business_controller.post('/branches', status_code=status.HTTP_201_CREATED,
+                          response_model=AddBranchOutput)  # TODO: response_model=NewBranchOutput
 async def add_branch(request: Request, response: Response,
                      new_branch: NewBranch, db: SessionLocal = Depends(get_data_base)):
     logger.info('new_branch: {}', new_branch)
@@ -109,13 +114,13 @@ async def search_locals(
         client_id = token_payload.id_branch_client
 
     search_service = SearchService()
-    all_branches = await search_service \
+    all_branches_response = await search_service \
         .search_all_branches(parameters=search_parameters, client_id=client_id, db=db)
 
-    if all_branches['data'] is None:
+    if not all_branches_response['data']:
         response.status_code = status.HTTP_204_NO_CONTENT
 
-    return all_branches
+    return all_branches_response
 
 
 @business_controller.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=BranchProfileOutput)

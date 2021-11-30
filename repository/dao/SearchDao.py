@@ -1,7 +1,6 @@
 from loguru import logger
 from sqlalchemy import func, distinct, or_
 from configuration.database.database import SessionLocal
-from repository.entity.BranchImageEntity import BranchImageEntity
 from repository.entity.BranchEntity import BranchEntity
 from repository.entity.StateEntity import StateEntity
 from repository.entity.RestaurantEntity import RestaurantEntity
@@ -11,7 +10,6 @@ from repository.entity.ReservationEntity import ReservationEntity
 from repository.entity.ManagerEntity import ManagerEntity
 from repository.entity.UserEntity import UserEntity
 from repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
-from repository.entity.ScheduleEntity import ScheduleEntity
 from repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from repository.entity.BranchImageEntity import BranchImageEntity
 from repository.entity.ClientEntity import ClientEntity
@@ -20,9 +18,9 @@ from dto.request.business_request_dto import SearchParameter
 
 class SearchDAO:
 
-    def search_all_branches(self, search_parameters: SearchParameter, db: SessionLocal, client_id: int):
+    def search_all_branches(self, search_parameters: SearchParameter, db: SessionLocal,
+                            client_id: int, limit: int):
         try:
-            logger.info('search_parameters: {}, client_id: {}', search_parameters, client_id)
 
             all_branches = None
 
@@ -39,7 +37,6 @@ class SearchDAO:
                     func.min(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='min_price'),
                     func.max(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='max_price'),
                     BranchImageEntity.url_image)
-                logger.info('all_branches: {}', str(all_branches))
 
             if not client_id:
                 all_branches = db.query(
@@ -50,7 +47,6 @@ class SearchDAO:
                     RestaurantEntity.name.label(name='restaurant_name'),
                     BranchEntity.description,
                     BranchImageEntity.url_image)
-                logger.info('all_branches: {}', str(all_branches))
 
             all_branches = all_branches.select_from(BranchEntity) \
                 .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
@@ -58,26 +54,21 @@ class SearchDAO:
                 .join(BranchImageEntity, BranchImageEntity.branch_id == BranchEntity.id) \
                 .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
                 .join(UserEntity, UserEntity.id == ManagerEntity.id_user)
-            logger.info('all_branches: {}', str(all_branches))
 
             if client_id:
                 all_branches = all_branches.join(ProductEntity, ProductEntity.branch_id == BranchEntity.id,
                                                  isouter=True) \
                     .join(OpinionEntity, OpinionEntity.branch_id == BranchEntity.id, isouter=True)
-                logger.info('all_branches: {}', str(all_branches))
 
             all_branches = all_branches.filter(BranchImageEntity.is_main_image) \
                 .filter(UserEntity.is_active)
-            logger.info('all_branches: {}', str(all_branches))
 
             if search_parameters['name']:
                 name = search_parameters['name'].lower()
-                logger.info('name: {}', name)
                 all_branches = all_branches.filter(func.lower(RestaurantEntity.name).like("%" + name + "%"))
 
             if search_parameters['date_reservation']:
                 date_reservation = search_parameters['date_reservation']
-                logger.info('date_reservation: {}', date_reservation)
                 reservation_data = db.query(
                     ReservationEntity.id.label(name='reservation_id'),
                     func.max(ReservationChangeStatusEntity.datetime).label(name='last_modify'),
@@ -97,16 +88,30 @@ class SearchDAO:
 
             if search_parameters['state_id']:
                 state_id = search_parameters['state_id']
-                logger.info('state_id: {}', state_id)
                 all_branches = all_branches.filter(StateEntity.id == state_id)
 
             if search_parameters['sort_by'] and search_parameters['order_by']:  # TODO: Se implementa después
                 pass
 
-            logger.info('all_branches: {}', str(all_branches))
+            total_number_all_branches = all_branches.count()
+
+            page = search_parameters['page']
+            result_for_page = search_parameters['result_for_page']
+
+            if result_for_page == total_number_all_branches and page == 1:
+                result_for_page = result_for_page + 1
+
+            all_branches = all_branches.slice((page - 1) * result_for_page, (
+                    (page - 1) * result_for_page) + result_for_page)
+
             all_branches = all_branches.all()
 
-            return all_branches
+            result_dict = {
+                'total_number_all_branches': total_number_all_branches,
+                'all_branches': all_branches
+            }
+
+            return result_dict
         except Exception as error:
             logger.error('error: {}', error)
             logger.error('error.args: {}', error.args)
@@ -159,11 +164,8 @@ class SearchDAO:
             branch_dict['aggregate_values'] = aggregate_values
             logger.info('branch_dict: {}', branch_dict)
 
-            schedule = db.query(
-                ScheduleEntity) \
-                .join(BranchScheduleEntity, BranchScheduleEntity.schedule_id == ScheduleEntity.id) \
-                .join(BranchEntity, BranchEntity.id == BranchScheduleEntity.branch_id) \
-                .filter(BranchEntity.id == branch.id).all()
+            schedule = db.query(BranchScheduleEntity).filter(
+                BranchScheduleEntity.branch_id == branch_id).filter(BranchScheduleEntity.active).all()
 
             branch_dict['schedule'] = schedule
             logger.info('branch_dict: {}', branch_dict)

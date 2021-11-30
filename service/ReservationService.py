@@ -1,10 +1,14 @@
 from datetime import timezone, datetime
 
+from loguru import logger
 from sqlalchemy.orm import Session
 from starlette import status
 
 from dto.request.NewReservationRequest import NewReservationRequest
+from dto.request.LocalReservationsRequest import LocalReservationRequest
 from dto.response.ReservationResponse import ReservationResponse
+from dto.response.LocalReservationsResponse import LocalReservationsResponse
+from dto.response.ReservationDetailResponse import ReservationDetailResponse
 from enums.ReservationStatusEnum import ReservationStatusEnum
 from exception.exceptions import CustomError
 from repository.dao.ClientDao import ClientDao
@@ -16,6 +20,8 @@ from repository.entity.ReservationChangeStatusEntity import ReservationChangeSta
 from repository.entity.ReservationEntity import ReservationEntity
 from repository.entity.ReservationProductEntity import ReservationProductEntity
 from service.KhipuService import KhipuService
+
+from dto.dto import GenericDTO as responseDTO
 
 
 class ReservationService:
@@ -69,6 +75,7 @@ class ReservationService:
                         reservation_product.amount = product.amount
                         reservation_product.commission_tyne = product.commission_tyne
                         reservation_product.quantity = x.quantity
+                        reservation_product.description = product.description
                         reservation_products.append(reservation_product)
 
             amount = round(amount)
@@ -137,3 +144,77 @@ class ReservationService:
                 self._reservation_dao.add_reservation_status(reservation_status=change_status, db=db)
 
             raise error
+
+    @classmethod
+    def local_reservations(cls, branch_id: int,
+                           reservation_date: datetime,
+                           result_for_page: int,
+                           page_number: int,
+                           status_reservation: int, db):
+
+        local_reservation_request = LocalReservationRequest()
+        local_reservation_request.reservation_date = reservation_date
+        local_reservation_request.result_for_page = result_for_page
+        local_reservation_request.page_number = page_number
+        local_reservation_request.status_reservation = status_reservation
+
+        local_reservation_request.validate_fields(local_reservation_request)
+
+        reservations = ReservationDao.local_reservations(db
+                                                         , branch_id
+                                                         , reservation_date
+                                                         , status_reservation)
+
+        reservations_date = ReservationDao.local_reservations_date(db
+                                                                   , branch_id
+                                                                   , status_reservation
+                                                                   , reservation_date
+                                                                   , result_for_page
+                                                                   , page_number)
+
+        local_reservations_response = LocalReservationsResponse()
+        response = local_reservations_response.local_reservations(reservations,
+                                                                  reservations_date,
+                                                                  result_for_page,
+                                                                  page_number)
+        return response
+
+    @classmethod
+    def reservation_detail(cls, reservation_id: int, db):
+
+        if reservation_id == 0:
+            raise CustomError(name="Validación",
+                              detail="No se han encontrado datos de la reserva",
+                              status_code=status.HTTP_204_NO_CONTENT,
+                              cause="No se han encontrado datos de la reserva")
+
+        reservations = ReservationDao.reservation_detail(db, reservation_id)
+
+        reservation_detail = ReservationDetailResponse()
+        response = reservation_detail.reservation_detail(reservations)
+        return response
+
+    def get_reservations(self, client_id: int, db: Session):
+        try:
+            reservations = self._reservation_dao.get_reservations(client_id, db)
+            if not reservations:
+                raise CustomError(name="Error get_reservation",
+                                  detail="reservations not found",
+                                  status_code=status.HTTP_204_NO_CONTENT)
+
+            response = responseDTO()
+            response.data = reservations
+            return response
+
+        except CustomError as error:
+            logger.error(error.detail)
+            raise CustomError(name=error.name,
+                              detail=error.detail,
+                              status_code=error.status_code)
+
+        except Exception as e:
+            logger.error(e)
+            raise CustomError(name="Error al obtener reservas",
+                              detail="service Error",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause="Error al obtener reservas")

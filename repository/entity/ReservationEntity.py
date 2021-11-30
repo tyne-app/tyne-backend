@@ -20,4 +20,4 @@ class ReservationEntity(Base):
     branch_id = Column(Integer, ForeignKey('tyne.branch.id'))
 
     opinion_reservation = relationship("OpinionEntity", back_populates='reservation')
-    # reservation_change_status: list[ReservationChangeStatusEntity] = relationship("ReservationChangeStatusEntity", back_populates='reservation')
+    reservation_change_status = relationship("ReservationChangeStatusEntity", back_populates='reservation')
