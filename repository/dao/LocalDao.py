@@ -1,6 +1,5 @@
 from loguru import logger
 from datetime import datetime, timezone
-import pytz
 from repository.entity.ManagerEntity import ManagerEntity
 from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
 from repository.entity.RestaurantEntity import RestaurantEntity
@@ -11,6 +10,7 @@ from repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from configuration.database.database import SessionLocal
 from repository.entity.UserEntity import UserEntity
 from repository.entity.BranchImageEntity import BranchImageEntity
+
 
 class LocalDAO:
 
@@ -68,17 +68,18 @@ class LocalDAO:
             return error.args[0]
 
     def get_account_profile(self, branch_id: int, db: SessionLocal):
-        # TODO: para el login, yo te mando el email y se devuelves todos los datos del local + del representante
         try:
             profile = {}
 
-            branch_entity = db.query(BranchEntity.id, BranchEntity.manager_id, BranchEntity.accept_pet, BranchEntity.description,
+            branch_entity = db.query(BranchEntity.id, BranchEntity.manager_id, BranchEntity.accept_pet,
+                                     BranchEntity.description,
                                      BranchEntity.state_id, BranchEntity.street, BranchEntity.street_number,
-                                     RestaurantEntity.name, RestaurantEntity.commercial_activity) \
+                                     RestaurantEntity.name, RestaurantEntity.commercial_activity,
+                                     RestaurantEntity.phone) \
                 .select_from(BranchEntity).join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
-                .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id)\
+                .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
                 .join(UserEntity, UserEntity.id == ManagerEntity.id_user) \
-                .filter(UserEntity.is_active)\
+                .filter(UserEntity.is_active) \
                 .filter(BranchEntity.id == branch_id).first()
 
             profile['branch'] = branch_entity
@@ -86,25 +87,30 @@ class LocalDAO:
             if not branch_entity:
                 return None
 
-            manager_entity = db.query(ManagerEntity).filter(ManagerEntity.id == branch_entity.manager_id).first()
+            manager_entity = db.query(ManagerEntity.id, ManagerEntity.last_name,
+                                      ManagerEntity.name, ManagerEntity.phone,
+                                      ManagerEntity.id_user,
+                                      UserEntity.email).select_from(ManagerEntity).join(
+                UserEntity,
+                UserEntity.id == ManagerEntity.id_user).filter(
+                ManagerEntity.id == branch_entity.manager_id).first()
+
             if not manager_entity:
                 return None
 
             profile['manager'] = manager_entity
 
-            image_list = db.query(BranchImageEntity.id, BranchImageEntity.url_image)\
-                .select_from(BranchImageEntity)\
-                .join(BranchEntity, BranchEntity.id == BranchImageEntity.branch_id)\
+            image_list = db.query(BranchImageEntity.id, BranchImageEntity.url_image) \
+                .select_from(BranchImageEntity) \
+                .join(BranchEntity, BranchEntity.id == BranchImageEntity.branch_id) \
                 .filter(BranchImageEntity.branch_id == branch_entity.id).all()
 
             profile['image_list'] = image_list
 
-            schedule_entity_list = db.query(ScheduleEntity).join(BranchScheduleEntity,
-                                                                 BranchScheduleEntity.schedule_id == ScheduleEntity.id) \
-                .join(BranchEntity, BranchEntity.id == BranchScheduleEntity.branch_id) \
-                .filter(BranchEntity.manager_id == manager_entity.id).all()
+            schedule = db.query(BranchScheduleEntity).filter(
+                BranchScheduleEntity.branch_id == branch_id).filter(BranchScheduleEntity.active).all()
 
-            profile['schedule_list'] = schedule_entity_list
+            profile['schedule_list'] = schedule
 
             return profile
         except Exception as error:

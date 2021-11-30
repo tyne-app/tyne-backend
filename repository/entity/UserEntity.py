@@ -18,3 +18,4 @@ class UserEntity(Base):
     image_id = Column(String(200))
 
     client = relationship("ClientEntity", back_populates='user')
+    manager = relationship("ManagerEntity", back_populates='user')
