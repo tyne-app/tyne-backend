@@ -4,7 +4,7 @@ from configuration.database.database import Base
 
 
 class TypeCoin(Base):
-    __tablename__ = "payment"
+    __tablename__ = "type_coin"
     __table_args__ = {'schema': 'tyne'}
 
     id = Column(Integer, primary_key=True, index=True)

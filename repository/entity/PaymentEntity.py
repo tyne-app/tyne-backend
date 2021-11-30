@@ -10,11 +10,10 @@ class PaymentEntity(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    payment_date = Column(TIMESTAMP)
-    created_date = Column(TIMESTAMP)
-    update_date = Column(TIMESTAMP)
+    date = Column(TIMESTAMP)
     method = Column(String)
     amount = Column(Integer)
+    receipt_url = Column(String)
 
-    type_coin_id = Column(Integer, ForeignKey("tyne.type_coin.id"))
+    type_coin_id = Column(Integer)
     reservation_id = Column(Integer, ForeignKey("tyne.reservation.id"))

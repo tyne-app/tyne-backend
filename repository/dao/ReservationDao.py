@@ -55,7 +55,6 @@ class ReservationDao:
                 .filter(ReservationEntity.id == reservation_id) \
                 .first()
 
-            print(reservation.id)
             if reservation:
                 reservation.payment_id = payment_id
                 db.commit()
@@ -216,3 +215,16 @@ class ReservationDao:
                               detail="Error",
                               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                               cause="Error al guardar estado reserva")
+
+    @classmethod
+    def get_reservation(cls, reservation_id: int, payment_id: str, db: Session):
+        try:
+            return db.query(ReservationEntity).filter(ReservationEntity.id == reservation_id) \
+                .filter(ReservationEntity.payment_id == payment_id) \
+                .first()
+
+        except Exception as e:
+            raise CustomError(name="Error al obtener reserva",
+                              detail="Error",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause="Error al obtener reserva")
