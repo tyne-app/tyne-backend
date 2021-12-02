@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session, aliased
 from sqlalchemy import func, distinct, extract, subquery
 from starlette import status
 from exception.exceptions import CustomError
+from repository.entity.BranchImageEntity import BranchImageEntity
+from repository.entity.PaymentEntity import PaymentEntity
 from repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
 from repository.entity.ReservationStatusEntity import ReservationStatusEntity
 from repository.entity.ReservationEntity import ReservationEntity
@@ -10,6 +12,7 @@ from repository.entity.ProductEntity import ProductEntity
 from repository.entity.CategoryEntity import CategoryEntity
 from repository.entity.ClientEntity import ClientEntity
 from repository.entity.BranchEntity import BranchEntity
+from repository.entity.RestaurantEntity import RestaurantEntity
 from repository.entity.StateEntity import StateEntity
 from repository.entity.CityEntity import CityEntity
 from repository.entity.CountryEntity import CountryEntity
@@ -205,16 +208,27 @@ class ReservationDao:
     @classmethod
     def get_reservations(cls, client_id, db: Session):
         try:
-            return db.query(ReservationEntity).filter(ReservationEntity.client_id == client_id). \
-                join(ReservationEntity.reservation_change_status). \
-                join(ReservationChangeStatusEntity.reservation_status).filter(ReservationStatusEntity.id == 4). \
-                all()
+            reservations = db.query(ReservationEntity.id,
+                                    RestaurantEntity.name.label("restaurant_name"), ReservationEntity.people,
+                                    ReservationEntity.reservation_date,
+                                    ReservationEntity.hour, PaymentEntity.amount,
+                                    BranchEntity.street.label("branch_street_address"),
+                                    BranchEntity.street_number.label("branch_street_number"),
+                                    BranchImageEntity.url_image,
+                                    PaymentEntity.date.label("payment_datetime")) \
+                .join(BranchEntity, BranchEntity.id == ReservationEntity.branch_id) \
+                .join(PaymentEntity, PaymentEntity.reservation_id == ReservationEntity.id) \
+                .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
+                .join(BranchImageEntity, BranchImageEntity.branch_id == BranchEntity.id) \
+                .filter(ReservationEntity.client_id == client_id) \
+                .filter(BranchImageEntity.is_main_image).all()
 
-        except Exception as e:
-            raise CustomError(name="Error al guardar estado reserva",
+            return reservations
+        except Exception:
+            raise CustomError(name="Error al obtener reservas del cliente",
                               detail="Error",
                               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                              cause="Error al guardar estado reserva")
+                              cause="Error al obtener reservas del cliente")
 
     @classmethod
     def get_reservation(cls, reservation_id: int, payment_id: str, db: Session):
