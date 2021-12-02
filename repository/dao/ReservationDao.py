@@ -110,7 +110,8 @@ class ReservationDao:
                                 BranchEntity.street_number,
                                 StateEntity.name.label("state"),
                                 CityEntity.name.label("city"),
-                                CountryEntity.name.label("country")) \
+                                CountryEntity.name.label("country"),
+                                ReservationEntity.payment_id) \
             .order_by(ReservationEntity.reservation_date.asc(), ReservationEntity.id.desc(),
                       ReservationChangeStatusEntity.datetime.desc()) \
             .filter(ReservationEntity.branch_id == branch_id,
