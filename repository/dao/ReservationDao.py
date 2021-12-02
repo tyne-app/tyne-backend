@@ -208,12 +208,14 @@ class ReservationDao:
     @classmethod
     def get_reservations(cls, client_id, db: Session):
         try:
-            reservations = db.query(RestaurantEntity.name.label("restaurant_name"), ReservationEntity.people,
+            reservations = db.query(ReservationEntity.id,
+                                    RestaurantEntity.name.label("restaurant_name"), ReservationEntity.people,
                                     ReservationEntity.reservation_date,
                                     ReservationEntity.hour, PaymentEntity.amount,
                                     BranchEntity.street.label("branch_street_address"),
                                     BranchEntity.street_number.label("branch_street_number"),
-                                    BranchImageEntity.url_image) \
+                                    BranchImageEntity.url_image,
+                                    PaymentEntity.date.label("payment_datetime")) \
                 .join(BranchEntity, BranchEntity.id == ReservationEntity.branch_id) \
                 .join(PaymentEntity, PaymentEntity.reservation_id == ReservationEntity.id) \
                 .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
