@@ -8,6 +8,7 @@ from dto.request.UpdateReservationRequest import UpdateReservationRequest
 from dto.response.ReservationResponse import ReservationResponse
 from dto.response.LocalReservationsResponse import LocalReservationsResponse
 from dto.response.ReservationDetailResponse import ReservationDetailResponse
+from dto.response.SimpleResponse import SimpleResponse
 from dto.response.UpdateReservationResponse import UpdateReservationResponse
 from enums.ReservationStatusEnum import ReservationStatusEnum
 from exception.exceptions import CustomError
@@ -248,14 +249,18 @@ class ReservationService:
                               cause="Ya existe un pago asociado")
 
         # save the status pago cancelado or pago rechazado
-        if reservation_updated.status.value == ReservationStatusEnum.pago_rechazado.value or \
-                reservation_updated.status.value == ReservationStatusEnum.pago_cancelado.value:
+        if reservation_updated.status.value == ReservationStatusEnum.pago_cancelado.value or \
+                reservation_updated.status.value == ReservationStatusEnum.pago_rechazado.value or \
+                reservation_updated.status.value == ReservationStatusEnum.cancelado_local.value or \
+                reservation_updated.status.value == ReservationStatusEnum.reserva_confirmada.value or \
+                reservation_updated.status.value == ReservationStatusEnum.reserva_atendida.value:
+
             reservation_status = ReservationChangeStatusEntity()
             reservation_status.status_id = reservation_updated.status.value
             reservation_status.datetime = datetime.now(tz=timezone.utc)
             reservation_status.reservation_id = reservation_updated.reservation_id
             self._reservation_dao_.add_reservation_status(reservation_status=reservation_status, db=db)
-            return None
+            return SimpleResponse("Reserva actualizada correctamente")
 
         # get and verify the payment in khipu
         payment_khipu = self._khipu_service.verify_payment(reservation_updated.payment_id)
