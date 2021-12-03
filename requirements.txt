@@ -43,6 +43,7 @@ pyjwt
 cloudinary
 python-multipart
 khipupy
+pykhipu
 pyjwt[crypto]
 cryptography
 firebase-admin

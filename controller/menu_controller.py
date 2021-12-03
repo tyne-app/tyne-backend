@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Response, status, Request
 from sqlalchemy.orm import Session
 
 from configuration.database import database
 from dto.request.MenuRequestDTO import MenuRequestDTO
+from exception.exceptions import CustomError
 from service import menu_service
+from loguru import logger
 
 menu_controller = APIRouter(
     prefix="/v1/menus",
@@ -19,9 +21,15 @@ async def all_category(db: Session = Depends(database.get_data_base)):
 #  Se creará el menu por productos
 @menu_controller.post('/{branch_id}', status_code=status.HTTP_201_CREATED)
 async def create_menu(branch_id: int,
+                      request: Request,
                       response: Response,
                       menu_request: MenuRequestDTO,
                       db: Session = Depends(database.get_data_base)):
+    if 'authorization' not in request.headers:
+        # TODO: Refactor
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return {'error': 'Usuario no autorizado'}
+
     return await menu_service.create_menu(branch_id, db, menu_request)
 
 

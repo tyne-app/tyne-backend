@@ -29,6 +29,7 @@ class LocalDAO:
                          branch_bank_entity: BranchBankEntity,
                          branch_image_entity: BranchImageEntity,
                          db: SessionLocal):
+
         logger.info('manager_entity: {}, legal_representative_entity: {},'
                     ' restaurant_entity: {}, branch_entity: {}, branch_bank_entity: {}, branch_image_entity: {}',
                     manager_entity, legal_representative_entity, restaurant_entity, branch_entity, branch_bank_entity,
@@ -74,7 +75,8 @@ class LocalDAO:
             .query(BranchEntity.id, BranchEntity.manager_id, BranchEntity.accept_pet,
                    BranchEntity.description,
                    BranchEntity.state_id, BranchEntity.street, BranchEntity.street_number,
-                   RestaurantEntity.name, RestaurantEntity.commercial_activity) \
+                   RestaurantEntity.name, RestaurantEntity.commercial_activity,
+                                     RestaurantEntity.phone) \
             .select_from(BranchEntity).join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
             .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
             .join(UserEntity, UserEntity.id == ManagerEntity.id_user) \
@@ -90,8 +92,14 @@ class LocalDAO:
                                                                  status_code=status.HTTP_204_NO_CONTENT)
 
         manager_entity = db \
-            .query(ManagerEntity) \
-            .filter(ManagerEntity.id == branch_entity.manager_id) \
+            .query(ManagerEntity.id, ManagerEntity.last_name,
+                                      ManagerEntity.name, ManagerEntity.phone,
+                                      ManagerEntity.id_user,
+                                      UserEntity.email).select_from(ManagerEntity).join(
+                UserEntity,
+                UserEntity.id == ManagerEntity.id_user) \
+            .filter(
+                ManagerEntity.id == branch_entity.manager_id) \
             .first()
 
         if not manager_entity:
@@ -110,14 +118,10 @@ class LocalDAO:
 
         profile['image_list'] = image_list
 
-        schedule_entity_list = db \
-            .query(ScheduleEntity) \
-            .join(BranchScheduleEntity, BranchScheduleEntity.schedule_id == ScheduleEntity.id) \
-            .join(BranchEntity, BranchEntity.id == BranchScheduleEntity.branch_id) \
-            .filter(BranchEntity.manager_id == manager_entity.id) \
-            .all()
+            schedule = db.query(BranchScheduleEntity).filter(
+                BranchScheduleEntity.branch_id == branch_id).filter(BranchScheduleEntity.active).all()
 
-        profile['schedule_list'] = schedule_entity_list
+        profile['schedule_list'] = schedule
 
         return profile
 

@@ -36,8 +36,9 @@ class Branches(BaseModel):
 class Schedule(BaseModel):
     id: int
     day: int
-    opening_hour: time
-    closing_hour: time
+    opening_hour: str
+    closing_hour: str
+    active: bool
 
     class Config:
         orm_mode = True
@@ -98,6 +99,7 @@ class Branch(BaseModel):
     street_number: int
     name: str
     commercial_activity: str
+    phone: str
 
 
 class Manager(BaseModel):
@@ -106,6 +108,7 @@ class Manager(BaseModel):
     id: int
     last_name: str
     id_user: int
+    email: str
 
     class Config:
         orm_mode = True
@@ -119,7 +122,7 @@ class BranchImage(BaseModel):
 class ReadAccount(BaseModel):
     branch: Branch
     manager: Manager
-    image_list: list[BranchImage]
+    image_list: Optional[list[BranchImage]]
     schedule_list: list[Schedule]
 
 

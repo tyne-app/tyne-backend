@@ -6,6 +6,11 @@ from loguru import logger
 
 from configuration.database.database import SessionLocal, get_data_base
 from configuration.openapi.search_openapi import SearchAllBranchOpenAPI
+from dto.request.business_request_dto import SearchParameter
+from dto.response.business_response_dto import ListBranchOutput
+from dto.response.business_response_dto import BranchProfileOutput
+from dto.response.business_response_dto import RegisterAccountOutput
+from service.LocalService import LocalService
 from dto.request.business_request_dto import NewAccount
 from dto.request.business_request_dto import NewBranch
 from dto.request.business_request_dto import SearchParameter
@@ -28,6 +33,7 @@ _search_service = SearchService()
 
 
 async def search_parameters_params(
+        result_for_page: int,
         page: int,
         name: Optional[str] = None,
         dateReservation: Optional[str] = None,
@@ -35,6 +41,7 @@ async def search_parameters_params(
         sortBy: Optional[Union[int, str]] = None,
         orderBy: Optional[Union[int, str]] = None):
     return {
+        'result_for_page': result_for_page,
         'page': page,
         'name': name,
         'date_reservation': dateReservation,
@@ -65,8 +72,7 @@ async def read_account(request: Request, response: Response, db: SessionLocal = 
     return branch_profile
 
 
-@business_controller.post('/branches',
-                          status_code=status.HTTP_201_CREATED)
+@business_controller.post('/branches', status_code=status.HTTP_201_CREATED)
 async def add_branch(request: Request, response: Response,
                      new_branch: NewBranch,
                      db: SessionLocal = Depends(get_data_base)):
