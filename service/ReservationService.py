@@ -16,7 +16,7 @@ from enums.ReservationStatusEnum import ReservationStatusEnum
 from exception.exceptions import CustomError
 from repository.dao.ClientDao import ClientDao
 from repository.dao.PaymentDao import PaymentDao
-from repository.dao.Product2Dao import ProductDao
+from repository.dao.ProductDao import ProductDao
 from repository.dao.ReservationDao import ReservationDao
 from repository.entity.ClientEntity import ClientEntity
 from repository.entity.PaymentEntity import PaymentEntity

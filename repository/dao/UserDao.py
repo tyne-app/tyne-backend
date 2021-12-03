@@ -3,25 +3,22 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from repository.entity.UserEntity import UserEntity
-from repository.entity.UserTypeEntity import UserTypeEntity  # no eliminar o muere todo
+from repository.entity.UserTypeEntity import UserTypeEntity
 
 
 class UserDao:
 
-    @classmethod
-    def get_user(cls, user_id: int, db: Session):
+    def get_user(self, user_id: int, db: Session):
         return db.query(UserEntity) \
             .filter(UserEntity.id == user_id) \
             .first()
 
-    @classmethod
-    def verify_email(cls, email: str, db: Session):
+    def verify_email(self, email: str, db: Session):
         return db.query(UserEntity) \
             .filter(UserEntity.email == email) \
             .first()
 
-    @classmethod
-    def update_profile_image(cls, user_id: int, url_image: str, image_id: str, db: Session):
+    def update_profile_image(self, user_id: int, url_image: str, image_id: str, db: Session):
         user: UserEntity = db \
             .query(UserEntity) \
             .filter(UserEntity.id == user_id) \
@@ -35,8 +32,7 @@ class UserDao:
 
         return None
 
-    @classmethod
-    def create_user(cls, email: str, password: str, user_type: UserTypeEntity, db: Session):
+    def create_user(self, email: str, password: str, user_type: UserTypeEntity, db: Session):
         user_entity = UserEntity()
         user_entity.email = email
         user_entity.password = password
@@ -50,22 +46,19 @@ class UserDao:
 
         return user_entity
 
-    @classmethod
-    def delete_user_by_email(cls, email: str, db: Session):
+    def delete_user_by_email(self, email: str, db: Session):
         db \
             .query(UserEntity) \
             .filter(UserEntity.email == email) \
             .delete()
 
-    @classmethod
-    def delete_user_by_id(cls, user_id: str, db: Session):
+    def delete_user_by_id(self, user_id: str, db: Session):
         db \
             .query(UserEntity) \
             .filter(UserEntity.id == user_id) \
             .delete()
 
-    @classmethod
-    def change_password(cls, user_id: int, password: str, db: Session):
+    def change_password(self, user_id: int, password: str, db: Session):
         user = db.query(UserEntity) \
             .filter(UserEntity.id == user_id) \
             .first()

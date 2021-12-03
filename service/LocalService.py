@@ -1,6 +1,6 @@
 from loguru import logger
+from sqlalchemy.orm import Session
 
-from configuration.database.database import SessionLocal
 from dto.request.business_request_dto import NewAccount
 from dto.request.business_request_dto import NewBranch
 from mappers.request.BusinessMapperRequest import BusinessMapperRequest
@@ -33,7 +33,7 @@ class LocalService:
     _local_dao = LocalDAO()
     _state_dao_ = StateDao()
 
-    async def create_new_account(self, new_account: NewAccount, db: SessionLocal):
+    async def create_new_account(self, new_account: NewAccount, db: Session):
         local_validator = LocalValidator()
         local_validator.validate_new_account(new_account=new_account)
 
@@ -89,10 +89,10 @@ class LocalService:
         logger.info("coordinates: {}", coordinates)
         return coordinates
 
-    def get_account_profile(self, branch_id: int, db: SessionLocal):
+    def get_account_profile(self, branch_id: int, db: Session):
         return self._local_dao.get_account_profile(branch_id=branch_id, db=db)
 
-    async def add_new_branch(self, branch_id, new_branch: NewBranch, db: SessionLocal):
+    async def add_new_branch(self, branch_id, new_branch: NewBranch, db: Session):
         logger.info('branch_id: {}', branch_id)
         local_validator = LocalValidator()
         local_validator.validate_new_branch(new_branch=new_branch)

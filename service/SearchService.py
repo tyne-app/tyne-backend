@@ -1,11 +1,10 @@
 from fastapi import status
 from loguru import logger
+from sqlalchemy.orm import Session
 
-from configuration.database.database import SessionLocal
 from dto.request.business_request_dto import SearchParameter
 from mappers.request.BusinessMapperRequest import BusinessMapperRequest
-from repository.dao.SearchDao import SearchDAO
-from util.Constants import Constants
+from repository.dao.BranchDao import BranchDao
 from util.ThrowerExceptions import ThrowerExceptions
 from validator.SearchValidator import SearchValidator
 
@@ -19,11 +18,11 @@ class SearchService:
     NOT_BRANCH_RAW_MSG_ERROR = "'NoneType' object has no attribute 'restaurant_id'"
     TOTAL_ITEMS_PAGE = 10
     search_validator = SearchValidator()
-    _search_dao = SearchDAO()
+    _branch_dao_ = BranchDao()
     _business_mapper_request = BusinessMapperRequest()
     _throwerExceptions = ThrowerExceptions()
 
-    async def search_all_branches(self, parameters: SearchParameter, db: SessionLocal, client_id: int):
+    async def search_all_branches(self, parameters: SearchParameter, db: Session, client_id: int):
         logger.info('parameters: {}, client_id: {}', parameters, client_id)
 
         search_parameters = self.clear_null_values(values=parameters)  # TODO: Formato datetime validar con otra función y no con REGEX
@@ -34,7 +33,7 @@ class SearchService:
             search_parameters['date_reservation'] = search_parameters['date_reservation'].replace("/", "-")
             logger.info('search_parameters[date_reservation]: {}', search_parameters['date_reservation'])
 
-        all_branches_result = self._search_dao \
+        all_branches_result = self._branch_dao_ \
             .search_all_branches(search_parameters=search_parameters,
                                  client_id=client_id,
                                  db=db, limit=self.TOTAL_ITEMS_PAGE)
@@ -55,19 +54,12 @@ class SearchService:
             to_search_branches_response(content=all_branches, total_items=total_number_all_branches,
                                         page=search_parameters['page'],
                                         result_for_page=search_parameters['result_for_page'])
-        return self._business_mapper_request. \
-            to_search_branches_response(content=all_branches,
-                                        total_items=total_number_all_branches,
-                                        page=search_parameters['page'])
 
-    async def search_branch_profile(self, branch_id: int, client_id: int, db: SessionLocal):
-        branch_dict = self._search_dao.search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)
+    async def search_branch_profile(self, branch_id: int, client_id: int, db: Session):
+        branch_dict = self._branch_dao_.search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)
 
         if not branch_dict:
-            raise CustomError(name="Sin resultados",
-                              detail="No existe el local",
-                              status_code=status.HTTP_204_NO_CONTENT,
-                              cause="")
+            return None
 
         return self.populate_branch_profile(branch_dict=branch_dict)
 

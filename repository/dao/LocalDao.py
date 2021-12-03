@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from starlette import status
 
-from configuration.database.database import SessionLocal
 from repository.entity.BranchBankEntity import BranchBankEntity
 from repository.entity.BranchEntity import BranchEntity
 from repository.entity.BranchImageEntity import BranchImageEntity
@@ -62,8 +61,7 @@ class LocalDAO:
             db.rollback()
             raise ex
 
-    async def get_account_profile(self, branch_id: int, db: SessionLocal):
-        # TODO: para el login, yo te mando el email y se devuelves todos los datos del local + del representante
+    async def get_account_profile(self, branch_id: int, db: Session):
         profile = {}
 
         branch_entity = db \
@@ -160,7 +158,7 @@ class LocalDAO:
             db.rollback()
             raise ex
 
-    def find_branch_by_email_user_manager(self, email: str, db: SessionLocal):
+    def find_branch_by_email_user_manager(self, email: str, db: Session):
         return db \
             .query(BranchEntity) \
             .select_from(BranchEntity) \

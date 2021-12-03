@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 
-from configuration.database.database import SessionLocal
 from dto.request.ClientRequestDTO import ClientRequestDTO
 from repository.entity.ClientEntity import ClientEntity
 from repository.entity.UserEntity import UserEntity
@@ -8,8 +7,7 @@ from repository.entity.UserEntity import UserEntity
 
 class ClientDao:
 
-    @classmethod
-    def find_client_by_email_user(cls, email: str, db: SessionLocal):
+    def find_client_by_email_user(self, email: str, db: Session):
         return db \
             .query(ClientEntity) \
             .select_from(ClientEntity) \
@@ -17,21 +15,18 @@ class ClientDao:
             .filter(UserEntity.email == email) \
             .first()
 
-    @classmethod
-    def get_client_by_id(cls, client_id: int, db: SessionLocal):
+    def get_client_by_id(self, client_id: int, db: Session):
         return db \
             .query(ClientEntity) \
             .filter(ClientEntity.id == client_id) \
             .first()
 
-    @classmethod
-    def create_client(cls, client_req: ClientRequestDTO, id_login_created: int, db: SessionLocal):
+    def create_client(self, client_req: ClientRequestDTO, id_login_created: int, db: Session):
         db.add(client_req.to_entity(id_login_created))
         db.commit()
         return True
 
-    @classmethod
-    def create_client_v2(cls, client: ClientEntity, db: Session):
+    def create_client_v2(self, client: ClientEntity, db: Session):
         try:
             db.add(client.user)
             db.flush()

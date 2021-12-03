@@ -20,8 +20,7 @@ from repository.entity.StateEntity import StateEntity
 
 class ReservationDao:
 
-    @classmethod
-    def create_reservation(cls, reservation: ReservationEntity, reservation_status: ReservationChangeStatusEntity,
+    def create_reservation(self, reservation: ReservationEntity, reservation_status: ReservationChangeStatusEntity,
                            products: list[ReservationProductEntity],
                            db: Session):
         try:
@@ -46,8 +45,7 @@ class ReservationDao:
             db.rollback()
             raise ex
 
-    @classmethod
-    def update_payment_id_reservation(cls, reservation_id: int, payment_id: str, db: Session):
+    def update_payment_id_reservation(self, reservation_id: int, payment_id: str, db: Session):
         reservation: ReservationEntity = db \
             .query(ReservationEntity) \
             .filter(ReservationEntity.id == reservation_id) \
@@ -60,14 +58,12 @@ class ReservationDao:
 
         return reservation
 
-    @classmethod
-    def add_reservation_status(cls, reservation_status: ReservationChangeStatusEntity, db: Session):
+    def add_reservation_status(self, reservation_status: ReservationChangeStatusEntity, db: Session):
         db.add(reservation_status)
         db.commit()
         return reservation_status
 
-    @classmethod
-    def local_reservations(cls, db: Session, branch_id: int, reservation_date: date, status_reservation: int):
+    def local_reservations(self, db: Session, branch_id: int, reservation_date: date, status_reservation: int):
 
         if status_reservation == 0:
             filter_status_reservation = [4, 7, 8, 9]
@@ -113,8 +109,7 @@ class ReservationDao:
 
         return reservations
 
-    @classmethod
-    def local_reservations_date(cls, db: Session, branch_id: int, status_reservation: int, reservation_date: date,
+    def local_reservations_date(self, db: Session, branch_id: int, status_reservation: int, reservation_date: date,
                                 result_for_page: int,
                                 page_number: int):
         if status_reservation == 0:
@@ -124,7 +119,8 @@ class ReservationDao:
 
         sub_query = db \
             .query(ReservationChangeStatusEntity.reservation_id, ReservationChangeStatusEntity.id) \
-            .order_by(ReservationChangeStatusEntity.reservation_id.desc(), ReservationChangeStatusEntity.datetime.desc()) \
+            .order_by(ReservationChangeStatusEntity.reservation_id.desc(),
+                      ReservationChangeStatusEntity.datetime.desc()) \
             .distinct(ReservationChangeStatusEntity.reservation_id) \
             .subquery()
 
@@ -159,8 +155,7 @@ class ReservationDao:
 
         return reservations_date_response
 
-    @classmethod
-    def reservation_detail(cls, db: Session, reservation_id: int):
+    def reservation_detail(self, db: Session, reservation_id: int):
 
         reservation_detail = db.query(ReservationProductEntity.reservation_id,
                                       ClientEntity.name,
@@ -191,8 +186,7 @@ class ReservationDao:
 
         return reservation_detail
 
-    @classmethod
-    def get_reservations(cls, client_id, db: Session):
+    def get_reservations(self, client_id, db: Session):
         return db \
             .query(ReservationEntity.id,
                    RestaurantEntity.name.label("restaurant_name"), ReservationEntity.people,
@@ -210,8 +204,7 @@ class ReservationDao:
             .filter(BranchImageEntity.is_main_image) \
             .all()
 
-    @classmethod
-    def get_reservation(cls, reservation_id: int, payment_id: str, db: Session):
+    def get_reservation(self, reservation_id: int, payment_id: str, db: Session):
         return db \
             .query(ReservationEntity).filter(ReservationEntity.id == reservation_id) \
             .filter(ReservationEntity.payment_id == payment_id) \
