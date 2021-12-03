@@ -1,11 +1,9 @@
 from fastapi import status, APIRouter, Response, Depends
 from sqlalchemy.orm import Session
-
 from configuration.database import database
-from repository.dao.CityDao import get_cities, get_city_by_id
-from repository.dao.CountryDao import get_all_countries, get_country_by_id
-from repository.dao.StateDao import get_states, get_state_by_id
-from util.Constants import Constants
+from repository.dao.CityDao import CityDao
+from repository.dao.CountryDao import CountryDao
+from repository.dao.StateDao import StateDao
 from util.ThrowerExceptions import ThrowerExceptions
 
 territory_controller = APIRouter(
@@ -14,6 +12,9 @@ territory_controller = APIRouter(
 )
 
 _throwerExceptions = ThrowerExceptions()
+_city_dao_ = CityDao()
+_state_dao_ = StateDao()
+_country_dao_ = CountryDao()
 
 
 @territory_controller.get(
@@ -21,12 +22,11 @@ _throwerExceptions = ThrowerExceptions()
     status_code=status.HTTP_200_OK
 )
 async def get_countries(response: Response, db: Session = Depends(database.get_data_base)):
-    countries = get_all_countries(db)
+    countries = _country_dao_.get_all_countries(db)
 
     if len(countries) == 0:
-        await _throwerExceptions.throw_custom_exception(name=Constants.COUNTRY_NOT_FOUND_ERROR,
-                                                        detail=Constants.COUNTRY_NOT_FOUND_ERROR,
-                                                        status_code=status.HTTP_204_NO_CONTENT)
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
 
     return countries
 
@@ -36,14 +36,13 @@ async def get_countries(response: Response, db: Session = Depends(database.get_d
     status_code=status.HTTP_200_OK
 )
 async def get_country(response: Response, id_country: int, db: Session = Depends(database.get_data_base)):
-    countries = get_country_by_id(id_country, db)
+    country = _country_dao_.get_country_by_id(id_country, db)
 
-    if countries is None:
-        await _throwerExceptions.throw_custom_exception(name=Constants.COUNTRY_NOT_FOUND_ERROR,
-                                                        detail=Constants.COUNTRY_NOT_FOUND_ERROR,
-                                                        status_code=status.HTTP_204_NO_CONTENT)
+    if country is None:
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
 
-    return countries
+    return country
 
 
 @territory_controller.get(
@@ -51,12 +50,11 @@ async def get_country(response: Response, id_country: int, db: Session = Depends
     status_code=status.HTTP_200_OK
 )
 async def get_cities_by_country(response: Response, id_country: int, db: Session = Depends(database.get_data_base)):
-    cities = get_cities(id_country, db)
+    cities = _city_dao_.get_cities(id_country, db)
 
     if len(cities) == 0:
-        await _throwerExceptions.throw_custom_exception(name=Constants.CITIES_NOT_FOUND_ERROR,
-                                                        detail=Constants.CITIES_NOT_FOUND_ERROR,
-                                                        status_code=status.HTTP_204_NO_CONTENT)
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
 
     return cities
 
@@ -66,14 +64,13 @@ async def get_cities_by_country(response: Response, id_country: int, db: Session
     status_code=status.HTTP_200_OK
 )
 async def get_city(response: Response, id_city: int, db: Session = Depends(database.get_data_base)):
-    cities = get_city_by_id(id_city, db)
+    city = _city_dao_.get_city_by_id(id_city, db)
 
-    if cities is None:
-        await _throwerExceptions.throw_custom_exception(name=Constants.CITIES_NOT_FOUND_ERROR,
-                                                        detail=Constants.CITIES_NOT_FOUND_ERROR,
-                                                        status_code=status.HTTP_204_NO_CONTENT)
+    if city is None:
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
 
-    return cities
+    return city
 
 
 @territory_controller.get(
@@ -81,12 +78,11 @@ async def get_city(response: Response, id_city: int, db: Session = Depends(datab
     status_code=status.HTTP_200_OK
 )
 async def get_states_by_city(response: Response, id_city: int, db: Session = Depends(database.get_data_base)):
-    states = get_states(id_city, db)
+    states = _state_dao_.get_states(id_city, db)
 
     if len(states) == 0:
-        await _throwerExceptions.throw_custom_exception(name=Constants.STATES_NOT_FOUND_ERROR,
-                                                        detail=Constants.STATES_NOT_FOUND_ERROR,
-                                                        status_code=status.HTTP_204_NO_CONTENT)
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
 
     return states
 
@@ -96,11 +92,10 @@ async def get_states_by_city(response: Response, id_city: int, db: Session = Dep
     status_code=status.HTTP_200_OK
 )
 async def get_state(response: Response, id_state: int, db: Session = Depends(database.get_data_base)):
-    state = get_state_by_id(id_state, db)
+    state = _state_dao_.get_state_by_id(id_state, db)
 
     if state is None:
-        await _throwerExceptions.throw_custom_exception(name=Constants.STATES_NOT_FOUND_ERROR,
-                                                        detail=Constants.STATES_NOT_FOUND_ERROR,
-                                                        status_code=status.HTTP_204_NO_CONTENT)
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
 
     return state

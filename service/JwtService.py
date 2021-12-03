@@ -58,7 +58,7 @@ class JwtService:
             token_firebase.email = decoded_token['email']
             token_firebase.email_verified = decoded_token['email_verified']
             return token_firebase
-        except Exception as exception:
+        except:
             await cls._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_INVALID_ERROR,
                                                                 detail=Constants.TOKEN_INVALID_ERROR,
                                                                 status_code=status.HTTP_400_BAD_REQUEST)
@@ -71,9 +71,9 @@ class JwtService:
                                                                     detail=Constants.TOKEN_NOT_EXIST_DETAIL,
                                                                     status_code=status.HTTP_400_BAD_REQUEST,
                                                                     cause=Constants.TOKEN_NOT_EXIST_DETAIL)
-            token = request.headers['authorization']
+            token_header = request.headers['authorization']
 
-            decoded_token = jwt.decode(jwt=token, key=str(cls._settings_.JWT_KEY), algorithms=cls.ALGORITHM)
+            decoded_token = jwt.decode(jwt=token_header, key=str(cls._settings_.JWT_KEY), algorithms=cls.ALGORITHM)
             if not decoded_token:
                 await cls._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_VERIFY_ERROR,
                                                                     detail=Constants.TOKEN_VERIFY_ERROR,

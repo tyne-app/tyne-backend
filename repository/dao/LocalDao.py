@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+from sqlalchemy.orm import Session
 from starlette import status
 
 from configuration.database.database import SessionLocal
@@ -26,38 +27,40 @@ class LocalDAO:
                          branch_entity: BranchEntity,
                          branch_bank_entity: BranchBankEntity,
                          branch_image_entity: BranchImageEntity,
-                         db: SessionLocal):
-        db.begin()
+                         db: Session):
+        try:
+            user_entity.created_date = datetime.now(tz=timezone.utc)
+            db.add(user_entity)
+            db.flush()
 
-        user_entity.created_date = datetime.now(tz=timezone.utc)
-        db.add(user_entity)
-        db.flush()
+            manager_entity.id_user = user_entity.id
+            db.add(manager_entity)
+            db.flush()
 
-        manager_entity.id_user = user_entity.id
-        db.add(manager_entity)
-        db.flush()
+            db.add(legal_representative_entity)
+            db.flush()
 
-        db.add(legal_representative_entity)
-        db.flush()
+            restaurant_entity.legal_representative_id = legal_representative_entity.id
+            restaurant_entity.created_date = datetime.now(tz=timezone.utc)
+            db.add(restaurant_entity)
+            db.flush()
 
-        restaurant_entity.legal_representative_id = legal_representative_entity.id
-        restaurant_entity.created_date = datetime.now(tz=timezone.utc)
-        db.add(restaurant_entity)
-        db.flush()
+            db.add(branch_bank_entity)
+            db.flush()
 
-        db.add(branch_bank_entity)
-        db.flush()
+            branch_entity.restaurant_id = restaurant_entity.id
+            branch_entity.branch_bank_id = branch_bank_entity.id
+            branch_entity.manager_id = manager_entity.id
+            db.add(branch_entity)
+            db.flush()
 
-        branch_entity.restaurant_id = restaurant_entity.id
-        branch_entity.branch_bank_id = branch_bank_entity.id
-        branch_entity.manager_id = manager_entity.id
-        db.add(branch_entity)
-        db.flush()
-
-        branch_image_entity.branch_id = branch_entity.id
-        db.add(branch_image_entity)
-        db.commit()
-        return True
+            branch_image_entity.branch_id = branch_entity.id
+            db.add(branch_image_entity)
+            db.commit()
+            return True
+        except Exception as ex:
+            db.rollback()
+            raise ex
 
     async def get_account_profile(self, branch_id: int, db: SessionLocal):
         # TODO: para el login, yo te mando el email y se devuelves todos los datos del local + del representante
@@ -127,34 +130,35 @@ class LocalDAO:
                        branch_entity: BranchEntity,
                        branch_bank_entity: BranchBankEntity,
                        branch_image_entity: BranchImageEntity,
-                       db: SessionLocal):
-        db.begin()
+                       db: Session):
+        try:
+            user_entity.created_date = datetime.now(tz=timezone.utc)
+            db.add(user_entity)
+            db.flush()
 
-        user_entity.created_date = datetime.now(tz=timezone.utc)
-        db.add(user_entity)
-        db.flush()
+            manager_entity.id_user = user_entity.id
+            db.add(manager_entity)
+            db.flush()
 
-        manager_entity.id_user = user_entity.id
-        db.add(manager_entity)
-        db.flush()
+            restaurant_entity_id = db.query(BranchEntity.restaurant_id).select_from(BranchEntity). \
+                filter(BranchEntity.id == branch_id).first()
+            db.add(branch_bank_entity)
+            db.flush()
 
-        restaurant_entity_id = db.query(BranchEntity.restaurant_id).select_from(BranchEntity). \
-            filter(BranchEntity.id == branch_id).first()
-        db.add(branch_bank_entity)
-        db.flush()
+            branch_entity.restaurant_id = restaurant_entity_id[0]
+            branch_entity.manager_id = manager_entity.id
+            branch_entity.branch_bank_id = branch_bank_entity.id
+            db.add(branch_entity)
+            db.flush()
 
-        branch_entity.restaurant_id = restaurant_entity_id[0]
-        branch_entity.manager_id = manager_entity.id
-        branch_entity.branch_bank_id = branch_bank_entity.id
-        db.add(branch_entity)
-        db.flush()
+            branch_image_entity.branch_id = branch_entity.id
+            db.add(branch_image_entity)
+            db.commit()
 
-        branch_image_entity.branch_id = branch_entity.id
-        db.add(branch_image_entity)
-        db.commit()
-
-        return True
-
+            return True
+        except Exception as ex:
+            db.rollback()
+            raise ex
 
     def find_branch_by_email_user_manager(self, email: str, db: SessionLocal):
         return db \

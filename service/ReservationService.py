@@ -25,6 +25,8 @@ from repository.entity.ReservationChangeStatusEntity import ReservationChangeSta
 from repository.entity.ReservationEntity import ReservationEntity
 from repository.entity.ReservationProductEntity import ReservationProductEntity
 from service.KhipuService import KhipuService
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
 
 
 class ReservationService:
@@ -33,37 +35,38 @@ class ReservationService:
     _product_dao_ = ProductDao()
     _reservation_dao_ = ReservationDao()
     _payment_dao_ = PaymentDao()
+    _thrower_exceptions = ThrowerExceptions()
 
     async def create_reservation(self, client_id: int, reservation: NewReservationRequest, db: Session):
 
         reservation_id = 0
 
         try:
-            reservation.validate_fields()
+            await reservation.validate_fields()
 
             products: list[ProductEntity] = self._product_dao_.get_products_by_ids(
                 products_id=reservation.get_products_ids(),
                 branch_id=reservation.branch_id, db=db)
 
             if not products:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.PRODUCT_NOT_EXIST,
-                                                                     detail=Constants.PRODUCT_NOT_EXIST,
-                                                                     status_code=status.HTTP_400_BAD_REQUEST,
-                                                                     cause=f"No existen productos con branch_id {reservation.branch_id} para la reserva")
+                await self._thrower_exceptions.throw_custom_exception(name=Constants.PRODUCT_NOT_EXIST,
+                                                                      detail=Constants.PRODUCT_NOT_EXIST,
+                                                                      status_code=status.HTTP_400_BAD_REQUEST,
+                                                                      cause=f"No existen productos con branch_id {reservation.branch_id} para la reserva")
 
             client: ClientEntity = self._client_dao_.get_client_by_id(client_id=client_id, db=db)
 
             if client is None:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_NOT_EXIST,
-                                                                     detail=Constants.CLIENT_NOT_EXIST,
-                                                                     status_code=status.HTTP_400_BAD_REQUEST,
-                                                                     cause=f"Cliente con el id {client_id} no existe para crear la reserva")
+                await self._thrower_exceptions.throw_custom_exception(name=Constants.CLIENT_NOT_EXIST,
+                                                                      detail=Constants.CLIENT_NOT_EXIST,
+                                                                      status_code=status.HTTP_400_BAD_REQUEST,
+                                                                      cause=f"Cliente con el id {client_id} no existe para crear la reserva")
 
             if not client.user.is_active:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_UNAUTHORIZED,
-                                                                     detail=Constants.CLIENT_UNAUTHORIZED,
-                                                                     status_code=status.HTTP_401_UNAUTHORIZED,
-                                                                     cause=f"Cliente con el id {client_id} esta inactivo")
+                await self._thrower_exceptions.throw_custom_exception(name=Constants.CLIENT_UNAUTHORIZED,
+                                                                      detail=Constants.CLIENT_UNAUTHORIZED,
+                                                                      status_code=status.HTTP_401_UNAUTHORIZED,
+                                                                      cause=f"Cliente con el id {client_id} esta inactivo")
 
             amount = 0
 
@@ -85,10 +88,10 @@ class ReservationService:
             amount = round(amount)
             MIN_BUY: int = 10000
             if amount < MIN_BUY:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.BUY_INVALID_ERROR,
-                                                                     detail=Constants.BUY_INVALID_ERROR,
-                                                                     status_code=status.HTTP_400_BAD_REQUEST,
-                                                                     cause=f"La compra debe ser mayor a {str(MIN_BUY)}")
+                await self._thrower_exceptions.throw_custom_exception(name=Constants.BUY_INVALID_ERROR,
+                                                                      detail=Constants.BUY_INVALID_ERROR,
+                                                                      status_code=status.HTTP_400_BAD_REQUEST,
+                                                                      cause=f"La compra debe ser mayor a {str(MIN_BUY)}")
 
             entity = ReservationEntity()
             entity.reservation_date = reservation.date
@@ -117,10 +120,10 @@ class ReservationService:
                                                              transaction_id=entity.transaction_id)
 
             if response_khipu.status != 201:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.KHIPU_GET_ERROR,
-                                                                     detail=Constants.KHIPU_GET_ERROR,
-                                                                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                                                     cause="Error obtener datos khipu")
+                await self._thrower_exceptions.throw_custom_exception(name=Constants.KHIPU_GET_ERROR,
+                                                                      detail=Constants.KHIPU_GET_ERROR,
+                                                                      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                                                      cause="Error obtener datos khipu")
 
             # update reservation with payment_id from khipu
             self._reservation_dao_.update_payment_id_reservation(reservation_id=reservation_id,
@@ -153,11 +156,11 @@ class ReservationService:
 
     @classmethod
     async def local_reservations(cls,
-                           branch_id: int,
-                           reservation_date: datetime,
-                           result_for_page: int,
-                           page_number: int,
-                           status_reservation: int, db):
+                                 branch_id: int,
+                                 reservation_date: datetime,
+                                 result_for_page: int,
+                                 page_number: int,
+                                 status_reservation: int, db):
 
         local_reservation_request = LocalReservationRequest()
         local_reservation_request.reservation_date = reservation_date
@@ -192,9 +195,9 @@ class ReservationService:
         reservations = ReservationDao.reservation_detail(db, reservation_id)
 
         if not reservations:
-            await cls._throwerExceptions.throw_custom_exception(name=Constants.RESERVATION_NOT_FOUND_ERROR,
-                                                                detail=Constants.RESERVATION_NOT_FOUND_ERROR,
-                                                                status_code=status.HTTP_204_NO_CONTENT)
+            await cls._thrower_exceptions.throw_custom_exception(name=Constants.RESERVATION_NOT_FOUND_ERROR,
+                                                                 detail=Constants.RESERVATION_NOT_FOUND_ERROR,
+                                                                 status_code=status.HTTP_204_NO_CONTENT)
 
         reservation_detail = ReservationDetailResponse()
         response = reservation_detail.reservation_detail(reservations)
@@ -202,10 +205,11 @@ class ReservationService:
 
     async def get_reservations(self, client_id: int, db: Session):
         reservations = self._reservation_dao_.get_reservations(client_id, db)
+
         if not reservations:
-            await self._throwerExceptions.throw_custom_exception(name=Constants.RESERVATION_GET_ERROR,
-                                                                 detail=Constants.RESERVATION_NOT_FOUND_ERROR,
-                                                                 status_code=status.HTTP_204_NO_CONTENT)
+            await self._thrower_exceptions.throw_custom_exception(name=Constants.RESERVATION_GET_ERROR,
+                                                                  detail=Constants.RESERVATION_NOT_FOUND_ERROR,
+                                                                  status_code=status.HTTP_204_NO_CONTENT)
         return reservations
 
     def update_reservation(self, reservation_updated: UpdateReservationRequest, db: Session):

@@ -124,18 +124,18 @@ class UserService:
         return tokenResponse
 
     @classmethod
-    def change_profile_image(cls, user_id: int, file: UploadFile, db: Session):
+    async def change_profile_image(cls, user_id: int, file: UploadFile, db: Session):
 
         # Don't delete this try-except
         try:
             user = cls._user_dao_.get_user(user_id=user_id, db=db)
 
             if user and user.image_url:
-                cls._cloudinary_service_.delete_file(user.image_id)
+                await cls._cloudinary_service_.delete_file(user.image_id)
         except:
             pass
 
-        response_cloudinary = cls._cloudinary_service_.upload_image(file=file, user_id=user_id)
+        response_cloudinary = await cls._cloudinary_service_.upload_image(file=file, user_id=user_id)
         user = cls._user_dao_.update_profile_image(user_id=user_id,
                                                    url_image=response_cloudinary.metadata["secure_url"],
                                                    image_id=response_cloudinary.metadata["public_id"], db=db)
@@ -158,7 +158,7 @@ class UserService:
                                                                 detail=Constants.USER_NOT_IMAGE_ERROR,
                                                                 status_code=status.HTTP_400_BAD_REQUEST)
 
-        cls._cloudinary_service_.delete_file(user.image_id)
+        await cls._cloudinary_service_.delete_file(user.image_id)
         cls._user_dao_.update_profile_image(user_id, None, None, db)
 
         return True

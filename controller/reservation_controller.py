@@ -26,7 +26,7 @@ _auth_validator_ = AuthValidator()
 async def create_reservation(request: Request,
                              reservation_request: NewReservationRequest,
                              db: Session = Depends(database.get_data_base)):
-    token_payload = _auth_validator_.validate_token(request=request)
+    token_payload = await _auth_validator_.validate_token(request=request)
     return await _reservation_service_.create_reservation(client_id=token_payload.id_branch_client,
                                                           reservation=reservation_request,
                                                           db=db)
@@ -36,7 +36,7 @@ async def create_reservation(request: Request,
 async def update_reservation(request: Request,
                              reservation_updated: UpdateReservationRequest,
                              db: Session = Depends(database.get_data_base)):
-    token_payload = _auth_validator_.validate_token(request=request)
+    await _auth_validator_.validate_token(request=request)
     return await _reservation_service_.update_reservation(reservation_updated, db=db)
 
 

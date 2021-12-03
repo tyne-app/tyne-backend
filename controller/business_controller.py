@@ -58,16 +58,13 @@ async def register_account(new_account: NewAccount, db: SessionLocal = Depends(g
 
 @business_controller.get('/', status_code=status.HTTP_200_OK)
 async def read_account(request: Request, response: Response, db: SessionLocal = Depends(get_data_base)):
-    logger.info('login')
-
-    token_payload = await _jwt_service.verify_and_get_token_data(request)
+    await _jwt_service.verify_and_get_token_data(request)
 
     branch_profile = await _local_service.get_account_profile(branch_id=2, db=db)
 
     if branch_profile is None:
-        await _throwerExceptions.throw_custom_exception(name=Constants.BRANCH_READ_ERROR,
-                                                        detail=Constants.BRANCH_NOT_FOUND_ERROR_DETAIL,
-                                                        status_code=status.HTTP_204_NO_CONTENT)
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
 
     return branch_profile
 
@@ -76,11 +73,8 @@ async def read_account(request: Request, response: Response, db: SessionLocal = 
 async def add_branch(request: Request, response: Response,
                      new_branch: NewBranch,
                      db: SessionLocal = Depends(get_data_base)):
-    logger.info('new_branch: {}', new_branch)
-
     token_payload = await _jwt_service.verify_and_get_token_data(request)
-
-    await _local_service.add_new_branch(branch_id=2, new_branch=new_branch, db=db)
+    await _local_service.add_new_branch(branch_id=token_payload.id_branch_client, new_branch=new_branch, db=db)
 
     response.status_code = status.HTTP_201_CREATED
     return
@@ -99,15 +93,16 @@ async def search_locals(
         response: Response,
         search_parameters: SearchParameter = Depends(search_parameters_params),
         db: SessionLocal = Depends(get_data_base)):
-    logger.info('search_paramters: {}', search_parameters)
+    token_payload = await _jwt_service.verify_and_get_token_data(request)
 
-    client_id = None
+    restaurants = await _search_service.search_all_branches(parameters=search_parameters,
+                                                            client_id=token_payload.id_branch_client, db=db)
 
-    if 'authorization' in request.headers:
-        token_payload = await _jwt_service.verify_and_get_token_data(request)
-        client_id = token_payload.id_branch_client
+    if restaurants is None:
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
 
-    return await _search_service.search_all_branches(parameters=search_parameters, client_id=client_id, db=db)
+    return restaurants
 
 
 @business_controller.get('/{branch_id}', status_code=status.HTTP_200_OK)
@@ -115,12 +110,13 @@ async def read_branch_profile(request: Request,
                               response: Response,
                               branch_id: int,
                               db: SessionLocal = Depends(get_data_base)):
-    logger.info('branch_id: {}', branch_id)
+    token_payload = await _jwt_service.verify_and_get_token_data(request)
 
-    client_id = None
+    profile = await _search_service.search_branch_profile(branch_id=branch_id, client_id=token_payload.id_branch_client,
+                                                          db=db)
 
-    if 'authorization' in request.headers:
-        token_payload = await _jwt_service.verify_and_get_token_data(request)
-        client_id = token_payload.id_branch_client
+    if profile is None:
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
 
-    return await _search_service.search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)
+    return profile

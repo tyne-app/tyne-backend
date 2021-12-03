@@ -19,9 +19,15 @@ _reservation_service_ = ReservationService()
 
 
 @client_controller.get('/reservations', status_code=status.HTTP_200_OK)
-async def get_client_reservations(request: Request, db: Session = Depends(database.get_data_base)):
+async def get_client_reservations(request: Request, response: Response, db: Session = Depends(database.get_data_base)):
     token_payload = await _jwt_service_.verify_and_get_token_data(request)
-    return await _reservation_service_.get_reservations(client_id=token_payload.id_branch_client, db=db)
+    reservations = await _reservation_service_.get_reservations(client_id=token_payload.id_branch_client, db=db)
+
+    if reservations is None:
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
+
+    return reservations
 
 
 @client_controller.get(

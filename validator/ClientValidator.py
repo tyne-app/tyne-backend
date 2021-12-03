@@ -13,7 +13,7 @@ class ClientValidator:
     async def validate_fields(cls, fields):
         invalid_data = {}
 
-        if cls._utils_validator_.validate_phone(fields["phone"]):
+        if not cls._utils_validator_.validate_phone(fields["phone"]):
             invalid_data["phone"] = cls._utils_validator_.INVALID_DATA_MESSAGE
 
         if not cls._utils_validator_.validate_not_empty(fields["name"]):

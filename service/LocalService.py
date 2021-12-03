@@ -5,7 +5,7 @@ from dto.request.business_request_dto import NewAccount
 from dto.request.business_request_dto import NewBranch
 from mappers.request.BusinessMapperRequest import BusinessMapperRequest
 from repository.dao.LocalDao import LocalDAO
-from repository.dao.StateDao import get_state_by_id
+from repository.dao.StateDao import StateDao
 from service.MapboxService import MapBoxService
 from validator.LocalValidator import LocalValidator
 
@@ -31,64 +31,50 @@ class LocalService:
     DEFAULT_LOCAL_IMAGE_PROFILE = "https://res.cloudinary.com/dqdtvbynk/image/upload/v1636295279/Development/users/default%20main%20local%20image/Sart%C3%A9n_Tyne_Fondo_Transparente_zflbrr.png"
 
     _local_dao = LocalDAO()
+    _state_dao_ = StateDao()
 
     async def create_new_account(self, new_account: NewAccount, db: SessionLocal):
-        logger.info('new_account: {}', new_account)
-
         local_validator = LocalValidator()
         local_validator.validate_new_account(new_account=new_account)
 
         branch = new_account.branch
-        logger.info('branch: {}', branch)
 
-        state = get_state_by_id(id_state=branch.state_id, db=db)
-        logger.info('state.name: {}', state.name)
+        state = self._state_dao_.get_state_by_id(id_state=branch.state_id, db=db)
 
         branch_geocoding = await self.geocoding(street=branch.street, street_number=branch.street_number,
                                                 state_name=state.name)
-        logger.info('branch_geocoding: {}', branch_geocoding)
 
         manager = new_account.manager
-        logger.info('manager: {}', manager)
 
         user = {'email': manager.email, 'password': manager.password}
-        logger.info('user: {}', user)
         user_entity = self._business_mapper_request.to_user_entity(user_dict=user, id_user_type=self.ID_USER_TYPE)
-        logger.info('user_entity: {}', user_entity)
 
         manager_entity = self._business_mapper_request.to_manager_entity(manager=manager)
-        logger.info('manager_entity: {}', manager_entity)
 
         legal_representative = new_account.legal_representative
-        logger.info('legal_representative: {}', legal_representative)
         legal_representative_entity = self._business_mapper_request. \
             to_legal_representative_entity(legal_representative=legal_representative)
 
         restaurant = new_account.restaurant
-        logger.info('restaurant: {}', restaurant)
         restaurant_entity = self._business_mapper_request.to_restaurant_entity(restaurant=restaurant, name=branch.name)
 
         branch_entity = self._business_mapper_request.to_branch_entity(branch=branch, branch_geocoding=branch_geocoding)
-        logger.info('branch_entity: {}', branch_entity)
 
         branch_bank = new_account.branch_bank
-        logger.info('branch_bank: {}', branch_bank)
         branch_bank_entity = self._business_mapper_request.to_branch_bank_entity(branch_bank=branch_bank)
 
         branch_image_entity = self._business_mapper_request. \
             to_branch_image_entity(default_main_image=self.DEFAULT_LOCAL_IMAGE_PROFILE)
 
         local_dao = LocalDAO()
-        branch_entity_status = local_dao.register_account(user_entity=user_entity,
-                                                          manager_entity=manager_entity,
-                                                          legal_representative_entity=legal_representative_entity,
-                                                          restaurant_entity=restaurant_entity,
-                                                          branch_entity=branch_entity,
-                                                          branch_bank_entity=branch_bank_entity,
-                                                          branch_image_entity=branch_image_entity,
-                                                          db=db)
-
-        logger.info('branch_entity_status: {}', branch_entity_status)
+        local_dao.register_account(user_entity=user_entity,
+                                   manager_entity=manager_entity,
+                                   legal_representative_entity=legal_representative_entity,
+                                   restaurant_entity=restaurant_entity,
+                                   branch_entity=branch_entity,
+                                   branch_bank_entity=branch_bank_entity,
+                                   branch_image_entity=branch_image_entity,
+                                   db=db)
 
         return self._business_mapper_request.to_branch_create_response(content=self.MSG_CREATE_ACCOUNT_SUCCESSFULLY)
 
@@ -114,7 +100,7 @@ class LocalService:
         branch = new_branch.branch
         logger.info('branch: {}', branch)
 
-        state = get_state_by_id(id_state=branch.state_id, db=db)
+        state = self._state_dao_.get_state_by_id(id_state=branch.state_id, db=db)
         logger.info('state.name: {}', state.name)
 
         branch_geocoding = await self.geocoding(street=branch.street, street_number=branch.street_number,

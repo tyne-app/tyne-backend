@@ -32,11 +32,15 @@ class ClientDao:
 
     @classmethod
     def create_client_v2(cls, client: ClientEntity, db: Session):
-        db.add(client.user)
-        db.flush()
+        try:
+            db.add(client.user)
+            db.flush()
 
-        client.id_user = client.user.id
-        db.add(client)
+            client.id_user = client.user.id
+            db.add(client)
 
-        db.commit()
-        return True
+            db.commit()
+            return True
+        except Exception as ex:
+            db.rollback()
+            raise ex

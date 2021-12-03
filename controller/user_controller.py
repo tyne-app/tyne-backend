@@ -65,7 +65,7 @@ async def upload_profile_image(request: Request, response: Response, image: Uplo
 )
 async def delete_profile_image(request: Request, response: Response, db: Session = Depends(database.get_data_base)):
     token_payload = await _jwt_service_.verify_and_get_token_data(request)
-    _service_.delete_profile_image(token_payload.id_user, db)
+    await _service_.delete_profile_image(token_payload.id_user, db)
     return SimpleResponse("Imagen borrada exitosamente")
 
 

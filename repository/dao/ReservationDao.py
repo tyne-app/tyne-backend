@@ -24,23 +24,27 @@ class ReservationDao:
     def create_reservation(cls, reservation: ReservationEntity, reservation_status: ReservationChangeStatusEntity,
                            products: list[ReservationProductEntity],
                            db: Session):
-        db.add(reservation)
-        db.flush()
+        try:
+            db.add(reservation)
+            db.flush()
 
-        reservation_status.reservation_id = reservation.id
+            reservation_status.reservation_id = reservation.id
 
-        db.add(reservation_status)
-        db.flush()
+            db.add(reservation_status)
+            db.flush()
 
-        for x in products:
-            x.reservation_id = reservation.id
+            for x in products:
+                x.reservation_id = reservation.id
 
-        db.bulk_save_objects(products)
-        db.flush()
+            db.bulk_save_objects(products)
+            db.flush()
 
-        db.commit()
+            db.commit()
 
-        return reservation
+            return reservation
+        except Exception as ex:
+            db.rollback()
+            raise ex
 
     @classmethod
     def update_payment_id_reservation(cls, reservation_id: int, payment_id: str, db: Session):
