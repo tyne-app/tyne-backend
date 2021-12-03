@@ -12,14 +12,12 @@ from dto.request.business_request_dto import SearchParameter
 from service.JwtService import JwtService
 from service.LocalService import LocalService
 from service.SearchService import SearchService
-from util.ThrowerExceptions import ThrowerExceptions
 
 business_controller = APIRouter(
     prefix="/v1/business",
     tags=["Business"]
 )
 
-_throwerExceptions = ThrowerExceptions()
 _localService = LocalService()
 _jwt_service = JwtService()
 _local_service = LocalService()
@@ -45,16 +43,16 @@ async def search_parameters_params(
     }
 
 
-@business_controller.post("/", status_code=status.HTTP_201_CREATED)
+@business_controller.post("", status_code=status.HTTP_201_CREATED)
 async def register_account(new_account: NewAccount, db: Session = Depends(get_data_base)):
     return await _localService.create_new_account(new_account=new_account, db=db)
 
 
-@business_controller.get('/', status_code=status.HTTP_200_OK)
+@business_controller.get('', status_code=status.HTTP_200_OK)
 async def read_account(request: Request, response: Response, db: Session = Depends(get_data_base)):
-    await _jwt_service.verify_and_get_token_data(request)
+    token_payload = await _jwt_service.verify_and_get_token_data(request)
 
-    branch_profile = await _local_service.get_account_profile(branch_id=2, db=db)
+    branch_profile = await _local_service.get_account_profile(branch_id=token_payload.id_branch_client, db=db)
 
     if branch_profile is None:
         response.status_code = status.HTTP_204_NO_CONTENT
@@ -87,10 +85,13 @@ async def search_locals(
         response: Response,
         search_parameters: SearchParameter = Depends(search_parameters_params),
         db: Session = Depends(get_data_base)):
-    token_payload = await _jwt_service.verify_and_get_token_data(request)
+    client_id = None
 
-    restaurants = await _search_service.search_all_branches(parameters=search_parameters,
-                                                            client_id=token_payload.id_branch_client, db=db)
+    if 'authorization' in request.headers:
+        token_payload = await _jwt_service.verify_and_get_token_data(request)
+        client_id = token_payload.id_branch_client
+
+    restaurants = await _search_service.search_all_branches(parameters=search_parameters, client_id=client_id, db=db)
 
     if restaurants is None:
         response.status_code = status.HTTP_204_NO_CONTENT
@@ -104,10 +105,13 @@ async def read_branch_profile(request: Request,
                               response: Response,
                               branch_id: int,
                               db: Session = Depends(get_data_base)):
-    token_payload = await _jwt_service.verify_and_get_token_data(request)
+    client_id = None
 
-    profile = await _search_service.search_branch_profile(branch_id=branch_id, client_id=token_payload.id_branch_client,
-                                                          db=db)
+    if 'authorization' in request.headers:
+        token_payload = await _jwt_service.verify_and_get_token_data(request)
+        client_id = token_payload.id_branch_client
+
+    profile = await _search_service.search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)
 
     if profile is None:
         response.status_code = status.HTTP_204_NO_CONTENT

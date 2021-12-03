@@ -12,8 +12,7 @@ class ClientResponse:
     email: str
     image_url: str
 
-    @classmethod
-    def map(cls, client_entity: ClientEntity):
+    def map(self, client_entity: ClientEntity):
         response = ClientResponse()
         response.id = client_entity.id
         response.name = client_entity.name

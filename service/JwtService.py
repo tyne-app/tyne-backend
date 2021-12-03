@@ -69,7 +69,7 @@ class JwtService:
             if 'authorization' not in request.headers:
                 await cls._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_NOT_EXIST,
                                                                     detail=Constants.TOKEN_NOT_EXIST_DETAIL,
-                                                                    status_code=status.HTTP_400_BAD_REQUEST,
+                                                                    status_code=status.HTTP_401_UNAUTHORIZED,
                                                                     cause=Constants.TOKEN_NOT_EXIST_DETAIL)
             token_header = request.headers['authorization']
 
@@ -77,7 +77,7 @@ class JwtService:
             if not decoded_token:
                 await cls._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_VERIFY_ERROR,
                                                                     detail=Constants.TOKEN_VERIFY_ERROR,
-                                                                    status_code=status.HTTP_400_BAD_REQUEST,
+                                                                    status_code=status.HTTP_401_UNAUTHORIZED,
                                                                     cause="decoded_token is None")
 
             token = Token(int(decoded_token['id_user']), int(decoded_token['id_branch_client']))

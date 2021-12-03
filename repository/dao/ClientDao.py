@@ -7,7 +7,7 @@ from repository.entity.UserEntity import UserEntity
 
 class ClientDao:
 
-    def find_client_by_email_user(self, email: str, db: Session):
+    def find_client_by_email_user(self, email: str, db: Session) -> ClientEntity:
         return db \
             .query(ClientEntity) \
             .select_from(ClientEntity) \
@@ -15,7 +15,7 @@ class ClientDao:
             .filter(UserEntity.email == email) \
             .first()
 
-    def get_client_by_id(self, client_id: int, db: Session):
+    def get_client_by_id(self, client_id: int, db: Session) -> ClientEntity:
         return db \
             .query(ClientEntity) \
             .filter(ClientEntity.id == client_id) \

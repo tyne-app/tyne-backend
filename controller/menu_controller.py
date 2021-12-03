@@ -25,13 +25,12 @@ async def all_category(response: Response, db: Session = Depends(database.get_da
     return categories
 
 
-@menu_controller.post('/{branch_id}', status_code=status.HTTP_201_CREATED)
-async def create_menu(branch_id: int,
-                      request: Request,
+@menu_controller.post('', status_code=status.HTTP_201_CREATED)
+async def create_menu(request: Request,
                       menu_request: MenuRequestDTO,
                       db: Session = Depends(database.get_data_base)):
-    await _jwt_service.verify_and_get_token_data(request)
-    return await _menu_service_.create_menu(branch_id, db, menu_request)
+    token_payload = await _jwt_service.verify_and_get_token_data(request)
+    return await _menu_service_.create_menu(token_payload.id_branch_client, db, menu_request)
 
 
 @menu_controller.get('/{branch_id}', status_code=status.HTTP_200_OK)

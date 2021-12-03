@@ -23,7 +23,7 @@ async def get_client_reservations(request: Request, response: Response, db: Sess
     token_payload = await _jwt_service_.verify_and_get_token_data(request)
     reservations = await _reservation_service_.get_reservations(client_id=token_payload.id_branch_client, db=db)
 
-    if reservations is None:
+    if len(reservations) == 0:
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
 
@@ -34,12 +34,18 @@ async def get_client_reservations(request: Request, response: Response, db: Sess
     '/{id}',
     status_code=status.HTTP_200_OK
 )
-async def get_user_by_id(response: Response, id: int, db: Session = Depends(database.get_data_base)):
-    return await _client_service_.get_client_by_id(client_id=id, db=db)
+async def get_client_by_id(response: Response, id: int, db: Session = Depends(database.get_data_base)):
+    client = await _client_service_.get_client_by_id(client_id=id, db=db)
+
+    if client is None:
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
+
+    return client
 
 
 @client_controller.post(
-    '/',
+    '',
     status_code=status.HTTP_201_CREATED
 )
 async def create_client(response: Response, client_req: ClientRequestDTO,

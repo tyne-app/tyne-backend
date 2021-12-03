@@ -2,7 +2,6 @@ from fastapi import status, APIRouter, Response, Depends
 from sqlalchemy.orm import Session
 from configuration.database import database
 from repository.dao.BankDao import BankDao
-from util.ThrowerExceptions import ThrowerExceptions
 
 bank_controller = APIRouter(
     prefix="/v1/banks",
@@ -10,11 +9,10 @@ bank_controller = APIRouter(
 )
 
 _bank_dao_ = BankDao()
-_throwerExceptions = ThrowerExceptions()
 
 
 @bank_controller.get(
-    '/',
+    '',
     status_code=status.HTTP_200_OK
 )
 async def get_banks(response: Response, db: Session = Depends(database.get_data_base)):

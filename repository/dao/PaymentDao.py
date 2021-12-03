@@ -8,7 +8,7 @@ from repository.entity.ReservationChangeStatusEntity import ReservationChangeSta
 class PaymentDao:
 
     def create_payment(self, payment: PaymentEntity, reservation_status: ReservationChangeStatusEntity,
-                       db: Session):
+                       db: Session) -> PaymentEntity:
         try:
             db.add(payment)
             db.flush()

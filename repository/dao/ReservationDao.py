@@ -22,7 +22,7 @@ class ReservationDao:
 
     def create_reservation(self, reservation: ReservationEntity, reservation_status: ReservationChangeStatusEntity,
                            products: list[ReservationProductEntity],
-                           db: Session):
+                           db: Session) -> ReservationEntity:
         try:
             db.add(reservation)
             db.flush()
@@ -155,7 +155,7 @@ class ReservationDao:
 
         return reservations_date_response
 
-    def reservation_detail(self, db: Session, reservation_id: int):
+    def reservation_detail(self, reservation_id: int, db: Session):
 
         reservation_detail = db.query(ReservationProductEntity.reservation_id,
                                       ClientEntity.name,
@@ -204,7 +204,7 @@ class ReservationDao:
             .filter(BranchImageEntity.is_main_image) \
             .all()
 
-    def get_reservation(self, reservation_id: int, payment_id: str, db: Session):
+    def get_reservation(self, reservation_id: int, payment_id: str, db: Session) -> ReservationEntity:
         return db \
             .query(ReservationEntity).filter(ReservationEntity.id == reservation_id) \
             .filter(ReservationEntity.payment_id == payment_id) \

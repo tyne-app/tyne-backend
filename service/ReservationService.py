@@ -44,7 +44,7 @@ class ReservationService:
         try:
             await reservation.validate_fields()
 
-            products: list[ProductEntity] = self._product_dao_.get_products_by_ids(
+            products = self._product_dao_.get_products_by_ids(
                 products_id=reservation.get_products_ids(),
                 branch_id=reservation.branch_id, db=db)
 
@@ -154,8 +154,7 @@ class ReservationService:
 
             raise error
 
-    @classmethod
-    async def local_reservations(cls,
+    async def local_reservations(self,
                                  branch_id: int,
                                  reservation_date: datetime,
                                  result_for_page: int,
@@ -170,17 +169,17 @@ class ReservationService:
 
         await local_reservation_request.validate_fields(local_reservation_request)
 
-        reservations = ReservationDao.local_reservations(db,
-                                                         branch_id,
-                                                         reservation_date,
-                                                         status_reservation)
+        reservations = self._reservation_dao_.local_reservations(db,
+                                                                 branch_id,
+                                                                 reservation_date,
+                                                                 status_reservation)
 
-        reservations_date = ReservationDao.local_reservations_date(db,
-                                                                   branch_id,
-                                                                   status_reservation,
-                                                                   reservation_date,
-                                                                   result_for_page,
-                                                                   page_number)
+        reservations_date = self._reservation_dao_.local_reservations_date(db,
+                                                                           branch_id,
+                                                                           status_reservation,
+                                                                           reservation_date,
+                                                                           result_for_page,
+                                                                           page_number)
 
         local_reservations_response = LocalReservationsResponse()
         response = local_reservations_response.local_reservations(reservations,
@@ -189,30 +188,25 @@ class ReservationService:
                                                                   page_number)
         return response
 
-    @classmethod
-    async def reservation_detail(cls, reservation_id: int, db):
+    async def reservation_detail(self, reservation_id: int, db):
 
-        reservations = ReservationDao.reservation_detail(db, reservation_id)
+        reservations = self._reservation_dao_.reservation_detail(reservation_id=reservation_id, db=db)
 
         if not reservations:
-            await cls._thrower_exceptions.throw_custom_exception(name=Constants.RESERVATION_NOT_FOUND_ERROR,
-                                                                 detail=Constants.RESERVATION_NOT_FOUND_ERROR,
-                                                                 status_code=status.HTTP_204_NO_CONTENT)
+            await self._thrower_exceptions.throw_custom_exception(name=Constants.RESERVATION_NOT_FOUND_ERROR,
+                                                                  detail=Constants.RESERVATION_NOT_FOUND_ERROR,
+                                                                  status_code=status.HTTP_204_NO_CONTENT)
 
         reservation_detail = ReservationDetailResponse()
         response = reservation_detail.reservation_detail(reservations)
         return response
 
-    async def get_reservations(self, client_id: int, db: Session):
+    async def get_reservations(self, client_id: int, db: Session) -> list:
         reservations = self._reservation_dao_.get_reservations(client_id, db)
-
-        if not reservations:
-            await self._thrower_exceptions.throw_custom_exception(name=Constants.RESERVATION_GET_ERROR,
-                                                                  detail=Constants.RESERVATION_NOT_FOUND_ERROR,
-                                                                  status_code=status.HTTP_204_NO_CONTENT)
         return reservations
 
-    def update_reservation(self, reservation_updated: UpdateReservationRequest, db: Session):
+    async def update_reservation(self, reservation_updated: UpdateReservationRequest,
+                                 db: Session):
 
         # validate request
         reservation_updated.validate_fields()

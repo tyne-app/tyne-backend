@@ -1,4 +1,3 @@
-from fastapi import status
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -40,7 +39,7 @@ class SearchService:
 
         if type(all_branches_result) is str:
             self.raise_custom_error(name=self.MSG_ERROR_ALL_BRANCHES, message=all_branches_result)
-        all_branches_result = self._search_dao \
+        all_branches_result = self._branch_dao_ \
             .search_all_branches(
             search_parameters=search_parameters,
             client_id=client_id,

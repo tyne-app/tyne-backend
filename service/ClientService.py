@@ -25,34 +25,26 @@ class ClientService:
     _tokenService_ = JwtService()
     _throwerExceptions = ThrowerExceptions()
 
-    @classmethod
-    async def get_client_by_id(cls, client_id: int, db: Session):
-        client: ClientEntity = cls._client_dao_.get_client_by_id(client_id=client_id, db=db)
-
-        if client is None:
-            await cls._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_NOT_FOUND_ERROR_DETAIL,
-                                                                detail=Constants.CLIENT_NOT_FOUND_ERROR_DETAIL,
-                                                                status_code=status.HTTP_204_NO_CONTENT)
-
+    async def get_client_by_id(self, client_id: int, db: Session):
+        client: ClientEntity = self._client_dao_.get_client_by_id(client_id=client_id, db=db)
         client_dto = ClientResponse()
-        response = client_dto.map(client_entity=client)
-        return response
+        return client_dto.map(client_entity=client)
 
-    @classmethod
-    async def create_client(cls, client_req: ClientRequestDTO, db: Session):
-        await cls._client_validator_.validate_fields(client_req.__dict__)
-        id_login_created = await cls._login_service_.create_user_login(client_req.email, client_req.password, "Cliente",
-                                                                       db)
-        client_is_created = cls._client_dao_.create_client(client_req, id_login_created, db)
+    async def create_client(self, client_req: ClientRequestDTO, db: Session):
+        await self._client_validator_.validate_fields(client_req.__dict__)
+        id_login_created = await self._login_service_.create_user_login(client_req.email, client_req.password,
+                                                                        "Cliente",
+                                                                        db)
+        client_is_created = self._client_dao_.create_client(client_req, id_login_created, db)
 
         if not client_is_created:
             # TODO: Validar como hacer reversa si existe una excep no controlada
-            cls._user_dao_.delete_user_by_id(id_login_created, db)
-            cls._login_service_.delete_user_login(client_req.email, db)
+            self._user_dao_.delete_user_by_id(id_login_created, db)
+            self._login_service_.delete_user_login(client_req.email, db)
 
-            await cls._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_CREATE_ERROR_DETAIL,
-                                                                detail=Constants.CLIENT_CREATE_ERROR_DETAIL,
-                                                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            await self._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_CREATE_ERROR_DETAIL,
+                                                                 detail=Constants.CLIENT_CREATE_ERROR_DETAIL,
+                                                                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return client_is_created
 

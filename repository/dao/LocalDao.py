@@ -158,7 +158,7 @@ class LocalDAO:
             db.rollback()
             raise ex
 
-    def find_branch_by_email_user_manager(self, email: str, db: Session):
+    def find_branch_by_email_user_manager(self, email: str, db: Session) -> BranchEntity:
         return db \
             .query(BranchEntity) \
             .select_from(BranchEntity) \

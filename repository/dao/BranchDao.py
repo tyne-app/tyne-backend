@@ -19,7 +19,7 @@ from repository.entity.UserEntity import UserEntity
 
 class BranchDao:
 
-    def get_branch_by_id(self, db: Session, branch_id: int):
+    def get_branch_by_id(self, db: Session, branch_id: int) -> BranchEntity:
         return db \
             .query(BranchEntity) \
             .filter(BranchEntity.id == branch_id) \

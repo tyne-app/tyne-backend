@@ -1,6 +1,4 @@
-from sqlalchemy import Integer, String, Boolean, Column, ForeignKey, TIMESTAMP
-from sqlalchemy.orm import relationship
-
+from sqlalchemy import Integer, String, Column, Boolean
 from configuration.database.database import Base
 
 
@@ -10,3 +8,4 @@ class BankEntity(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100))
+    active = Column(Boolean)

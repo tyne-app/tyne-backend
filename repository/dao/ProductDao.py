@@ -4,7 +4,7 @@ from repository.entity.ProductEntity import ProductEntity
 
 class ProductDao:
 
-    def get_products_by_ids(self, products_id: list[int], branch_id: int, db: Session):
+    def get_products_by_ids(self, products_id: list[int], branch_id: int, db: Session) -> list[ProductEntity]:
         return db.query(ProductEntity) \
             .filter(ProductEntity.branch_id == branch_id) \
             .filter(ProductEntity.id.in_(products_id)) \
@@ -24,7 +24,7 @@ class ProductDao:
         db.commit()
         return True
 
-    def get_products_by_branch(self, db: Session, branch_id: int):
+    def get_products_by_branch(self, db: Session, branch_id: int) -> ProductEntity:
         return db \
             .query(ProductEntity) \
             .options(joinedload(ProductEntity.category, innerjoin=True)) \
