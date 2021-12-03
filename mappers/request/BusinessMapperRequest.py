@@ -18,7 +18,7 @@ class BusinessMapperRequest:
 
     def to_manager_entity(self, manager: Manager):
         manager_dict = manager.dict()
-        del(manager_dict['email'])
+        del (manager_dict['email'])
         del (manager_dict['password'])
         manager_entity = ManagerEntity(**manager_dict)
         return manager_entity
@@ -65,7 +65,8 @@ class BusinessMapperRequest:
         response.data = content
         return response.__dict__
 
-    def to_search_branches_response(self, content: list[PreviewBranch], total_items: int, page: int,result_for_page: int):
+    def to_search_branches_response(self, content: list[PreviewBranch], total_items: int, page: int,
+                                    result_for_page: int):
         response = wrapperDTO()
         response_dict = response.__dict__
         response_dict['total_items'] = total_items

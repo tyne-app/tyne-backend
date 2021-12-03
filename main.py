@@ -1,3 +1,5 @@
+import json
+
 import uvicorn
 from fastapi import FastAPI, status, Request
 from fastapi.responses import JSONResponse
@@ -5,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from firebase_admin import credentials
+from loguru import logger
 
 from configuration.firebase_config import FirebaseConfig
 from exception.exceptions import CustomError
@@ -14,6 +17,7 @@ from controller import business_controller, menu_controller, bank_controller, te
 import firebase_admin
 
 # from configuration.database import engine
+from util.ThrowerExceptions import ThrowerExceptions
 
 api_local = FastAPI(
     docs_url="/v1/docs",
@@ -58,22 +62,38 @@ async def validation_exception_handler(request, exc):
     )
 
 
+_throwerExceptions = ThrowerExceptions()
+@api_local.middleware("http")
+async def catch_exceptions_middleware(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception as e:
+        error_detail = {
+            "URL": f"{request.url}",
+            "query_params": f"{request.query_params}",
+            "path_params": f"{request.path_params}",
+            "cause": f"{e}",
+        }
+        logger.exception(e)
+        logger.error(json.dumps(error_detail, indent=4))
+        return await _throwerExceptions.response_internal_exception()
+
+
 @api_local.exception_handler(CustomError)
 async def custom_exception_handler(request: Request, exc: CustomError):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=jsonable_encoder({
-            'data': [],
-            "error": [{
-                "name": f"{exc.name}",
-                "detail": f"{exc.detail}",
-                "cause": f"{exc.cause}",
-            }]
-        })
-    )
+    error_detail = {
+        "URL": f"{request.url}",
+        "query_params": f"{request.query_params}",
+        "path_params": f"{request.path_params}",
+        "custom_error": f"{exc.__dict__}",
+    }
+    logger.error(json.dumps(error_detail, indent=4))
+    return await _throwerExceptions.response_custom_exception(exc)
+
 
 # init firebase
-FirebaseConfig.init_firebase()
+firebase_config = FirebaseConfig()
+firebase_config.init_firebase()
 
 api_local.include_router(bank_controller.bank_controller)
 api_local.include_router(business_controller.business_controller)

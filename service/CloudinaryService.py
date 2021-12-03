@@ -1,14 +1,17 @@
 import cloudinary
-import cloudinary.uploader
 import cloudinary.api
+import cloudinary.uploader
 from fastapi import UploadFile
 from starlette import status
+
 from configuration.Settings import Settings
-from exception.exceptions import CustomError
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
 
 
 class CloudinaryService:
     _settings_ = Settings()
+    _throwerExceptions = ThrowerExceptions()
 
     cloudinary.config(
         cloud_name=_settings_.CLOUDINARY_CLOUD_NAME,
@@ -17,32 +20,30 @@ class CloudinaryService:
         secure=True
     )
 
-    @classmethod
-    def upload_image(cls, file: UploadFile, user_id: int):
+    async def upload_image(self, file: UploadFile, user_id: int):
         try:
-            folder = cls._settings_.ENVIRONMENT + "/users/" + str(user_id)
+            folder = self._settings_.ENVIRONMENT + "/users/" + str(user_id)
             response = cloudinary.uploader.upload_image(file, folder=folder)
             return response
         except cloudinary.exceptions.Error as exception:
-            raise CustomError(name="Error subir imagen",
-                              detail=exception.args[0],
-                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                              cause="")
+            await self._throwerExceptions.throw_custom_exception(name=Constants.IMAGE_UPLOAD_ERROR,
+                                                                 detail=Constants.IMAGE_UPLOAD_ERROR,
+                                                                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                                                 cause=exception)
 
-    @classmethod
-    def delete_file(cls, id_image: str):
+    async def delete_file(self, id_image: str):
         try:
             response = cloudinary.uploader.destroy(id_image)
 
             if response["result"] != 'ok':
-                raise CustomError(name="Error eliminar imagen",
-                                  detail="Imagen no encontrada",
-                                  status_code=status.HTTP_400_BAD_REQUEST,
-                                  cause="")
+                await self._throwerExceptions.throw_custom_exception(name=Constants.IMAGE_DELETE_ERROR,
+                                                                     detail=Constants.IMAGE_NOT_FOUND_ERROR,
+                                                                     status_code=status.HTTP_400_BAD_REQUEST,
+                                                                     cause=f"imagen_id {id_image} no encontrada")
 
             return True
         except cloudinary.exceptions.Error as exception:
-            raise CustomError(name="Error eliminar imagen",
-                              detail=exception.args[0],
-                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                              cause="")
+            await self._throwerExceptions.throw_custom_exception(name=Constants.IMAGE_DELETE_ERROR,
+                                                                 detail=Constants.IMAGE_DELETE_ERROR,
+                                                                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                                                 cause=exception)

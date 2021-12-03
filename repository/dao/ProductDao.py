@@ -1,40 +1,21 @@
-from fastapi import status
-from loguru import logger
-from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
-
-from exception.exceptions import CustomError
-
-from repository.entity.BranchEntity import BranchEntity  # TODO: NO eliminar
 from repository.entity.ProductEntity import ProductEntity
 
 
-def save_all_products(db: Session, products):
-    try:
+class ProductDao:
+
+    def get_products_by_ids(self, products_id: list[int], branch_id: int, db: Session) -> list[ProductEntity]:
+        return db.query(ProductEntity) \
+            .filter(ProductEntity.branch_id == branch_id) \
+            .filter(ProductEntity.id.in_(products_id)) \
+            .all()
+
+    def save_all_products(self, db: Session, products):
         db.bulk_save_objects(products)
         db.commit()
         return True
 
-    except SQLAlchemyError as error:
-        logger.error(error)
-        raise CustomError(name="Error products",
-                          detail="BD error",
-                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                          cause=error.__cause__)
-    except Exception as error:
-        logger.error(error)
-        raise CustomError(name="Error products",
-                          detail="BD error",
-                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                          cause=error.__cause__)
-    finally:
-        db.close()
-
-
-def save_all_products_menu(db: Session, seccions_list_entity, branch_id):
-    try:
-
+    def save_all_products_menu(self, db: Session, seccions_list_entity, branch_id):
         db.query(ProductEntity).filter(ProductEntity.branch_id == branch_id).delete()
 
         for products in seccions_list_entity:
@@ -43,42 +24,9 @@ def save_all_products_menu(db: Session, seccions_list_entity, branch_id):
         db.commit()
         return True
 
-    except SQLAlchemyError as error:
-        logger.error(error)
-        raise CustomError(name="Error products",
-                          detail="BD error",
-                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                          cause=error.__cause__)
-    except Exception as error:
-        logger.error(error)
-        raise CustomError(name="Error products",
-                          detail="BD error",
-                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                          cause=error.__cause__)
-    finally:
-        db.close()
-
-
-def get_products_by_branch(db: Session, branch_id: int):
-    try:
+    def get_products_by_branch(self, db: Session, branch_id: int) -> ProductEntity:
         return db \
             .query(ProductEntity) \
             .options(joinedload(ProductEntity.category, innerjoin=True)) \
             .filter(ProductEntity.branch_id == branch_id) \
             .all()
-
-    except SQLAlchemyError as error:
-        logger.error(error)
-        raise CustomError(name="Error products",
-                          detail="BD error",
-                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                          cause=error.__cause__)
-    except Exception as error:
-        logger.error(error)
-        raise CustomError(name="Error products",
-                          detail="BD error",
-                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                          cause=error.__cause__)
-
-    finally:
-        db.close()

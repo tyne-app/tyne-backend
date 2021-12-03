@@ -1,17 +1,22 @@
-from loguru import logger
 from datetime import datetime, timezone
-from repository.entity.ManagerEntity import ManagerEntity
-from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
-from repository.entity.RestaurantEntity import RestaurantEntity
-from repository.entity.BranchEntity import BranchEntity
+
+from sqlalchemy.orm import Session
+from starlette import status
+
 from repository.entity.BranchBankEntity import BranchBankEntity
-from repository.entity.BranchScheduleEntity import BranchScheduleEntity
-from configuration.database.database import SessionLocal
-from repository.entity.UserEntity import UserEntity
+from repository.entity.BranchEntity import BranchEntity
 from repository.entity.BranchImageEntity import BranchImageEntity
+from repository.entity.BranchScheduleEntity import BranchScheduleEntity
+from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
+from repository.entity.ManagerEntity import ManagerEntity
+from repository.entity.RestaurantEntity import RestaurantEntity
+from repository.entity.UserEntity import UserEntity
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
 
 
 class LocalDAO:
+    _throwerExceptions = ThrowerExceptions()
 
     def register_account(self,
                          user_entity: UserEntity,
@@ -21,16 +26,8 @@ class LocalDAO:
                          branch_entity: BranchEntity,
                          branch_bank_entity: BranchBankEntity,
                          branch_image_entity: BranchImageEntity,
-                         db: SessionLocal):
-
-        logger.info('manager_entity: {}, legal_representative_entity: {},'
-                    ' restaurant_entity: {}, branch_entity: {}, branch_bank_entity: {}, branch_image_entity: {}',
-                    manager_entity, legal_representative_entity, restaurant_entity, branch_entity, branch_bank_entity,
-                    branch_image_entity)
-
+                         db: Session):
         try:
-            db.begin()
-
             user_entity.created_date = datetime.now(tz=timezone.utc)
             db.add(user_entity)
             db.flush()
@@ -60,64 +57,69 @@ class LocalDAO:
             db.add(branch_image_entity)
             db.commit()
             return True
-        except Exception as error:
-            logger.error('error: {}', error)
-            logger.error('error.args: {}', error.args)
+        except Exception as ex:
             db.rollback()
-            return error.args[0]
+            raise ex
 
-    def get_account_profile(self, branch_id: int, db: SessionLocal):
-        try:
-            profile = {}
+    async def get_account_profile(self, branch_id: int, db: Session):
+        profile = {}
 
-            branch_entity = db.query(BranchEntity.id, BranchEntity.manager_id, BranchEntity.accept_pet,
-                                     BranchEntity.description,
-                                     BranchEntity.state_id, BranchEntity.street, BranchEntity.street_number,
-                                     RestaurantEntity.name, RestaurantEntity.commercial_activity,
-                                     RestaurantEntity.phone) \
-                .select_from(BranchEntity).join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
-                .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
-                .join(UserEntity, UserEntity.id == ManagerEntity.id_user) \
-                .filter(UserEntity.is_active) \
-                .filter(BranchEntity.id == branch_id).first()
+        branch_entity = db \
+            .query(BranchEntity.id, BranchEntity.manager_id, BranchEntity.accept_pet,
+                   BranchEntity.description,
+                   BranchEntity.state_id, BranchEntity.street, BranchEntity.street_number,
+                   RestaurantEntity.name, RestaurantEntity.commercial_activity,
+                   RestaurantEntity.phone) \
+            .select_from(BranchEntity).join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
+            .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
+            .join(UserEntity, UserEntity.id == ManagerEntity.id_user) \
+            .filter(UserEntity.is_active) \
+            .filter(BranchEntity.id == branch_id) \
+            .first()
 
-            profile['branch'] = branch_entity
+        profile['branch'] = branch_entity
 
-            if not branch_entity:
-                return None
+        if not branch_entity:
+            await self._throwerExceptions.throw_custom_exception(name=Constants.ACCOUNT_PROFILE_GET_ERROR,
+                                                                 detail=Constants.BRANCH_NOT_FOUND_ERROR_DETAIL,
+                                                                 status_code=status.HTTP_204_NO_CONTENT)
 
-            manager_entity = db.query(ManagerEntity.id, ManagerEntity.last_name,
-                                      ManagerEntity.name, ManagerEntity.phone,
-                                      ManagerEntity.id_user,
-                                      UserEntity.email).select_from(ManagerEntity).join(
-                UserEntity,
-                UserEntity.id == ManagerEntity.id_user).filter(
-                ManagerEntity.id == branch_entity.manager_id).first()
+        manager_entity = db \
+            .query(ManagerEntity.id, ManagerEntity.last_name,
+                   ManagerEntity.name, ManagerEntity.phone,
+                   ManagerEntity.id_user,
+                   UserEntity.email).select_from(ManagerEntity).join(
+            UserEntity,
+            UserEntity.id == ManagerEntity.id_user) \
+            .filter(
+            ManagerEntity.id == branch_entity.manager_id) \
+            .first()
 
-            if not manager_entity:
-                return None
+        if not manager_entity:
+            await self._throwerExceptions.throw_custom_exception(name=Constants.ACCOUNT_PROFILE_GET_ERROR,
+                                                                 detail=Constants.MANAGER_NOT_FOUND_ERROR_DETAIL,
+                                                                 status_code=status.HTTP_204_NO_CONTENT)
 
-            profile['manager'] = manager_entity
+        profile['manager'] = manager_entity
 
-            image_list = db.query(BranchImageEntity.id, BranchImageEntity.url_image) \
-                .select_from(BranchImageEntity) \
-                .join(BranchEntity, BranchEntity.id == BranchImageEntity.branch_id) \
-                .filter(BranchImageEntity.branch_id == branch_entity.id).all()
+        image_list = db \
+            .query(BranchImageEntity.id, BranchImageEntity.url_image) \
+            .select_from(BranchImageEntity) \
+            .join(BranchEntity, BranchEntity.id == BranchImageEntity.branch_id) \
+            .filter(BranchImageEntity.branch_id == branch_entity.id) \
+            .all()
 
-            profile['image_list'] = image_list
+        profile['image_list'] = image_list
 
-            schedule = db.query(BranchScheduleEntity).filter(
-                BranchScheduleEntity.branch_id == branch_id).filter(BranchScheduleEntity.active).all()
+        schedule = db \
+            .query(BranchScheduleEntity) \
+            .filter(BranchScheduleEntity.branch_id == branch_id) \
+            .filter(BranchScheduleEntity.active) \
+            .all()
 
-            profile['schedule_list'] = schedule
+        profile['schedule_list'] = schedule
 
-            return profile
-        except Exception as error:
-            logger.error('error: {}', error)
-            logger.error('error.args: {}', error.args)
-            db.close()
-
-            return error.args[0]
+        return profile
 
     def add_new_branch(self,
                        user_entity: UserEntity,
@@ -126,13 +128,8 @@ class LocalDAO:
                        branch_entity: BranchEntity,
                        branch_bank_entity: BranchBankEntity,
                        branch_image_entity: BranchImageEntity,
-                       db: SessionLocal):
-        logger.info('branch_id: {}, manager_entity: {}, branch_entity: {},'
-                    ' branch_bank_entity: {}, branch_image_entity: {}',
-                    branch_id, manager_entity, branch_entity, branch_bank_entity, branch_image_entity)
+                       db: Session):
         try:
-            db.begin()
-
             user_entity.created_date = datetime.now(tz=timezone.utc)
             db.add(user_entity)
             db.flush()
@@ -155,19 +152,17 @@ class LocalDAO:
             branch_image_entity.branch_id = branch_entity.id
             db.add(branch_image_entity)
             db.commit()
-            return True
-        except Exception as error:
-            logger.error('error: {}', error)
-            logger.error('error.args: {}', error.args)
-            return error.args[0]
 
-    def find_branch_by_email_user_manager(self, email: str, db: SessionLocal):
-        try:
-            branch: BranchEntity = db.query(BranchEntity). \
-                select_from(BranchEntity). \
-                join(ManagerEntity, BranchEntity.manager_id == ManagerEntity.id). \
-                join(UserEntity, ManagerEntity.id_user == UserEntity.id). \
-                filter(UserEntity.email == email).first()
-            return branch
-        except Exception as error:
-            raise error
+            return True
+        except Exception as ex:
+            db.rollback()
+            raise ex
+
+    def find_branch_by_email_user_manager(self, email: str, db: Session) -> BranchEntity:
+        return db \
+            .query(BranchEntity) \
+            .select_from(BranchEntity) \
+            .join(ManagerEntity, BranchEntity.manager_id == ManagerEntity.id) \
+            .join(UserEntity, ManagerEntity.id_user == UserEntity.id) \
+            .filter(UserEntity.email == email) \
+            .first()

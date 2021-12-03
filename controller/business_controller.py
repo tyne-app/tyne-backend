@@ -2,25 +2,26 @@ from typing import Optional, Union
 
 from fastapi import status, APIRouter, Response, Request
 from fastapi.params import Depends
-from loguru import logger
-from configuration.database.database import SessionLocal, get_data_base
+from sqlalchemy.orm import Session
+
+from configuration.database.database import get_data_base
 from configuration.openapi.search_openapi import SearchAllBranchOpenAPI
-from dto.request.business_request_dto import SearchParameter
-from dto.response.business_response_dto import ListBranchOutput
-from dto.response.business_response_dto import BranchProfileOutput
-from dto.response.business_response_dto import RegisterAccountOutput
-from service.LocalService import LocalService
 from dto.request.business_request_dto import NewAccount
 from dto.request.business_request_dto import NewBranch
-from dto.response.business_response_dto import ReadAccountOutput
-from dto.response.business_response_dto import AddBranchOutput
+from dto.request.business_request_dto import SearchParameter
 from service.JwtService import JwtService
+from service.LocalService import LocalService
 from service.SearchService import SearchService
 
 business_controller = APIRouter(
     prefix="/v1/business",
     tags=["Business"]
 )
+
+_localService = LocalService()
+_jwt_service = JwtService()
+_local_service = LocalService()
+_search_service = SearchService()
 
 
 async def search_parameters_params(
@@ -42,106 +43,78 @@ async def search_parameters_params(
     }
 
 
-@business_controller.post("/", status_code=status.HTTP_201_CREATED, response_model=RegisterAccountOutput)
-async def register_account(new_account: NewAccount, db: SessionLocal = Depends(get_data_base)):
-    logger.info("new_account: {}", new_account)
-    local_service = LocalService()
-    account_created = await local_service.create_new_account(new_account=new_account, db=db)
-
-    return account_created
+@business_controller.post("", status_code=status.HTTP_201_CREATED)
+async def register_account(new_account: NewAccount, db: Session = Depends(get_data_base)):
+    return await _localService.create_new_account(new_account=new_account, db=db)
 
 
-@business_controller.get('/', status_code=status.HTTP_200_OK, response_model=ReadAccountOutput)
-async def read_account(request: Request, response: Response, db: SessionLocal = Depends(get_data_base)):
-    logger.info('login')
+@business_controller.get('', status_code=status.HTTP_200_OK)
+async def read_account(request: Request, response: Response, db: Session = Depends(get_data_base)):
+    token_payload = await _jwt_service.verify_and_get_token_data(request)
 
-    if 'authorization' not in request.headers:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        return {'error': 'Usuario no autorizado'}
+    branch_profile = await _local_service.get_account_profile(branch_id=token_payload.id_branch_client, db=db)
 
-    token = request.headers['authorization']
-    jwt_service = JwtService()
-    token_payload = jwt_service.verify_and_get_token_data(token=token)
-
-    local_service = LocalService()
-    branch_profile = local_service.get_account_profile(branch_id=token_payload.id_branch_client, db=db)
-
-    if branch_profile['data'] is None:
+    if branch_profile is None:
         response.status_code = status.HTTP_204_NO_CONTENT
+        return response
 
     return branch_profile
 
 
-@business_controller.post('/branches', status_code=status.HTTP_201_CREATED,
-                          response_model=AddBranchOutput)  # TODO: response_model=NewBranchOutput
+@business_controller.post('/branches', status_code=status.HTTP_201_CREATED)
 async def add_branch(request: Request, response: Response,
-                     new_branch: NewBranch, db: SessionLocal = Depends(get_data_base)):
-    logger.info('new_branch: {}', new_branch)
+                     new_branch: NewBranch,
+                     db: Session = Depends(get_data_base)):
+    token_payload = await _jwt_service.verify_and_get_token_data(request)
+    await _local_service.add_new_branch(branch_id=token_payload.id_branch_client, new_branch=new_branch, db=db)
 
-    if 'authorization' not in request.headers:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        return {'error': 'Usuario no autorizado'}
-
-    token = request.headers['authorization']
-
-    jwt_service = JwtService()
-    token_payload = jwt_service.verify_and_get_token_data(token=token)
-
-    local_service = LocalService()
-    branch_profile = await local_service.add_new_branch(branch_id=token_payload.id_branch_client, new_branch=new_branch,
-                                                        db=db)
-    return branch_profile
+    response.status_code = status.HTTP_201_CREATED
+    return
 
 
 @business_controller.get(
-    '/branches', status_code=status.HTTP_200_OK,
-    response_model=ListBranchOutput,
-    summary=SearchAllBranchOpenAPI.summary, responses=SearchAllBranchOpenAPI.responses,
-    description=SearchAllBranchOpenAPI.description, response_description=SearchAllBranchOpenAPI.response_description
+    '/branches',
+    status_code=status.HTTP_200_OK,
+    summary=SearchAllBranchOpenAPI.summary,
+    responses=SearchAllBranchOpenAPI.responses,
+    description=SearchAllBranchOpenAPI.description,
+    response_description=SearchAllBranchOpenAPI.response_description
 )
 async def search_locals(
         request: Request,
         response: Response,
         search_parameters: SearchParameter = Depends(search_parameters_params),
-        db: SessionLocal = Depends(get_data_base)):
-    logger.info('search_paramters: {}', search_parameters)
-
+        db: Session = Depends(get_data_base)):
     client_id = None
+
     if 'authorization' in request.headers:
-        token = request.headers['authorization']
-        jwt_service = JwtService()
-        token_payload = jwt_service.verify_and_get_token_data(token=token)
+        token_payload = await _jwt_service.verify_and_get_token_data(request)
         client_id = token_payload.id_branch_client
 
-    search_service = SearchService()
-    all_branches_response = await search_service \
-        .search_all_branches(parameters=search_parameters, client_id=client_id, db=db)
+    restaurants = await _search_service.search_all_branches(parameters=search_parameters, client_id=client_id, db=db)
 
-    if not all_branches_response['data']:
+    if restaurants is None:
         response.status_code = status.HTTP_204_NO_CONTENT
+        return response
 
-    return all_branches_response
+    return restaurants
 
 
-@business_controller.get('/{branch_id}', status_code=status.HTTP_200_OK, response_model=BranchProfileOutput)
+@business_controller.get('/{branch_id}', status_code=status.HTTP_200_OK)
 async def read_branch_profile(request: Request,
                               response: Response,
                               branch_id: int,
-                              db: SessionLocal = Depends(get_data_base)):
-    logger.info('branch_id: {}', branch_id)
-
+                              db: Session = Depends(get_data_base)):
     client_id = None
+
     if 'authorization' in request.headers:
-        token = request.headers['authorization']
-        jwt_service = JwtService()
-        token_payload = jwt_service.verify_and_get_token_data(token=token)
+        token_payload = await _jwt_service.verify_and_get_token_data(request)
         client_id = token_payload.id_branch_client
 
-    search_service = SearchService()
-    branch_profile = await search_service.search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)
+    profile = await _search_service.search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)
 
-    if branch_profile is None:
+    if profile is None:
         response.status_code = status.HTTP_204_NO_CONTENT
-        return
+        return response
 
-    return branch_profile
+    return profile

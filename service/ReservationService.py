@@ -1,20 +1,22 @@
+import uuid
 from datetime import timezone, datetime
-from loguru import logger
+
 from sqlalchemy.orm import Session
 from starlette import status
-from dto.request.NewReservationRequest import NewReservationRequest
+
 from dto.request.LocalReservationsRequest import LocalReservationRequest
+from dto.request.NewReservationRequest import NewReservationRequest
 from dto.request.UpdateReservationRequest import UpdateReservationRequest
-from dto.response.ReservationResponse import ReservationResponse
 from dto.response.LocalReservationsResponse import LocalReservationsResponse
 from dto.response.ReservationDetailResponse import ReservationDetailResponse
+from dto.response.ReservationResponse import ReservationResponse
 from dto.response.SimpleResponse import SimpleResponse
 from dto.response.UpdateReservationResponse import UpdateReservationResponse
 from enums.ReservationStatusEnum import ReservationStatusEnum
 from exception.exceptions import CustomError
 from repository.dao.ClientDao import ClientDao
 from repository.dao.PaymentDao import PaymentDao
-from repository.dao.Product2Dao import ProductDao
+from repository.dao.ProductDao import ProductDao
 from repository.dao.ReservationDao import ReservationDao
 from repository.entity.ClientEntity import ClientEntity
 from repository.entity.PaymentEntity import PaymentEntity
@@ -23,8 +25,8 @@ from repository.entity.ReservationChangeStatusEntity import ReservationChangeSta
 from repository.entity.ReservationEntity import ReservationEntity
 from repository.entity.ReservationProductEntity import ReservationProductEntity
 from service.KhipuService import KhipuService
-from dto.dto import GenericDTO as responseDTO
-import uuid
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
 
 
 class ReservationService:
@@ -33,37 +35,38 @@ class ReservationService:
     _product_dao_ = ProductDao()
     _reservation_dao_ = ReservationDao()
     _payment_dao_ = PaymentDao()
+    _thrower_exceptions = ThrowerExceptions()
 
-    def create_reservation(self, client_id: int, reservation: NewReservationRequest, db: Session):
+    async def create_reservation(self, client_id: int, reservation: NewReservationRequest, db: Session):
 
         reservation_id = 0
 
         try:
-            reservation.validate_fields()
+            await reservation.validate_fields()
 
-            products: list[ProductEntity] = self._product_dao_.get_products_by_ids(
+            products = self._product_dao_.get_products_by_ids(
                 products_id=reservation.get_products_ids(),
                 branch_id=reservation.branch_id, db=db)
 
             if not products:
-                raise CustomError(name="No existen productos",
-                                  detail="Validación",
-                                  status_code=status.HTTP_400_BAD_REQUEST,
-                                  cause="No existen productos")
+                await self._thrower_exceptions.throw_custom_exception(name=Constants.PRODUCT_NOT_EXIST,
+                                                                      detail=Constants.PRODUCT_NOT_EXIST,
+                                                                      status_code=status.HTTP_400_BAD_REQUEST,
+                                                                      cause=f"No existen productos con branch_id {reservation.branch_id} para la reserva")
 
-            client: ClientEntity = self._client_dao_.get_client(client_id=client_id, db=db)
+            client: ClientEntity = self._client_dao_.get_client_by_id(client_id=client_id, db=db)
 
             if client is None:
-                raise CustomError(name="Cliente no existe",
-                                  detail="Validación",
-                                  status_code=status.HTTP_400_BAD_REQUEST,
-                                  cause="Cliente no existe")
+                await self._thrower_exceptions.throw_custom_exception(name=Constants.CLIENT_NOT_EXIST,
+                                                                      detail=Constants.CLIENT_NOT_EXIST,
+                                                                      status_code=status.HTTP_400_BAD_REQUEST,
+                                                                      cause=f"Cliente con el id {client_id} no existe para crear la reserva")
 
             if not client.user.is_active:
-                raise CustomError(name="Cliente no autorizado",
-                                  detail="Validación",
-                                  status_code=status.HTTP_401_UNAUTHORIZED,
-                                  cause="Cliente no autorizado")
+                await self._thrower_exceptions.throw_custom_exception(name=Constants.CLIENT_UNAUTHORIZED,
+                                                                      detail=Constants.CLIENT_UNAUTHORIZED,
+                                                                      status_code=status.HTTP_401_UNAUTHORIZED,
+                                                                      cause=f"Cliente con el id {client_id} esta inactivo")
 
             amount = 0
 
@@ -83,12 +86,12 @@ class ReservationService:
                         reservation_products.append(reservation_product)
 
             amount = round(amount)
-            min_buy: int = 10000
-            if amount < min_buy:
-                raise CustomError(name="Compra no válida",
-                                  detail="Validación",
-                                  status_code=status.HTTP_400_BAD_REQUEST,
-                                  cause="La compra debe ser mayor a " + str(min_buy))
+            MIN_BUY: int = 10000
+            if amount < MIN_BUY:
+                await self._thrower_exceptions.throw_custom_exception(name=Constants.BUY_INVALID_ERROR,
+                                                                      detail=Constants.BUY_INVALID_ERROR,
+                                                                      status_code=status.HTTP_400_BAD_REQUEST,
+                                                                      cause=f"La compra debe ser mayor a {str(MIN_BUY)}")
 
             entity = ReservationEntity()
             entity.reservation_date = reservation.date
@@ -117,14 +120,15 @@ class ReservationService:
                                                              transaction_id=entity.transaction_id)
 
             if response_khipu.status != 201:
-                raise CustomError(name="Error obtener datos khipu",
-                                  detail="Khipu error",
-                                  status_code=status.HTTP_400_BAD_REQUEST,
-                                  cause="Error obtener datos khipu")
+                await self._thrower_exceptions.throw_custom_exception(name=Constants.KHIPU_GET_ERROR,
+                                                                      detail=Constants.KHIPU_GET_ERROR,
+                                                                      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                                                      cause="Error obtener datos khipu")
 
             # update reservation with payment_id from khipu
             self._reservation_dao_.update_payment_id_reservation(reservation_id=reservation_id,
-                                                                 payment_id=response_khipu.payment_id, db=db)
+                                                                 payment_id=response_khipu.payment_id,
+                                                                 db=db)
 
             # add new reservation change status
             change_status = ReservationChangeStatusEntity()
@@ -150,12 +154,12 @@ class ReservationService:
 
             raise error
 
-    @classmethod
-    def local_reservations(cls, branch_id: int,
-                           reservation_date: datetime,
-                           result_for_page: int,
-                           page_number: int,
-                           status_reservation: int, db):
+    async def local_reservations(self,
+                                 branch_id: int,
+                                 reservation_date: datetime,
+                                 result_for_page: int,
+                                 page_number: int,
+                                 status_reservation: int, db):
 
         local_reservation_request = LocalReservationRequest()
         local_reservation_request.reservation_date = reservation_date
@@ -163,19 +167,19 @@ class ReservationService:
         local_reservation_request.page_number = page_number
         local_reservation_request.status_reservation = status_reservation
 
-        local_reservation_request.validate_fields(local_reservation_request)
+        await local_reservation_request.validate_fields(local_reservation_request)
 
-        reservations = ReservationDao.local_reservations(db
-                                                         , branch_id
-                                                         , reservation_date
-                                                         , status_reservation)
+        reservations = self._reservation_dao_.local_reservations(db,
+                                                                 branch_id,
+                                                                 reservation_date,
+                                                                 status_reservation)
 
-        reservations_date = ReservationDao.local_reservations_date(db
-                                                                   , branch_id
-                                                                   , status_reservation
-                                                                   , reservation_date
-                                                                   , result_for_page
-                                                                   , page_number)
+        reservations_date = self._reservation_dao_.local_reservations_date(db,
+                                                                           branch_id,
+                                                                           status_reservation,
+                                                                           reservation_date,
+                                                                           result_for_page,
+                                                                           page_number)
 
         local_reservations_response = LocalReservationsResponse()
         response = local_reservations_response.local_reservations(reservations,
@@ -184,47 +188,25 @@ class ReservationService:
                                                                   page_number)
         return response
 
-    @classmethod
-    def reservation_detail(cls, reservation_id: int, db):
+    async def reservation_detail(self, reservation_id: int, db):
 
-        if reservation_id == 0:
-            raise CustomError(name="Validación",
-                              detail="No se han encontrado datos de la reserva",
-                              status_code=status.HTTP_204_NO_CONTENT,
-                              cause="No se han encontrado datos de la reserva")
+        reservations = self._reservation_dao_.reservation_detail(reservation_id=reservation_id, db=db)
 
-        reservations = ReservationDao.reservation_detail(db, reservation_id)
+        if not reservations:
+            await self._thrower_exceptions.throw_custom_exception(name=Constants.RESERVATION_NOT_FOUND_ERROR,
+                                                                  detail=Constants.RESERVATION_NOT_FOUND_ERROR,
+                                                                  status_code=status.HTTP_204_NO_CONTENT)
 
         reservation_detail = ReservationDetailResponse()
         response = reservation_detail.reservation_detail(reservations)
         return response
 
-    def get_reservations(self, client_id: int, db: Session):
-        try:
-            reservations = self._reservation_dao_.get_reservations(client_id, db)
-            if not reservations:
-                raise CustomError(name="Error get_reservation",
-                                  detail="reservations not found",
-                                  status_code=status.HTTP_204_NO_CONTENT)
+    async def get_reservations(self, client_id: int, db: Session) -> list:
+        reservations = self._reservation_dao_.get_reservations(client_id, db)
+        return reservations
 
-            response = responseDTO()
-            response.data = reservations
-            return response
-
-        except CustomError as error:
-            logger.error(error.detail)
-            raise CustomError(name=error.name,
-                              detail=error.detail,
-                              status_code=error.status_code)
-
-        except Exception as e:
-            logger.error(e)
-            raise CustomError(name="Error al obtener reservas",
-                              detail="service Error",
-                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                              cause="Error al obtener reservas")
-
-    def update_reservation(self, reservation_updated: UpdateReservationRequest, db: Session):
+    async def update_reservation(self, reservation_updated: UpdateReservationRequest,
+                                 db: Session):
 
         # validate request
         reservation_updated.validate_fields()
@@ -254,7 +236,6 @@ class ReservationService:
                 reservation_updated.status.value == ReservationStatusEnum.cancelado_local.value or \
                 reservation_updated.status.value == ReservationStatusEnum.reserva_confirmada.value or \
                 reservation_updated.status.value == ReservationStatusEnum.reserva_atendida.value:
-
             reservation_status = ReservationChangeStatusEntity()
             reservation_status.status_id = reservation_updated.status.value
             reservation_status.datetime = datetime.now(tz=timezone.utc)

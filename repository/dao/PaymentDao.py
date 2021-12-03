@@ -7,9 +7,8 @@ from repository.entity.ReservationChangeStatusEntity import ReservationChangeSta
 
 class PaymentDao:
 
-    @classmethod
-    def create_payment(cls, payment: PaymentEntity, reservation_status: ReservationChangeStatusEntity,
-                       db: Session):
+    def create_payment(self, payment: PaymentEntity, reservation_status: ReservationChangeStatusEntity,
+                       db: Session) -> PaymentEntity:
         try:
             db.add(payment)
             db.flush()
@@ -27,8 +26,7 @@ class PaymentDao:
                               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                               cause=error)
 
-    @classmethod
-    def get_payment(cls, reservation_id: int, db: Session):
+    def get_payment(self, reservation_id: int, db: Session):
         try:
             return db.query(PaymentEntity).filter(PaymentEntity.reservation_id == reservation_id).first()
 

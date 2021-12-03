@@ -1,12 +1,11 @@
-from fastapi import status
 from loguru import logger
-from validator.SearchValidator import SearchValidator
-from repository.dao.SearchDao import SearchDAO
-from configuration.database.database import SessionLocal
-from exception.exceptions import CustomError
+from sqlalchemy.orm import Session
+
 from dto.request.business_request_dto import SearchParameter
 from mappers.request.BusinessMapperRequest import BusinessMapperRequest
-from dto.dto import GenericDTO as wrapperDTO
+from repository.dao.BranchDao import BranchDao
+from util.ThrowerExceptions import ThrowerExceptions
+from validator.SearchValidator import SearchValidator
 
 
 class SearchService:
@@ -18,27 +17,34 @@ class SearchService:
     NOT_BRANCH_RAW_MSG_ERROR = "'NoneType' object has no attribute 'restaurant_id'"
     TOTAL_ITEMS_PAGE = 10
     search_validator = SearchValidator()
-    search_dao = SearchDAO()
+    _branch_dao_ = BranchDao()
     _business_mapper_request = BusinessMapperRequest()
+    _throwerExceptions = ThrowerExceptions()
 
-    async def search_all_branches(self, parameters: SearchParameter, db: SessionLocal, client_id: int):
+    async def search_all_branches(self, parameters: SearchParameter, db: Session, client_id: int):
         logger.info('parameters: {}, client_id: {}', parameters, client_id)
 
-        search_parameters = self.clear_null_values(
-            values=parameters)  # TODO: Formato datetime validar con otra función y no con REGEX
+        search_parameters = self.clear_null_values(values=parameters)  # TODO: Formato datetime validar con otra función y no con REGEX
 
-        self.search_validator.validate_search_parameters(search_parameters=search_parameters)
+        await self.search_validator.validate_search_parameters(search_parameters=search_parameters)
 
         if search_parameters['date_reservation']:
             search_parameters['date_reservation'] = search_parameters['date_reservation'].replace("/", "-")
             logger.info('search_parameters[date_reservation]: {}', search_parameters['date_reservation'])
 
-        all_branches_result = self.search_dao \
-            .search_all_branches(search_parameters=search_parameters, client_id=client_id,
+        all_branches_result = self._branch_dao_ \
+            .search_all_branches(search_parameters=search_parameters,
+                                 client_id=client_id,
                                  db=db, limit=self.TOTAL_ITEMS_PAGE)
 
         if type(all_branches_result) is str:
             self.raise_custom_error(name=self.MSG_ERROR_ALL_BRANCHES, message=all_branches_result)
+        all_branches_result = self._branch_dao_ \
+            .search_all_branches(
+            search_parameters=search_parameters,
+            client_id=client_id,
+            db=db,
+            limit=self.TOTAL_ITEMS_PAGE)
 
         total_number_all_branches = all_branches_result['total_number_all_branches']
         all_branches = all_branches_result['all_branches']
@@ -48,21 +54,13 @@ class SearchService:
                                         page=search_parameters['page'],
                                         result_for_page=search_parameters['result_for_page'])
 
-    async def search_branch_profile(self, branch_id: int, client_id: int, db: SessionLocal):
-        logger.info('branch_id: {}', branch_id)
-        branch_dict = self.search_dao.search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)
+    async def search_branch_profile(self, branch_id: int, client_id: int, db: Session):
+        branch_dict = self._branch_dao_.search_branch_profile(branch_id=branch_id, client_id=client_id, db=db)
 
         if not branch_dict:
-            raise CustomError(name="Sin resultados",
-                              detail="No existe el local",
-                              status_code=status.HTTP_204_NO_CONTENT,
-                              cause="")
+            return None
 
-        if type(branch_dict) is str:
-            self.raise_custom_error(name=self.MSG_ERROR_BRANCH_PROFILE, message=branch_dict)
-
-        branch_profile_populated = self.populate_branch_profile(branch_dict=branch_dict)
-        return self.to_branch_profile_response(content=branch_profile_populated)
+        return self.populate_branch_profile(branch_dict=branch_dict)
 
     def clear_null_values(self, values: dict):
         logger.info('values: {}', values)
@@ -96,14 +94,3 @@ class SearchService:
         }
         logger.info('branch_profile: {}', branch_profile)
         return branch_profile
-
-    def raise_custom_error(self, name: str, message: str):
-        raise CustomError(name=name,
-                          detail=message,
-                          status_code=status.HTTP_400_BAD_REQUEST,
-                          cause="")  # TODO: Llenar campo
-
-    def to_branch_profile_response(self, content):  # TODO: Mover función a otra clase(?)
-        response = wrapperDTO()
-        response.data = content
-        return response.__dict__

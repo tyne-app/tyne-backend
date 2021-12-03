@@ -1,19 +1,22 @@
-from fastapi import status
 import re
+
+from fastapi import status
 from loguru import logger
-from exception.exceptions import CustomError
+
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
 
 
 class SearchValidator:
-
     STRING_REGEX = re.compile(r"[A-Za-z0-9\sáéíóúÁÉÍÓÚñ]+")
     SORT_BY_INDEX_LIST = [1, 2, 3]
     ORDER_BY_INDEX_LIST = [1, 2]
     DATE_RESERVATION_REGEX = re.compile(r"2[0-9]{3}/[0-9]{2}/[0-9]{2}")
     # TODO: Poner constantes para validar date_reservation por año  mes y día
     INVALID_DATA_MESSAGE = "Valor no válido"  # TODO: Podría ser general, en ingles y toda validacion en un solo archivo?
+    _throwerExceptions = ThrowerExceptions()
 
-    def validate_search_parameters(self, search_parameters: dict):
+    async def validate_search_parameters(self, search_parameters: dict):
         logger.info('search_parameters:{}', search_parameters)
 
         data_checked = {}
@@ -35,10 +38,7 @@ class SearchValidator:
 
         if data_checked:
             logger.error("data_checked: {}", data_checked)
-            self.raise_custom_error(message=data_checked)
-
-    def raise_custom_error(self, message):
-        raise CustomError(name="Error al validar los datos de entrada",
-                          detail=message,
-                          status_code=status.HTTP_400_BAD_REQUEST,
-                          cause="")  # TODO: Llenar campo
+            await self._throwerExceptions.throw_custom_exception(name=Constants.FIELDS_VALIDATOR_ERROR,
+                                                                 detail=data_checked,
+                                                                 status_code=status.HTTP_400_BAD_REQUEST,
+                                                                 cause=data_checked)

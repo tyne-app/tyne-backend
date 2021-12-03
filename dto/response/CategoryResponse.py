@@ -5,8 +5,7 @@ class CategoryResponse:
     id: str
     name: str
 
-    @classmethod
-    def to_all_categories(cls, categories: list[CategoryEntity]):
+    def to_all_categories(self, categories: list[CategoryEntity]):
         categories_response: list[CategoryResponse] = []
         for category in categories:
             category_response = CategoryResponse()

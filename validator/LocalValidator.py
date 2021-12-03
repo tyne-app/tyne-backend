@@ -1,12 +1,16 @@
-from fastapi import status
 import re
+
+from fastapi import status
 from loguru import logger
-from exception.exceptions import CustomError
-from dto.request.business_request_dto import NewAccount, Branch, Restaurant, LegalRepresentative, Manager, BranchBank,\
+
+from dto.request.business_request_dto import NewAccount, Branch, Restaurant, LegalRepresentative, Manager, BranchBank, \
     NewBranch
+from util.Constants import Constants
+from util.ThrowerExceptions import ThrowerExceptions
 
 
 class LocalValidator:
+    _throwerExceptions = ThrowerExceptions()
 
     NUMBER_AND_WORD_REGEX = re.compile(r"[A-Za-z0-9\sáéíóúÁÉÍÓÚñ]+")
     NUMBER_REGEX = re.compile(r"[0-9]+")
@@ -22,7 +26,8 @@ class LocalValidator:
         if bool(manager_checked):
             data_checked["manager"] = manager_checked
 
-        legal_representative_checked = self.validate_legal_representative(legal_representative=new_account.legal_representative)
+        legal_representative_checked = self.validate_legal_representative(
+            legal_representative=new_account.legal_representative)
         if bool(legal_representative_checked):
             data_checked["legal_representative"] = legal_representative_checked
 
@@ -158,11 +163,9 @@ class LocalValidator:
             data_checked["branch_bank"] = branch_bank_checked
 
         if data_checked:
-            logger.error("data_checked: {}", data_checked)
             self.raise_custom_error(message=data_checked)
 
-    def raise_custom_error(self, message):
-        raise CustomError(name="Error al validar los datos de entrada",
-                          detail=message,
-                          status_code=status.HTTP_400_BAD_REQUEST,
-                          cause="")  # TODO: Llenar campo
+    async def raise_custom_error(self, message):
+        await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
+                                                             detail=message,
+                                                             status_code=status.HTTP_400_BAD_REQUEST)

@@ -4,17 +4,17 @@ from sqlalchemy.orm import sessionmaker
 from loguru import logger
 from ..Settings import Settings
 
-settings = Settings()
-connection_string = f'postgresql+psycopg2://{settings.DATABASE_USER}:{settings.DATABASE_PASSWORD}@{settings.DATABASE_HOST}/{settings.DATABASE_NAME}'
-engine = create_engine(connection_string)
-SessionLocal = sessionmaker(bind=engine)
+_settings_ = Settings()
+_connection_string_ = f'postgresql+psycopg2://{_settings_.DATABASE_USER}:{_settings_.DATABASE_PASSWORD}@{_settings_.DATABASE_HOST}/{_settings_.DATABASE_NAME}'
+_engine_ = create_engine(_connection_string_)
+_session_local_ = sessionmaker(bind=_engine_)
 Base = declarative_base()
 
-logger.info('Conexión con base de datos: engine = {}', engine)
+logger.info('Conexión con base de datos: engine = {}', _engine_)
 
 
 def get_data_base():
-    db = SessionLocal()
+    db = _session_local_()
     try:
         yield db
     finally:
