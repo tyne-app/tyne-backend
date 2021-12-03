@@ -22,9 +22,11 @@ _jwt_service_ = JwtService()
     '/login',
     status_code=status.HTTP_200_OK
 )
-def login(response: Response, request: Request, loginRequest: LoginUserRequest,
-          db: Session = Depends(database.get_data_base)):
-    token = _service_.login_user(loginRequest=loginRequest, ip=request.client.host, db=db)
+async def login(response: Response,
+                request: Request,
+                loginRequest: LoginUserRequest,
+                db: Session = Depends(database.get_data_base)):
+    token = await _service_.login_user(loginRequest=loginRequest, ip=request.client.host, db=db)
 
     if token is None:
         response.status_code = status.HTTP_204_NO_CONTENT
@@ -36,9 +38,11 @@ def login(response: Response, request: Request, loginRequest: LoginUserRequest,
     '/social-login',
     status_code=status.HTTP_200_OK
 )
-def social_login(response: Response, request: Request, loginRequest: LoginSocialRequest,
-                 db: Session = Depends(database.get_data_base)):
-    token = _service_.social_login_user(loginRequest=loginRequest, ip=request.client.host, db=db)
+async def social_login(response: Response,
+                       request: Request,
+                       loginRequest: LoginSocialRequest,
+                       db: Session = Depends(database.get_data_base)):
+    token = await _service_.social_login_user(loginRequest=loginRequest, ip=request.client.host, db=db)
     if token is None:
         response.status_code = status.HTTP_204_NO_CONTENT
     return token
@@ -48,9 +52,9 @@ def social_login(response: Response, request: Request, loginRequest: LoginSocial
     '/profile-image',
     status_code=status.HTTP_200_OK
 )
-def upload_profile_image(request: Request, response: Response, image: UploadFile = File(...),
-                         db: Session = Depends(database.get_data_base)):
-    token_payload = _jwt_service_.verify_and_get_token_data(request)
+async def upload_profile_image(request: Request, response: Response, image: UploadFile = File(...),
+                               db: Session = Depends(database.get_data_base)):
+    token_payload = await _jwt_service_.verify_and_get_token_data(request)
     response = _service_.change_profile_image(token_payload.id_user, image.file, db)
     return response
 
@@ -59,8 +63,8 @@ def upload_profile_image(request: Request, response: Response, image: UploadFile
     '/profile-image',
     status_code=status.HTTP_200_OK
 )
-def delete_profile_image(request: Request, response: Response, db: Session = Depends(database.get_data_base)):
-    token_payload = _jwt_service_.verify_and_get_token_data(request)
+async def delete_profile_image(request: Request, response: Response, db: Session = Depends(database.get_data_base)):
+    token_payload = await _jwt_service_.verify_and_get_token_data(request)
     _service_.delete_profile_image(token_payload.id_user, db)
     return SimpleResponse("Imagen borrada exitosamente")
 
@@ -69,8 +73,8 @@ def delete_profile_image(request: Request, response: Response, db: Session = Dep
     '/password',
     status_code=status.HTTP_200_OK
 )
-def update_password(request: Request, response: Response, change_password: UserChangePasswordRequest,
-                    db: Session = Depends(database.get_data_base)):
-    token_payload = _jwt_service_.verify_and_get_token_data(request)
+async def update_password(request: Request, response: Response, change_password: UserChangePasswordRequest,
+                          db: Session = Depends(database.get_data_base)):
+    token_payload = await _jwt_service_.verify_and_get_token_data(request)
     _service_.change_password(token_payload.id_user, change_password.password, db)
     return SimpleResponse("Contraseña actualizada correctamente")

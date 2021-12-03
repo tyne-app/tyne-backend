@@ -15,7 +15,7 @@ class LoginService:
 
     @classmethod
     async def create_user_login(cls, email, password, name_user_type, db):
-        cls._user_validator_.validate_fields({"email": email, "password": password})
+        await cls._user_validator_.validate_fields({"email": email, "password": password})
 
         user_exist = cls._user_dao_.verify_email(email, db)
         if user_exist:

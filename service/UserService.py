@@ -33,7 +33,7 @@ class UserService:
         id_branch_client = None
         name = None
         last_name = None
-        loginRequest.validate_fields()
+        await loginRequest.validate_fields()
 
         tokenResponse: UserTokenResponse = None
         user: UserEntity = cls._user_dao_.verify_email(loginRequest.email, db)
@@ -79,10 +79,10 @@ class UserService:
         id_branch_client = None
         name = None
         last_name = None
-        loginRequest.validate_fields()
+        await loginRequest.validate_fields()
 
         # try to verify the token and decode it
-        token_firebase = cls._tokenService_.decode_token_firebase(loginRequest.token)
+        token_firebase = await cls._tokenService_.decode_token_firebase(loginRequest.token)
 
         tokenResponse: UserTokenResponse = None
         user: UserEntity = cls._user_dao_.verify_email(loginRequest.email, db)

@@ -40,7 +40,7 @@ class ClientService:
 
     @classmethod
     async def create_client(cls, client_req: ClientRequestDTO, db: Session):
-        cls._client_validator_.validate_fields(client_req.__dict__)
+        await cls._client_validator_.validate_fields(client_req.__dict__)
         id_login_created = await cls._login_service_.create_user_login(client_req.email, client_req.password, "Cliente",
                                                                        db)
         client_is_created = cls._client_dao_.create_client(client_req, id_login_created, db)
@@ -59,14 +59,14 @@ class ClientService:
     async def create_client_social_networks(self, client_request: ClientSocialRegistrationRequest, db: Session):
 
         # fields validations
-        client_request.validate_fields()
+        await client_request.validate_fields()
 
         # verify if email exists
         user: UserEntity = self._user_dao_.verify_email(client_request.email, db)
 
         if not user:
             # try to verify the token and decode it
-            token = self._tokenService_.decode_token_firebase(client_request.token)
+            token = await self._tokenService_.decode_token_firebase(client_request.token)
 
             if token.email != client_request.email:
                 await self._throwerExceptions.throw_custom_exception(name=Constants.LOGIN_ERROR,

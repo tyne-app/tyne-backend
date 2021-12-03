@@ -47,4 +47,4 @@ async def create_client(response: Response, client_req: ClientRequestDTO,
 )
 async def create_client_with_social_networks(response: Response, client: ClientSocialRegistrationRequest,
                                              db: Session = Depends(database.get_data_base)):
-    return _client_service_.create_client_social_networks(client, db)
+    return await _client_service_.create_client_social_networks(client, db)

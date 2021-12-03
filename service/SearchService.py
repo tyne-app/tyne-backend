@@ -28,14 +28,15 @@ class SearchService:
 
         search_parameters = self.clear_null_values(values=parameters)  # TODO: Formato datetime validar con otra función y no con REGEX
 
-        self.search_validator.validate_search_parameters(search_parameters=search_parameters)
+        await self.search_validator.validate_search_parameters(search_parameters=search_parameters)
 
         if search_parameters['date_reservation']:
             search_parameters['date_reservation'] = search_parameters['date_reservation'].replace("/", "-")
             logger.info('search_parameters[date_reservation]: {}', search_parameters['date_reservation'])
 
-        all_branches_result = self.search_dao \
-            .search_all_branches(search_parameters=search_parameters, client_id=client_id,
+        all_branches_result = self._search_dao \
+            .search_all_branches(search_parameters=search_parameters,
+                                 client_id=client_id,
                                  db=db, limit=self.TOTAL_ITEMS_PAGE)
 
         if type(all_branches_result) is str:
