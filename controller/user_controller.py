@@ -55,7 +55,8 @@ async def social_login(response: Response,
 async def upload_profile_image(request: Request, response: Response, image: UploadFile = File(...),
                                db: Session = Depends(database.get_data_base)):
     token_payload = await _jwt_service_.verify_and_get_token_data(request)
-    response = _service_.change_profile_image(token_payload.id_user, image.file, db)
+
+    response = await _service_.change_profile_image(token_payload.id_user, image.file, db)
     return response
 
 
