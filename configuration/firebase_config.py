@@ -4,9 +4,7 @@ import os
 
 class FirebaseConfig:
 
-    @classmethod
-    def init_firebase(cls):
-
+    def init_firebase(self):
         if len(firebase_admin._apps) == 0:
             cred_obj = firebase_admin.credentials.Certificate(
                 os.path.abspath("./configuration/firebase_credentials.json"))

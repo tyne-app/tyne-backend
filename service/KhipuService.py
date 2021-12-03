@@ -3,7 +3,7 @@ from datetime import time
 
 from khipupy import Khipupy
 from starlette import status
-
+from pykhipu.client import Client
 from configuration.Settings import Settings
 from dto.internal.KhipuResponse import KhipuResponse
 from exception.exceptions import CustomError

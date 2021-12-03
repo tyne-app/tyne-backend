@@ -92,7 +92,8 @@ async def custom_exception_handler(request: Request, exc: CustomError):
 
 
 # init firebase
-FirebaseConfig.init_firebase()
+firebase_config = FirebaseConfig()
+firebase_config.init_firebase()
 
 api_local.include_router(bank_controller.bank_controller)
 api_local.include_router(business_controller.business_controller)

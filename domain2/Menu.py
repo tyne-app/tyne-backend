@@ -15,8 +15,7 @@ class Menu:
     def __init__(self):
         self.sections = list()
 
-    @classmethod
-    def to_menu_read_domain(cls, products: list[ProductEntity], branch: BranchEntity, opinions):
+    def to_menu_read_domain(self, products: list[ProductEntity], branch: BranchEntity, opinions):
         menu_domain = Menu()
 
         menu_domain.set_branch_id(branch)

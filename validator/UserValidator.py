@@ -9,20 +9,19 @@ class UserValidator:
     _utils_validator_ = UtilsValidator()
     _throwerExceptions = ThrowerExceptions()
 
-    @classmethod
-    async def validate_fields(cls, fields):
+    async def validate_fields(self, fields):
 
         invalid_data = {}
 
-        if not cls._utils_validator_.validate_email(fields["email"]):
-            invalid_data["email"] = cls._utils_validator_.INVALID_DATA_MESSAGE
+        if not self._utils_validator_.validate_email(fields["email"]):
+            invalid_data["email"] = self._utils_validator_.INVALID_DATA_MESSAGE
 
-        if not cls._utils_validator_.validate_not_empty(fields["password"]):
+        if not self._utils_validator_.validate_not_empty(fields["password"]):
             # TODO: Mejorar logica de password
-            invalid_data["password"] = cls._utils_validator_.INVALID_DATA_MESSAGE
+            invalid_data["password"] = self._utils_validator_.INVALID_DATA_MESSAGE
 
         if invalid_data:
-            await cls._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
+            await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
                                                                 detail=invalid_data,
                                                                 status_code=status.HTTP_400_BAD_REQUEST)
 

@@ -14,8 +14,7 @@ class LocalReservationRequest:
     page_number: int
     status_reservation: int
 
-    @classmethod
-    async def validate_fields(cls, local_reservation_request):
+    async def validate_fields(self, local_reservation_request):
 
         if not local_reservation_request.reservation_date:
             await _throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,

@@ -39,8 +39,7 @@ class LocalReservationsResponse:
     total_pages: int
     local_reservations_date: list[LocalReservationsDate]
 
-    @classmethod
-    def local_reservations(cls, localReservations: list, localReservationsDate: list, result_for_page: int,
+    def local_reservations(self, localReservations: list, localReservationsDate: list, result_for_page: int,
                            page_number: int):
 
         reservations_response = LocalReservationsResponse()
@@ -95,7 +94,8 @@ class LocalReservationsResponse:
                     local_reservations_list.append(local_reservations_obj)
             if len(local_reservations_list) > 0:
                 local_reservations_date_obj.reservation_date = local_reservations_date.reservation_date
-                local_reservations_date_obj.reservation_week_day = local_reservations_date.reservation_date.strftime("%A")
+                local_reservations_date_obj.reservation_week_day = local_reservations_date.reservation_date.strftime(
+                    "%A")
                 local_reservations_date_obj.reservation_attended = reservation_attended
                 local_reservations_date_obj.reservation_confirmed = reservation_confirmed
                 local_reservations_date_obj.reservation_canceled = reservation_canceled

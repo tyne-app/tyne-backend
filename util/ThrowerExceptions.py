@@ -8,8 +8,7 @@ from util.Constants import Constants
 
 class ThrowerExceptions:
 
-    @classmethod
-    async def throw_custom_exception(cls,
+    async def throw_custom_exception(self,
                                      name=Constants.INTERNAL_ERROR,
                                      detail=Constants.INTERNAL_ERROR_DETAIL,
                                      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -19,8 +18,7 @@ class ThrowerExceptions:
                           status_code=status_code,
                           cause=cause)
 
-    @classmethod
-    async def response_custom_exception(cls, exc):
+    async def response_custom_exception(self, exc):
         return JSONResponse(
             status_code=exc.status_code,
             content=jsonable_encoder({
@@ -29,8 +27,7 @@ class ThrowerExceptions:
             })
         )
 
-    @classmethod
-    async def response_internal_exception(cls):
+    async def response_internal_exception(self):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=jsonable_encoder({

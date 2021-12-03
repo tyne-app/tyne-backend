@@ -22,12 +22,11 @@ class ReservationDetailResponse:
     reservation_date: datetime
     hour: str
     total_price: int
-    name: str;
-    last_name: str;
+    name: str
+    last_name: str
     reservation_detail: list[ReservationDetail]
 
-    @classmethod
-    def reservation_detail(cls, reservationDetail: list):
+    def reservation_detail(self, reservationDetail: list):
         reservations_detail_response = ReservationDetailResponse()
 
         reservation_detail_list: list[ReservationDetail] = []
