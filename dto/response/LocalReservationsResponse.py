@@ -19,6 +19,7 @@ class LocalReservations:
     state: str
     city: str
     country: str
+    payment_id: str
 
 
 class LocalReservationsDate:
@@ -77,6 +78,7 @@ class LocalReservationsResponse:
                     local_reservations_obj.state = local_reservations.state
                     local_reservations_obj.city = local_reservations.city
                     local_reservations_obj.country = local_reservations.country
+                    local_reservations_obj.payment_id = local_reservations.payment_id
 
                     if local_reservations_obj.status_id == 4:
                         reservation_pending += 1
