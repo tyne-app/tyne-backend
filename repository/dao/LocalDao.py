@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 
-from loguru import logger
 from starlette import status
 
 from configuration.database.database import SessionLocal
@@ -11,7 +10,6 @@ from repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
 from repository.entity.ManagerEntity import ManagerEntity
 from repository.entity.RestaurantEntity import RestaurantEntity
-from repository.entity.ScheduleEntity import ScheduleEntity
 from repository.entity.UserEntity import UserEntity
 from util.Constants import Constants
 from util.ThrowerExceptions import ThrowerExceptions
@@ -29,12 +27,6 @@ class LocalDAO:
                          branch_bank_entity: BranchBankEntity,
                          branch_image_entity: BranchImageEntity,
                          db: SessionLocal):
-
-        logger.info('manager_entity: {}, legal_representative_entity: {},'
-                    ' restaurant_entity: {}, branch_entity: {}, branch_bank_entity: {}, branch_image_entity: {}',
-                    manager_entity, legal_representative_entity, restaurant_entity, branch_entity, branch_bank_entity,
-                    branch_image_entity)
-
         db.begin()
 
         user_entity.created_date = datetime.now(tz=timezone.utc)
@@ -76,7 +68,7 @@ class LocalDAO:
                    BranchEntity.description,
                    BranchEntity.state_id, BranchEntity.street, BranchEntity.street_number,
                    RestaurantEntity.name, RestaurantEntity.commercial_activity,
-                                     RestaurantEntity.phone) \
+                   RestaurantEntity.phone) \
             .select_from(BranchEntity).join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
             .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
             .join(UserEntity, UserEntity.id == ManagerEntity.id_user) \
@@ -93,13 +85,13 @@ class LocalDAO:
 
         manager_entity = db \
             .query(ManagerEntity.id, ManagerEntity.last_name,
-                                      ManagerEntity.name, ManagerEntity.phone,
-                                      ManagerEntity.id_user,
-                                      UserEntity.email).select_from(ManagerEntity).join(
-                UserEntity,
-                UserEntity.id == ManagerEntity.id_user) \
+                   ManagerEntity.name, ManagerEntity.phone,
+                   ManagerEntity.id_user,
+                   UserEntity.email).select_from(ManagerEntity).join(
+            UserEntity,
+            UserEntity.id == ManagerEntity.id_user) \
             .filter(
-                ManagerEntity.id == branch_entity.manager_id) \
+            ManagerEntity.id == branch_entity.manager_id) \
             .first()
 
         if not manager_entity:
@@ -118,8 +110,11 @@ class LocalDAO:
 
         profile['image_list'] = image_list
 
-            schedule = db.query(BranchScheduleEntity).filter(
-                BranchScheduleEntity.branch_id == branch_id).filter(BranchScheduleEntity.active).all()
+        schedule = db \
+            .query(BranchScheduleEntity) \
+            .filter(BranchScheduleEntity.branch_id == branch_id) \
+            .filter(BranchScheduleEntity.active) \
+            .all()
 
         profile['schedule_list'] = schedule
 
@@ -133,9 +128,6 @@ class LocalDAO:
                        branch_bank_entity: BranchBankEntity,
                        branch_image_entity: BranchImageEntity,
                        db: SessionLocal):
-        logger.info('branch_id: {}, manager_entity: {}, branch_entity: {},'
-                    ' branch_bank_entity: {}, branch_image_entity: {}',
-                    branch_id, manager_entity, branch_entity, branch_bank_entity, branch_image_entity)
         db.begin()
 
         user_entity.created_date = datetime.now(tz=timezone.utc)
@@ -160,13 +152,15 @@ class LocalDAO:
         branch_image_entity.branch_id = branch_entity.id
         db.add(branch_image_entity)
         db.commit()
+
         return True
 
 
-def find_branch_by_email_user_manager(self, email: str, db: SessionLocal):
-    branch: BranchEntity = db.query(BranchEntity). \
-        select_from(BranchEntity). \
-        join(ManagerEntity, BranchEntity.manager_id == ManagerEntity.id). \
-        join(UserEntity, ManagerEntity.id_user == UserEntity.id). \
-        filter(UserEntity.email == email).first()
-    return branch
+    def find_branch_by_email_user_manager(self, email: str, db: SessionLocal):
+        return db \
+            .query(BranchEntity) \
+            .select_from(BranchEntity) \
+            .join(ManagerEntity, BranchEntity.manager_id == ManagerEntity.id) \
+            .join(UserEntity, ManagerEntity.id_user == UserEntity.id) \
+            .filter(UserEntity.email == email) \
+            .first()

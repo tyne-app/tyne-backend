@@ -1,21 +1,20 @@
 from loguru import logger
 from sqlalchemy import func, distinct, or_
+
 from configuration.database.database import SessionLocal
-from repository.entity.BranchImageEntity import BranchImageEntity
+from dto.request.business_request_dto import SearchParameter
 from repository.entity.BranchEntity import BranchEntity
-from repository.entity.StateEntity import StateEntity
-from repository.entity.RestaurantEntity import RestaurantEntity
+from repository.entity.BranchImageEntity import BranchImageEntity
+from repository.entity.BranchScheduleEntity import BranchScheduleEntity
+from repository.entity.ClientEntity import ClientEntity
+from repository.entity.ManagerEntity import ManagerEntity
 from repository.entity.OpinionEntity import OpinionEntity
 from repository.entity.ProductEntity import ProductEntity
-from repository.entity.ReservationEntity import ReservationEntity
-from repository.entity.ManagerEntity import ManagerEntity
-from repository.entity.UserEntity import UserEntity
 from repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
-from repository.entity.ScheduleEntity import ScheduleEntity
-from repository.entity.BranchScheduleEntity import BranchScheduleEntity
-from repository.entity.BranchImageEntity import BranchImageEntity
-from repository.entity.ClientEntity import ClientEntity
-from dto.request.business_request_dto import SearchParameter
+from repository.entity.ReservationEntity import ReservationEntity
+from repository.entity.RestaurantEntity import RestaurantEntity
+from repository.entity.StateEntity import StateEntity
+from repository.entity.UserEntity import UserEntity
 
 
 class SearchDAO:
@@ -86,9 +85,9 @@ class SearchDAO:
                 .group_by(ReservationEntity.id).cte(name='reservation_data')
 
             all_branches = all_branches.filter(BranchEntity.id.in_(db.query(reservation_data.c.branch_id) \
-                                                                   .select_from(reservation_data) \
-                                                                   .group_by(reservation_data.c.branch_id) \
-                                                                   .having(
+                .select_from(reservation_data) \
+                .group_by(reservation_data.c.branch_id) \
+                .having(
                 func.count(reservation_data.c.reservation_id) < 4)))
 
         if search_parameters['state_id']:

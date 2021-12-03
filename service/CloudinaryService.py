@@ -21,7 +21,7 @@ class CloudinaryService:
     )
 
     @classmethod
-    def upload_image(cls, file: UploadFile, user_id: int):
+    async def upload_image(cls, file: UploadFile, user_id: int):
         try:
             folder = cls._settings_.ENVIRONMENT + "/users/" + str(user_id)
             response = cloudinary.uploader.upload_image(file, folder=folder)
@@ -33,7 +33,7 @@ class CloudinaryService:
                                                                 cause=exception)
 
     @classmethod
-    def delete_file(cls, id_image: str):
+    async def delete_file(cls, id_image: str):
         try:
             response = cloudinary.uploader.destroy(id_image)
 

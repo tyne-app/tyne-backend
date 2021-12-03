@@ -1,11 +1,12 @@
-from datetime import datetime, timezone, timedelta, time
+import time
+from datetime import time
+
 from khipupy import Khipupy
 from starlette import status
+
 from configuration.Settings import Settings
 from dto.internal.KhipuResponse import KhipuResponse
-from pykhipu.client import Client
 from exception.exceptions import CustomError
-import time
 
 
 class KhipuService:

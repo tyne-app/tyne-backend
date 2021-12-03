@@ -165,7 +165,7 @@ class LocalValidator:
         if data_checked:
             self.raise_custom_error(message=data_checked)
 
-    def raise_custom_error(self, message):
+    async def raise_custom_error(self, message):
         await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
                                                              detail=message,
                                                              status_code=status.HTTP_400_BAD_REQUEST)

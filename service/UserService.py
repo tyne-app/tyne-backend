@@ -74,7 +74,7 @@ class UserService:
         return tokenResponse
 
     @classmethod
-    def social_login_user(cls, loginRequest: LoginSocialRequest, ip: str, db: Session):
+    async def social_login_user(cls, loginRequest: LoginSocialRequest, ip: str, db: Session):
 
         id_branch_client = None
         name = None
@@ -145,7 +145,7 @@ class UserService:
         return response_dto
 
     @classmethod
-    def delete_profile_image(cls, user_id: int, db: Session):
+    async def delete_profile_image(cls, user_id: int, db: Session):
         user: UserEntity = cls._user_dao_.get_user(user_id, db)
 
         if user is None:

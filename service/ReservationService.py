@@ -1,13 +1,15 @@
+import uuid
 from datetime import timezone, datetime
-from loguru import logger
+
 from sqlalchemy.orm import Session
 from starlette import status
-from dto.request.NewReservationRequest import NewReservationRequest
+
 from dto.request.LocalReservationsRequest import LocalReservationRequest
+from dto.request.NewReservationRequest import NewReservationRequest
 from dto.request.UpdateReservationRequest import UpdateReservationRequest
-from dto.response.ReservationResponse import ReservationResponse
 from dto.response.LocalReservationsResponse import LocalReservationsResponse
 from dto.response.ReservationDetailResponse import ReservationDetailResponse
+from dto.response.ReservationResponse import ReservationResponse
 from dto.response.SimpleResponse import SimpleResponse
 from dto.response.UpdateReservationResponse import UpdateReservationResponse
 from enums.ReservationStatusEnum import ReservationStatusEnum
@@ -23,8 +25,6 @@ from repository.entity.ReservationChangeStatusEntity import ReservationChangeSta
 from repository.entity.ReservationEntity import ReservationEntity
 from repository.entity.ReservationProductEntity import ReservationProductEntity
 from service.KhipuService import KhipuService
-from dto.dto import GenericDTO as responseDTO
-import uuid
 
 
 class ReservationService:
@@ -34,7 +34,7 @@ class ReservationService:
     _reservation_dao_ = ReservationDao()
     _payment_dao_ = PaymentDao()
 
-    def create_reservation(self, client_id: int, reservation: NewReservationRequest, db: Session):
+    async def create_reservation(self, client_id: int, reservation: NewReservationRequest, db: Session):
 
         reservation_id = 0
 
@@ -152,7 +152,8 @@ class ReservationService:
             raise error
 
     @classmethod
-    def local_reservations(cls, branch_id: int,
+    async def local_reservations(cls,
+                           branch_id: int,
                            reservation_date: datetime,
                            result_for_page: int,
                            page_number: int,
@@ -164,19 +165,19 @@ class ReservationService:
         local_reservation_request.page_number = page_number
         local_reservation_request.status_reservation = status_reservation
 
-        local_reservation_request.validate_fields(local_reservation_request)
+        await local_reservation_request.validate_fields(local_reservation_request)
 
-        reservations = ReservationDao.local_reservations(db
-                                                         , branch_id
-                                                         , reservation_date
-                                                         , status_reservation)
+        reservations = ReservationDao.local_reservations(db,
+                                                         branch_id,
+                                                         reservation_date,
+                                                         status_reservation)
 
-        reservations_date = ReservationDao.local_reservations_date(db
-                                                                   , branch_id
-                                                                   , status_reservation
-                                                                   , reservation_date
-                                                                   , result_for_page
-                                                                   , page_number)
+        reservations_date = ReservationDao.local_reservations_date(db,
+                                                                   branch_id,
+                                                                   status_reservation,
+                                                                   reservation_date,
+                                                                   result_for_page,
+                                                                   page_number)
 
         local_reservations_response = LocalReservationsResponse()
         response = local_reservations_response.local_reservations(reservations,
@@ -205,7 +206,7 @@ class ReservationService:
             await self._throwerExceptions.throw_custom_exception(name=Constants.RESERVATION_GET_ERROR,
                                                                  detail=Constants.RESERVATION_NOT_FOUND_ERROR,
                                                                  status_code=status.HTTP_204_NO_CONTENT)
-    return reservations
+        return reservations
 
     def update_reservation(self, reservation_updated: UpdateReservationRequest, db: Session):
 
@@ -237,7 +238,6 @@ class ReservationService:
                 reservation_updated.status.value == ReservationStatusEnum.cancelado_local.value or \
                 reservation_updated.status.value == ReservationStatusEnum.reserva_confirmada.value or \
                 reservation_updated.status.value == ReservationStatusEnum.reserva_atendida.value:
-
             reservation_status = ReservationChangeStatusEntity()
             reservation_status.status_id = reservation_updated.status.value
             reservation_status.datetime = datetime.now(tz=timezone.utc)

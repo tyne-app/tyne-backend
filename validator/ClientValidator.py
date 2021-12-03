@@ -10,7 +10,7 @@ class ClientValidator:
     _throwerExceptions = ThrowerExceptions()
 
     @classmethod
-    def validate_fields(cls, fields):
+    async def validate_fields(cls, fields):
         invalid_data = {}
 
         if cls._utils_validator_.validate_phone(fields["phone"]):

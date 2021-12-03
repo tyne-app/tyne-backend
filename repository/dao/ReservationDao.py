@@ -1,22 +1,21 @@
-from sqlalchemy.orm import Session, aliased
-from sqlalchemy import func, distinct, extract, subquery
-from starlette import status
-from exception.exceptions import CustomError
+from datetime import date
+
+from sqlalchemy import func, distinct, extract
+from sqlalchemy.orm import Session
+
+from repository.entity.BranchEntity import BranchEntity
 from repository.entity.BranchImageEntity import BranchImageEntity
+from repository.entity.CategoryEntity import CategoryEntity
+from repository.entity.CityEntity import CityEntity
+from repository.entity.ClientEntity import ClientEntity
+from repository.entity.CountryEntity import CountryEntity
 from repository.entity.PaymentEntity import PaymentEntity
 from repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
-from repository.entity.ReservationStatusEntity import ReservationStatusEntity
 from repository.entity.ReservationEntity import ReservationEntity
 from repository.entity.ReservationProductEntity import ReservationProductEntity
-from repository.entity.ProductEntity import ProductEntity
-from repository.entity.CategoryEntity import CategoryEntity
-from repository.entity.ClientEntity import ClientEntity
-from repository.entity.BranchEntity import BranchEntity
+from repository.entity.ReservationStatusEntity import ReservationStatusEntity
 from repository.entity.RestaurantEntity import RestaurantEntity
 from repository.entity.StateEntity import StateEntity
-from repository.entity.CityEntity import CityEntity
-from repository.entity.CountryEntity import CountryEntity
-from datetime import date
 
 
 class ReservationDao:
@@ -25,52 +24,43 @@ class ReservationDao:
     def create_reservation(cls, reservation: ReservationEntity, reservation_status: ReservationChangeStatusEntity,
                            products: list[ReservationProductEntity],
                            db: Session):
-        try:
-            db.add(reservation)
-            db.flush()
+        db.add(reservation)
+        db.flush()
 
-            reservation_status.reservation_id = reservation.id
+        reservation_status.reservation_id = reservation.id
 
-            db.add(reservation_status)
-            db.flush()
+        db.add(reservation_status)
+        db.flush()
 
-            for x in products:
-                x.reservation_id = reservation.id
+        for x in products:
+            x.reservation_id = reservation.id
 
-            db.bulk_save_objects(products)
-            db.flush()
+        db.bulk_save_objects(products)
+        db.flush()
 
-            db.commit()
+        db.commit()
 
-            return reservation
-        except Exception as error:
-            db.rollback()
-            raise CustomError(name="Error al guardar reserva",
-                              detail="Error",
-                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                              cause=error)
+        return reservation
 
     @classmethod
     def update_payment_id_reservation(cls, reservation_id: int, payment_id: str, db: Session):
-        try:
+        reservation: ReservationEntity = db \
+            .query(ReservationEntity) \
+            .filter(ReservationEntity.id == reservation_id) \
+            .first()
 
-            reservation: ReservationEntity = db \
-                .query(ReservationEntity) \
-                .filter(ReservationEntity.id == reservation_id) \
-                .first()
-
-            if reservation:
-                reservation.payment_id = payment_id
-                db.commit()
-                return reservation
-
+        if reservation:
+            reservation.payment_id = payment_id
+            db.commit()
             return reservation
+
+        return reservation
 
     @classmethod
     def add_reservation_status(cls, reservation_status: ReservationChangeStatusEntity, db: Session):
-            db.add(reservation_status)
-            db.commit()
-            return reservation_status
+        db.add(reservation_status)
+        db.commit()
+        return reservation_status
 
     @classmethod
     def local_reservations(cls, db: Session, branch_id: int, reservation_date: date, status_reservation: int):
@@ -128,13 +118,14 @@ class ReservationDao:
         else:
             filter_status_reservation = [status_reservation]
 
-        sub_query = db.query(ReservationChangeStatusEntity.reservation_id, ReservationChangeStatusEntity.id) \
-            .order_by(ReservationChangeStatusEntity.reservation_id.desc(),
-                      ReservationChangeStatusEntity.datetime.desc()) \
+        sub_query = db \
+            .query(ReservationChangeStatusEntity.reservation_id, ReservationChangeStatusEntity.id) \
+            .order_by(ReservationChangeStatusEntity.reservation_id.desc(), ReservationChangeStatusEntity.datetime.desc()) \
             .distinct(ReservationChangeStatusEntity.reservation_id) \
             .subquery()
 
-        total_items = db.query(func.count(distinct(ReservationEntity.reservation_date))) \
+        total_items = db \
+            .query(func.count(distinct(ReservationEntity.reservation_date))) \
             .filter(ReservationEntity.branch_id == branch_id,
                     extract("month", ReservationEntity.reservation_date) == reservation_date.month,
                     extract("year", ReservationEntity.reservation_date) == reservation_date.year,
@@ -162,7 +153,7 @@ class ReservationDao:
             .slice((page_number - 1) * result_for_page, ((page_number - 1) * result_for_page) + result_for_page) \
             .all()
 
-        return reservations_date
+        return reservations_date_response
 
     @classmethod
     def reservation_detail(cls, db: Session, reservation_id: int):
@@ -198,27 +189,26 @@ class ReservationDao:
 
     @classmethod
     def get_reservations(cls, client_id, db: Session):
-        try:
-            return db \
-                .query(ReservationEntity.id,
-                                    RestaurantEntity.name.label("restaurant_name"), ReservationEntity.people,
-                                    ReservationEntity.reservation_date,
-                                    ReservationEntity.hour, PaymentEntity.amount,
-                                    BranchEntity.street.label("branch_street_address"),
-                                    BranchEntity.street_number.label("branch_street_number"),
-                                    BranchImageEntity.url_image,
-                                    PaymentEntity.date.label("payment_datetime")) \
-                .join(BranchEntity, BranchEntity.id == ReservationEntity.branch_id) \
-                .join(PaymentEntity, PaymentEntity.reservation_id == ReservationEntity.id) \
-                .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
-                .join(BranchImageEntity, BranchImageEntity.branch_id == BranchEntity.id) \
-                .filter(ReservationEntity.client_id == client_id) \
-                .filter(BranchImageEntity.is_main_image) \
-                .all()
+        return db \
+            .query(ReservationEntity.id,
+                   RestaurantEntity.name.label("restaurant_name"), ReservationEntity.people,
+                   ReservationEntity.reservation_date,
+                   ReservationEntity.hour, PaymentEntity.amount,
+                   BranchEntity.street.label("branch_street_address"),
+                   BranchEntity.street_number.label("branch_street_number"),
+                   BranchImageEntity.url_image,
+                   PaymentEntity.date.label("payment_datetime")) \
+            .join(BranchEntity, BranchEntity.id == ReservationEntity.branch_id) \
+            .join(PaymentEntity, PaymentEntity.reservation_id == ReservationEntity.id) \
+            .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
+            .join(BranchImageEntity, BranchImageEntity.branch_id == BranchEntity.id) \
+            .filter(ReservationEntity.client_id == client_id) \
+            .filter(BranchImageEntity.is_main_image) \
+            .all()
 
     @classmethod
     def get_reservation(cls, reservation_id: int, payment_id: str, db: Session):
-            return db \
-                .query(ReservationEntity).filter(ReservationEntity.id == reservation_id) \
-                .filter(ReservationEntity.payment_id == payment_id) \
-                .first()
+        return db \
+            .query(ReservationEntity).filter(ReservationEntity.id == reservation_id) \
+            .filter(ReservationEntity.payment_id == payment_id) \
+            .first()

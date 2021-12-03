@@ -46,7 +46,7 @@ class JwtService:
         return tokenResponse
 
     @classmethod
-    def decode_token_firebase(cls, token: str):
+    async def decode_token_firebase(cls, token: str):
 
         try:
             decoded_token = auth.verify_id_token(token)

@@ -56,7 +56,7 @@ class ClientService:
 
         return client_is_created
 
-    def create_client_social_networks(self, client_request: ClientSocialRegistrationRequest, db: Session):
+    async def create_client_social_networks(self, client_request: ClientSocialRegistrationRequest, db: Session):
 
         # fields validations
         client_request.validate_fields()
