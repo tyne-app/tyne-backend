@@ -89,8 +89,8 @@ class SearchService:
             'max_price': branch_dict['aggregate_values']['max_price'] if branch_dict['aggregate_values'] else 0,
             'branches': branch_dict['branches'],
             'images': branch_dict['images'],
-            'schedule': branch_dict['schedule'],
-            'opinions': branch_dict['opinions']
+            'schedule': branch_dict['schedule']
+            # 'opinions': branch_dict['opinions']
         }
         logger.info('branch_profile: {}', branch_profile)
         return branch_profile
