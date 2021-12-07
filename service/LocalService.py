@@ -79,41 +79,28 @@ class LocalService:
         return self._business_mapper_request.to_branch_create_response(content=self.MSG_CREATE_ACCOUNT_SUCCESSFULLY)
 
     async def geocoding(self, street: str, street_number: int, state_name: str):
-        logger.info('street: {}, street_number: {}', street, street_number)
         mapbox_service = MapBoxService()
-
         address = street + " " + str(street_number)
-        logger.info('address: {}', address)
-
         coordinates = await mapbox_service.get_latitude_longitude(address=address, state_name=state_name)
-        logger.info("coordinates: {}", coordinates)
         return coordinates
 
     def get_account_profile(self, branch_id: int, db: Session):
         return self._local_dao.get_account_profile(branch_id=branch_id, db=db)
 
     async def add_new_branch(self, branch_id, new_branch: NewBranch, db: Session):
-        logger.info('branch_id: {}', branch_id)
         local_validator = LocalValidator()
         local_validator.validate_new_branch(new_branch=new_branch)
 
         branch = new_branch.branch
-        logger.info('branch: {}', branch)
 
         state = self._state_dao_.get_state_by_id(id_state=branch.state_id, db=db)
-        logger.info('state.name: {}', state.name)
 
         branch_geocoding = await self.geocoding(street=branch.street, street_number=branch.street_number,
                                                 state_name=state.name)
-        logger.info('branch_geocoding: {}', branch_geocoding)
-
         manager = new_branch.manager
-        logger.info('manager: {}', manager)
 
         user = {'email': manager.email, 'password': manager.password}
-        logger.info('user: {}', user)
         user_entity = self._business_mapper_request.to_user_entity(user_dict=user, id_user_type=self.ID_USER_TYPE)
-        logger.info('user_entity: {}', user_entity)
 
         manager_entity = self._business_mapper_request.to_manager_entity(manager=manager)
 
