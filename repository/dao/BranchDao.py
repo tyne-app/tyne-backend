@@ -179,7 +179,11 @@ class BranchDao:
         branches = db.query(
             BranchEntity.id.label(name='branch_id'),
             RestaurantEntity.name.label(name='restaurant_name'),
-            StateEntity.name.label(name='state_name')) \
+            StateEntity.name.label(name='state_name'),
+            BranchEntity.street,
+            BranchEntity.street_number,
+            BranchEntity.latitude,
+            BranchEntity.longitude,) \
             .select_from(BranchEntity) \
             .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
             .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
@@ -202,17 +206,16 @@ class BranchDao:
         branch_dict['images'] = images
         logger.info('branch_dict: {}', branch_dict)
 
-        opinions = db \
-            .query(OpinionEntity.id,
-                   OpinionEntity.description,
-                   OpinionEntity.qualification,
-                   OpinionEntity.creation_date,
-                   ClientEntity.name.label(name='client_name')) \
-            .select_from(OpinionEntity) \
-            .join(ClientEntity, ClientEntity.id == OpinionEntity.client_id) \
-            .join(BranchEntity, BranchEntity.id == OpinionEntity.branch_id) \
-            .filter(BranchEntity.id == branch.id).all()
+        # opinions = db \
+        #     .query(OpinionEntity.id,
+        #            OpinionEntity.description,
+        #            OpinionEntity.qualification,
+        #            OpinionEntity.creation_date,
+        #            ClientEntity.name.label(name='client_name')) \
+        #     .select_from(OpinionEntity) \
+        #     .join(ClientEntity, ClientEntity.id == OpinionEntity.client_id) \
+        #     .join(BranchEntity, BranchEntity.id == OpinionEntity.branch_id) \
+        #     .filter(BranchEntity.id == branch.id).all()
 
-        branch_dict['opinions'] = opinions
-        logger.info('branch_dict: {}', branch_dict)
+        # branch_dict['opinions'] = opinions
         return branch_dict
