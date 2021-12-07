@@ -21,7 +21,7 @@ class MapBoxService:
             try:
                 mapbox_api = self.settings.MAPBOX_API
                 mapbox_access_token = self.settings.MAPBOX_ACCESS_TOKEN
-                full_address = address + " " + self.BASE_COUNTRY
+                full_address = address
                 logger.info("mapbox_appi: {}, mapbox_access_token: {}, full_addres: {}", full_address, mapbox_api,
                             mapbox_access_token)
 
@@ -64,22 +64,22 @@ class MapBoxService:
                                                                      cause=error)
 
     def extract_coordinates(self, data, state_name: str):
-        logger.info("data: {}", data)
+        # logger.info("data: {}", data)
 
         features = data['features']
-        logger.info("features: {}", features)
+        # logger.info("features: {}", features)
 
         coordenates = None
         is_state = False
         is_country = False
 
         for feature in features:
-            logger.info("feature: {}", feature)
+            # logger.info("feature: {}", feature)
             contexts = feature['context']
-            logger.info("contexts: {}", contexts)
+            # logger.info("contexts: {}", contexts)
 
             for context in contexts:
-                logger.info("context: {}", context)
+                # logger.info("context: {}", context)
 
                 if self.KEY_WORD_PLACE.lower() in context['id'].lower():
                     if state_name.lower() in context['text'].lower():
@@ -91,7 +91,10 @@ class MapBoxService:
 
                 if is_state and is_country:
                     coordenates = feature['center']
-                    logger.info("coordenates: {}", coordenates)
+                    #logger.info("coordenates: {}", coordenates)
                     return coordenates
 
+        print(state_name)
+        print(is_state)
+        print(is_country)
         return coordenates
