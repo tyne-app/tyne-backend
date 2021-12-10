@@ -19,5 +19,6 @@ class RestaurantEntity(Base):
     street_number = Column(Integer)
     state_id = Column(Integer, ForeignKey('tyne.state.id'))
     legal_representative_id = Column(Integer, ForeignKey('tyne.legal_representative.id'))
+    description = Column(String(300))
 
     branch = relationship("BranchEntity", back_populates='restaurant')

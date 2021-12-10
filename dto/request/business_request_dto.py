@@ -31,6 +31,7 @@ class Restaurant(BaseModel):
     street: str
     street_number: int
     state_id: int
+    description: str
 
 
 class Branch(BaseModel):

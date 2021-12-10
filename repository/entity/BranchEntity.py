@@ -13,7 +13,6 @@ class BranchEntity(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     accept_pet = Column(Boolean)
-    description = Column(String(100))
     street = Column(String(100))
     latitude = Column(DECIMAL)
     longitude = Column(DECIMAL)
