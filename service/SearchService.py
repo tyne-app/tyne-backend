@@ -22,8 +22,6 @@ class SearchService:
     _throwerExceptions = ThrowerExceptions()
 
     async def search_all_branches(self, parameters: SearchParameter, db: Session, client_id: int):
-        logger.info('parameters: {}, client_id: {}', parameters, client_id)
-
         search_parameters = self.clear_null_values(values=parameters)  # TODO: Formato datetime validar con otra función y no con REGEX
 
         await self.search_validator.validate_search_parameters(search_parameters=search_parameters)
@@ -90,7 +88,5 @@ class SearchService:
             'branches': branch_dict['branches'],
             'images': branch_dict['images'],
             'schedule': branch_dict['schedule']
-            # 'opinions': branch_dict['opinions']
         }
-        logger.info('branch_profile: {}', branch_profile)
         return branch_profile

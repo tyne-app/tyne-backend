@@ -8,6 +8,7 @@ class PreviewBranch(BaseModel):
     state_name: str
     state_id: int
     restaurant_name: str
+    restaurant_description: str
     description: Optional[str] = None
     rating: Optional[float] = 0
     avg_price: Optional[int] = 0

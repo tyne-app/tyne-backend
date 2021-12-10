@@ -36,7 +36,7 @@ class LocalService:
     async def create_new_account(self, new_account: NewAccount, db: Session):
         local_validator = LocalValidator()
         local_validator.validate_new_account(new_account=new_account)
-
+        print(new_account.restaurant.description)
         branch = new_account.branch
 
         state = self._state_dao_.get_state_by_id(id_state=branch.state_id, db=db)

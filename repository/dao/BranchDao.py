@@ -39,6 +39,7 @@ class BranchDao:
                 StateEntity.name.label(name='state_name'),
                 StateEntity.id.label(name='state_id'),
                 RestaurantEntity.name.label(name='restaurant_name'),
+                RestaurantEntity.description.label('restaurant_description'),
                 func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id).label(name='rating'),
                 func.avg(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='avg_price'),
                 func.min(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='min_price'),
@@ -52,6 +53,8 @@ class BranchDao:
                 StateEntity.name.label(name='state_name'),
                 StateEntity.id.label(name='state_id'),
                 RestaurantEntity.name.label(name='restaurant_name'),
+                RestaurantEntity.description.label('restaurant_description'),
+
                 BranchImageEntity.url_image)
 
         all_branches = all_branches \
@@ -134,6 +137,7 @@ class BranchDao:
             BranchEntity.accept_pet,
             RestaurantEntity.id.label(name='restaurant_id'),
             RestaurantEntity.name,
+            RestaurantEntity.description,
             StateEntity.name.label(name='state_name')) \
             .select_from(BranchEntity) \
             .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
@@ -180,7 +184,7 @@ class BranchDao:
             BranchEntity.street,
             BranchEntity.street_number,
             BranchEntity.latitude,
-            BranchEntity.longitude,) \
+            BranchEntity.longitude, ) \
             .select_from(BranchEntity) \
             .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
             .join(StateEntity, StateEntity.id == BranchEntity.state_id) \

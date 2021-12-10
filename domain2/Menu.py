@@ -19,11 +19,8 @@ class Menu:
         menu_domain = Menu()
 
         menu_domain.set_branch_id(branch)
-
         menu_domain.set_name(branch)
-
         menu_domain.set_sections_and_rango_precio(products)
-
         menu_domain.set_rating(opinions)
 
         return menu_domain
@@ -32,7 +29,7 @@ class Menu:
         self.branch_id = branch.id
 
     def set_name(self, branch: BranchEntity):
-        self.nombre_local = branch.description
+        self.nombre_local = branch.restaurant.name
 
     def set_sections_and_rango_precio(self, products):
         price_set = list()
