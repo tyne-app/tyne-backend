@@ -39,7 +39,6 @@ class BranchDao:
                 StateEntity.name.label(name='state_name'),
                 StateEntity.id.label(name='state_id'),
                 RestaurantEntity.name.label(name='restaurant_name'),
-                BranchEntity.description,
                 func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id).label(name='rating'),
                 func.avg(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='avg_price'),
                 func.min(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='min_price'),
@@ -53,7 +52,6 @@ class BranchDao:
                 StateEntity.name.label(name='state_name'),
                 StateEntity.id.label(name='state_id'),
                 RestaurantEntity.name.label(name='restaurant_name'),
-                BranchEntity.description,
                 BranchImageEntity.url_image)
 
         all_branches = all_branches \
@@ -129,7 +127,6 @@ class BranchDao:
 
         branch = db.query(
             BranchEntity.id,
-            BranchEntity.description,
             BranchEntity.latitude,
             BranchEntity.longitude,
             BranchEntity.street,

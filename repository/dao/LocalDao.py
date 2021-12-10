@@ -66,7 +66,6 @@ class LocalDAO:
 
         branch_entity = db \
             .query(BranchEntity.id, BranchEntity.manager_id, BranchEntity.accept_pet,
-                   BranchEntity.description,
                    BranchEntity.state_id, BranchEntity.street, BranchEntity.street_number,
                    RestaurantEntity.name, RestaurantEntity.commercial_activity,
                    RestaurantEntity.phone) \
