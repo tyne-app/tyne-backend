@@ -103,20 +103,24 @@ class BranchDao:
 
         if search_parameters['sort_by'] and search_parameters['order_by']:  # TODO: Se implementa después
             if search_parameters['order_by'] == 1:
-                    if search_parameters['sort_by'] == 1:
-                        all_branches = all_branches.order_by((func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id)).asc())
-                    elif search_parameters['sort_by'] == 2:
-                        all_branches = all_branches.order_by(RestaurantEntity.name.asc())
-                    elif search_parameters['sort_by'] == 3:
-                        all_branches = all_branches.order_by((func.max(ProductEntity.amount).over(partition_by=BranchEntity.id)).asc())
+                if search_parameters['sort_by'] == 1:
+                    all_branches = all_branches.order_by(
+                        (func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id)).asc())
+                elif search_parameters['sort_by'] == 2:
+                    all_branches = all_branches.order_by(RestaurantEntity.name.asc())
+                elif search_parameters['sort_by'] == 3:
+                    all_branches = all_branches.order_by(
+                        (func.max(ProductEntity.amount).over(partition_by=BranchEntity.id)).asc())
 
-                elif search_parameters['order_by'] == 2:
-                    if search_parameters['sort_by'] == 1:
-                        all_branches = all_branches.order_by((func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id)).asc())
-                    elif search_parameters['sort_by'] == 2:
-                        all_branches = all_branches.order_by(BranchEntity.name.desc())
-                    elif search_parameters['sort_by'] == 3:
-                        all_branches = all_branches.order_by((func.min(ProductEntity.amount).over(partition_by=BranchEntity.id)).desc())
+            elif search_parameters['order_by'] == 2:
+                if search_parameters['sort_by'] == 1:
+                    all_branches = all_branches.order_by(
+                        (func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id)).asc())
+                elif search_parameters['sort_by'] == 2:
+                    all_branches = all_branches.order_by(BranchEntity.name.desc())
+                elif search_parameters['sort_by'] == 3:
+                    all_branches = all_branches.order_by(
+                        (func.min(ProductEntity.amount).over(partition_by=BranchEntity.id)).desc())
 
         total_number_all_branches = all_branches.count()
 
