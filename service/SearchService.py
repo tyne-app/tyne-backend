@@ -2,6 +2,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from dto.request.business_request_dto import SearchParameter
+from dto.response.BranchResponse import BranchResponse
 from mappers.request.BusinessMapperRequest import BusinessMapperRequest
 from repository.dao.BranchDao import BranchDao
 from util.ThrowerExceptions import ThrowerExceptions
@@ -22,7 +23,8 @@ class SearchService:
     _throwerExceptions = ThrowerExceptions()
 
     async def search_all_branches(self, parameters: SearchParameter, db: Session, client_id: int):
-        search_parameters = self.clear_null_values(values=parameters)  # TODO: Formato datetime validar con otra función y no con REGEX
+        search_parameters = self.clear_null_values(
+            values=parameters)  # TODO: Formato datetime validar con otra función y no con REGEX
 
         await self.search_validator.validate_search_parameters(search_parameters=search_parameters)
 
@@ -37,15 +39,12 @@ class SearchService:
 
         if type(all_branches_result) is str:
             self.raise_custom_error(name=self.MSG_ERROR_ALL_BRANCHES, message=all_branches_result)
-        all_branches_result = self._branch_dao_ \
-            .search_all_branches(
-            search_parameters=search_parameters,
-            client_id=client_id,
-            db=db,
-            limit=self.TOTAL_ITEMS_PAGE)
+
+        branch_response = BranchResponse()
+        result = branch_response.to_all_branch(client_id, all_branches_result['all_branches'])
 
         total_number_all_branches = all_branches_result['total_number_all_branches']
-        all_branches = all_branches_result['all_branches']
+        all_branches = result
 
         return self._business_mapper_request. \
             to_search_branches_response(content=all_branches, total_items=total_number_all_branches,
