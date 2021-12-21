@@ -32,30 +32,18 @@ class BranchDao:
                             limit: int):
         all_branches = None
 
-        if client_id:
-            all_branches = db.query(
-                distinct(BranchEntity.id),
-                BranchEntity.id.label(name='branch_id'),
-                StateEntity.name.label(name='state_name'),
-                StateEntity.id.label(name='state_id'),
-                RestaurantEntity.name.label(name='restaurant_name'),
-                RestaurantEntity.description.label('restaurant_description'),
-                func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id).label(name='rating'),
-                func.avg(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='avg_price'),
-                func.min(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='min_price'),
-                func.max(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='max_price'),
-                BranchImageEntity.url_image)
-
-        if not client_id:
-            all_branches = db.query(
-                distinct(BranchEntity.id),
-                BranchEntity.id.label(name='branch_id'),
-                StateEntity.name.label(name='state_name'),
-                StateEntity.id.label(name='state_id'),
-                RestaurantEntity.name.label(name='restaurant_name'),
-                RestaurantEntity.description.label('restaurant_description'),
-
-                BranchImageEntity.url_image)
+        all_branches = db.query(
+            distinct(BranchEntity.id),
+            BranchEntity.id.label(name='branch_id'),
+            StateEntity.name.label(name='state_name'),
+            StateEntity.id.label(name='state_id'),
+            RestaurantEntity.name.label(name='restaurant_name'),
+            RestaurantEntity.description.label('restaurant_description'),
+            func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id).label(name='rating'),
+            func.avg(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='avg_price'),
+            func.min(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='min_price'),
+            func.max(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='max_price'),
+            BranchImageEntity.url_image)
 
         all_branches = all_branches \
             .select_from(BranchEntity) \
@@ -64,16 +52,13 @@ class BranchDao:
             .join(BranchImageEntity, BranchImageEntity.branch_id == BranchEntity.id) \
             .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
             .join(UserEntity, UserEntity.id == ManagerEntity.id_user)
-
-        if client_id:
-            all_branches = all_branches \
-                .join(ProductEntity, ProductEntity.branch_id == BranchEntity.id, isouter=True) \
-                .join(OpinionEntity, OpinionEntity.branch_id == BranchEntity.id, isouter=True)
+        all_branches = all_branches \
+            .join(ProductEntity, ProductEntity.branch_id == BranchEntity.id, isouter=True) \
+            .join(OpinionEntity, OpinionEntity.branch_id == BranchEntity.id, isouter=True)
 
         all_branches = all_branches \
             .filter(BranchImageEntity.is_main_image) \
             .filter(UserEntity.is_active)
-
         if search_parameters['name']:
             name = search_parameters['name'].lower()
             all_branches = all_branches.filter(func.lower(RestaurantEntity.name).like("%" + name + "%"))
@@ -115,13 +100,12 @@ class BranchDao:
             elif search_parameters['order_by'] == 2:
                 if search_parameters['sort_by'] == 1:
                     all_branches = all_branches.order_by(
-                        (func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id)).asc())
+                        (func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id)).desc())
                 elif search_parameters['sort_by'] == 2:
                     all_branches = all_branches.order_by(BranchEntity.name.desc())
                 elif search_parameters['sort_by'] == 3:
                     all_branches = all_branches.order_by(
                         (func.min(ProductEntity.amount).over(partition_by=BranchEntity.id)).desc())
-
         total_number_all_branches = all_branches.count()
 
         page = search_parameters['page']
