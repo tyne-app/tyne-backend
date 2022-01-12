@@ -37,6 +37,8 @@ class BranchDao:
             BranchEntity.id.label(name='branch_id'),
             StateEntity.name.label(name='state_name'),
             StateEntity.id.label(name='state_id'),
+            BranchEntity.street.label(name="street"),
+            BranchEntity.street_number.label(name="street_number"),
             RestaurantEntity.name.label(name='restaurant_name'),
             RestaurantEntity.description.label('restaurant_description'),
             func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id).label(name='rating'),

@@ -60,7 +60,7 @@ class Constants:
     BUY_INVALID_ERROR = "Compra no válida"
     KHIPU_GET_ERROR = "Error obtener datos khipu"
 
-    INVALID_DATA_ERROR = "Datos invalidos"
+    INVALID_DATA_ERROR = "Datos inválidos"
 
     DATE_EMPTY_ERROR = "Fecha de reserva no puede estar vacia"
     PAGE_LEN_ERROR = "N° de página debe ser mayor a 0"

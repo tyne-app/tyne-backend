@@ -7,6 +7,9 @@ class UtilsValidator:
     PHONE_REGEX = re.compile(r"\+569[0-9]{8}")
     EMAIL_REGEX = re.compile(r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.?[A-Za-z]+")
     INVALID_DATA_MESSAGE = "Formato no válido"
+    INVALID_DATA_PHONE = "Formato de teléfono no válido"
+    INVALID_DATA_EMAIL = "Formato de correo no válido"
+    INVALID_DATA_NOT_EMPTY_NAME = "Debe llenar nombre"
 
     def validate_email(self, email):
         return re.fullmatch(self.EMAIL_REGEX, email)
