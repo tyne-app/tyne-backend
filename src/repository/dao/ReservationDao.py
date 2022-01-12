@@ -169,6 +169,7 @@ class ReservationDao:
                                       ReservationEntity.preference,
                                       ReservationEntity.reservation_date,
                                       ReservationEntity.hour,
+                                      ReservationEntity.payment_id,
                                       CategoryEntity.id.label("category_id"),
                                       ReservationProductEntity.name_product,
                                       ReservationProductEntity.description.label("product_description"),

@@ -11,6 +11,7 @@ class ReservationDetail:
 
 class ReservationDetailResponse:
     reservation_id: int
+    payment_id: str
     reservation_week_day: str
     people: int
     street: str
@@ -54,6 +55,7 @@ class ReservationDetailResponse:
                 reservations_detail_response.reservation_date = reservation_detail.reservation_date
                 reservations_detail_response.reservation_week_day = reservation_detail.reservation_date.strftime("%A")
                 reservations_detail_response.hour = reservation_detail.hour
+                reservations_detail_response.payment_id = reservation_detail.payment_id
 
             reservation_detail_list.append(reservation_detail_obj)
         reservations_detail_response.total_price = total_price
