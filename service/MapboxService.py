@@ -50,8 +50,8 @@ class MapBoxService:
                                                                          status_code=status.HTTP_400_BAD_REQUEST,
                                                                          cause="Dirección inválida de sucursal")
                 coordenates = {
-                    'latitude': raw_coordenates[0],
-                    'longitude': raw_coordenates[1]
+                    'latitude': raw_coordenates[1],
+                    'longitude': raw_coordenates[0]
                 }
                 logger.info("coordenates: {}", coordenates)
 

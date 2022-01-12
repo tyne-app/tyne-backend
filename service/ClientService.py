@@ -15,6 +15,7 @@ from service.PasswordService import PasswordService
 from util.Constants import Constants
 from util.ThrowerExceptions import ThrowerExceptions
 from validator.ClientValidator import ClientValidator
+from dto.response.ClientCreateResponse import ClientCreateResponse
 
 
 class ClientService:
@@ -35,21 +36,18 @@ class ClientService:
         id_login_created = await self._login_service_.create_user_login(client_req.email, client_req.password,
                                                                         "Cliente",
                                                                         db)
-        client_is_created = self._client_dao_.create_client(client_req, id_login_created, db)
-
-        if not client_is_created:
-            # TODO: Validar como hacer reversa si existe una excep no controlada
-            self._user_dao_.delete_user_by_id(id_login_created, db)
-            self._login_service_.delete_user_login(client_req.email, db)
-
-            await self._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_CREATE_ERROR_DETAIL,
-                                                                 detail=Constants.CLIENT_CREATE_ERROR_DETAIL,
-                                                                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        return client_is_created
+        if id_login_created:
+            client_is_created = self._client_dao_.create_client(client_req, id_login_created.message, db)
+            if not client_is_created:
+                self._user_dao_.delete_user_by_id(id_login_created, db)
+                self._login_service_.delete_user_login(client_req.email, db)
+                await self._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_CREATE_ERROR_DETAIL,
+                                                                     detail=Constants.CLIENT_CREATE_ERROR_DETAIL,
+                                                                     status_code=status.HTTP_400_BAD_REQUEST)
+        else:
+            return id_login_created
 
     async def create_client_social_networks(self, client_request: ClientSocialRegistrationRequest, db: Session):
-
         # fields validations
         await client_request.validate_fields()
 

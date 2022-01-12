@@ -1,3 +1,5 @@
+from email.base64mime import body_decode
+
 from fastapi import status, APIRouter, Response, Depends, Request
 from sqlalchemy.orm import Session
 
@@ -50,7 +52,9 @@ async def get_client_by_id(response: Response, id: int, db: Session = Depends(da
 )
 async def create_client(response: Response, client_req: ClientRequestDTO,
                         db: Session = Depends(database.get_data_base)):
-    return await _client_service_.create_client(client_req, db)
+    new_client = await _client_service_.create_client(client_req, db)
+
+    return new_client
 
 
 @client_controller.post(
