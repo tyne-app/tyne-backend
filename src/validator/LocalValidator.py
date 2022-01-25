@@ -108,7 +108,6 @@ class LocalValidator:
 
     async def validate_restaurant(self, restaurant: Restaurant):
         logger.info('restaurant: {}', restaurant)
-        print(restaurant)
         invalid_data = []
         if not re.fullmatch(self.NUMBER_AND_WORD_REGEX, restaurant.social_reason):
             invalid_data.append(self.INVALID_DATA_SOCIAL_REASON_MESSAGE)
@@ -203,8 +202,6 @@ class LocalValidator:
 
         branch_checked = await self.validate_second_branch(new_branch=new_branch)
         if bool(branch_checked):
-            print(branch_checked)
-
             data_checked.append(branch_checked)
         branch_bank_checked = await self.validate_branch_bank(branch_bank=new_branch.branch_bank)
 

@@ -16,7 +16,7 @@ class MapBoxService:
     settings = Settings()
     _throwerExceptions = ThrowerExceptions()
 
-    async def get_latitude_longitude(self, address: str, state_name: str):
+    async def get_latitude_longitude(self, address: str, state_name: str, type_geocoding: str):
         async with AsyncClient() as client:
             try:
                 mapbox_api = self.settings.MAPBOX_API
@@ -46,7 +46,8 @@ class MapBoxService:
 
                 if not raw_coordenates:
                     await self._throwerExceptions.throw_custom_exception(name=Constants.GEO_COORDENATES_EMPTY_ERROR,
-                                                                         detail=["Dirección inválida de sucursal"],
+                                                                         detail=[("Dirección inválida {0}").replace(
+                                                                             "{0}", type_geocoding)],
                                                                          status_code=status.HTTP_400_BAD_REQUEST,
                                                                          cause=Constants.GEO_COORDENATES_EMPTY_ERROR)
                 coordenates = {
@@ -91,7 +92,7 @@ class MapBoxService:
 
                 if is_state and is_country:
                     coordenates = feature['center']
-                    #logger.info("coordenates: {}", coordenates)
+                    # logger.info("coordenates: {}", coordenates)
                     return coordenates
 
         print(state_name)
