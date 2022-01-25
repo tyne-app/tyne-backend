@@ -36,7 +36,7 @@ class MapBoxService:
                     logger.error("response: {}", response)
                     logger.error("response.text: {}", response.text)
                     await self._throwerExceptions.throw_custom_exception(name=Constants.GEO_DECODE_ERROR,
-                                                                         detail=Constants.GEO_DECODE_ERROR,
+                                                                         detail=[Constants.GEO_DECODE_ERROR],
                                                                          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                                                          cause=response.text)
 
@@ -46,9 +46,9 @@ class MapBoxService:
 
                 if not raw_coordenates:
                     await self._throwerExceptions.throw_custom_exception(name=Constants.GEO_COORDENATES_EMPTY_ERROR,
-                                                                         detail=Constants.GEO_COORDENATES_EMPTY_ERROR,
+                                                                         detail=["Dirección inválida de sucursal"],
                                                                          status_code=status.HTTP_400_BAD_REQUEST,
-                                                                         cause="Dirección inválida de sucursal")
+                                                                         cause=Constants.GEO_COORDENATES_EMPTY_ERROR)
                 coordenates = {
                     'latitude': raw_coordenates[1],
                     'longitude': raw_coordenates[0]
@@ -59,7 +59,7 @@ class MapBoxService:
 
             except RequestError as error:
                 await self._throwerExceptions.throw_custom_exception(name=Constants.GEO_DECODE_ERROR,
-                                                                     detail=Constants.GEO_DECODE_ERROR,
+                                                                     detail=[Constants.GEO_DECODE_ERROR],
                                                                      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                                                      cause=error)
 
