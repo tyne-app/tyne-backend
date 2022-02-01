@@ -16,6 +16,8 @@ from src.service.PasswordService import PasswordService
 from src.util.Constants import Constants
 from src.exception.ThrowerExceptions import ThrowerExceptions
 from src.validator.ClientValidator import ClientValidator
+from src.service.EmailService import EmailService
+from src.util.EmailSubject import EmailSubject
 
 
 class ClientService:
@@ -25,6 +27,7 @@ class ClientService:
     _login_service_ = LoginService()
     _tokenService_ = JwtService()
     _throwerExceptions = ThrowerExceptions()
+    _email_service: EmailService = EmailService()
 
     async def get_client_by_id(self, client_id: int, db: Session):
         client: ClientEntity = self._client_dao_.get_client_by_id(client_id=client_id, db=db)
@@ -37,10 +40,12 @@ class ClientService:
 
         # create user
         id_login_created = await self._login_service_.create_user_login(client_req.email, client_req.password,
-                                                                        int(UserTypeEnum.cliente.value),
+                                                                        int(UserTypeEnum.cliente.value), # TODO: NO es necesario un Enum
                                                                         db)
-        if id_login_created:
+        if id_login_created:  # TODO: Refactorizar creación de cuenta clienta
             client_is_created = self._client_dao_.create_client(client_req, id_login_created, db)
+            if client_is_created:
+                self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.WELCOME, receiver_email=client_req.email)
             if not client_is_created:
                 self._user_dao_.delete_user_by_id(id_login_created, db)
                 self._login_service_.delete_user_login(client_req.email, db)

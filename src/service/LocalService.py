@@ -8,8 +8,10 @@ from src.repository.dao.LocalDao import LocalDAO
 from src.repository.dao.StateDao import StateDao
 from src.repository.dao.BusinessDao import BusinessDao
 from src.service.MapboxService import MapBoxService
+from src.util.EmailSubject import EmailSubject
 from src.validator.LocalValidator import LocalValidator
-
+from src.service.EmailService import EmailService
+from src.util.Constants import Constants
 
 class LocalService:
     MSG_CREATE_ACCOUNT_SUCCESSFULLY = "Local creado correctamente"
@@ -34,6 +36,7 @@ class LocalService:
     TYPE_VALIDATION_GEOCODING_BRANCH = "del local"
     TYPE_VALIDATION_GEOCODING_RESTAURANT = "de la casa matriz"
 
+    _email_service = EmailService()
     _local_dao = LocalDAO()
     _state_dao_ = StateDao()
 
@@ -87,6 +90,8 @@ class LocalService:
                                    branch_bank_entity=branch_bank_entity,
                                    branch_image_entity=branch_image_entity,
                                    db=db)
+
+        self._email_service.send_email(user=Constants.LOCAL, subject=EmailSubject.WELCOME, receiver_email=manager.email)
 
         return self._business_mapper_request.to_branch_create_response(content=self.MSG_CREATE_ACCOUNT_SUCCESSFULLY)
 
