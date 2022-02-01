@@ -66,19 +66,17 @@ class ClientService:
 
             if token.email != client_request.email:
                 await self._throwerExceptions.throw_custom_exception(name=Constants.LOGIN_ERROR,
-                                                                     detail=Constants.LOGIN_ERROR,
+                                                                     detail=[Constants.LOGIN_ERROR],
                                                                      status_code=status.HTTP_400_BAD_REQUEST,
                                                                      cause=f"token.email: {token.email} es diferente a client_request.email: {client_request.email}")
-
             # create client entity
             new_user = client_request.to_user_entity(image_url=token.picture,
                                                      password=PasswordService.generate_password())
             new_client = client_request.to_client_entity(user=new_user)
             self._client_dao_.create_client_v2(client=new_client, db=db)
-
             return SimpleResponse("Cliente creado correctamente")
         else:
             await self._throwerExceptions.throw_custom_exception(name=Constants.USER_ALREADY_EXIST,
-                                                                 detail=Constants.USER_ALREADY_EXIST,
+                                                                 detail=[Constants.USER_ALREADY_EXIST],
                                                                  status_code=status.HTTP_400_BAD_REQUEST,
                                                                  cause=f"El usuario con id: {user.id} ya existe en el sistema")

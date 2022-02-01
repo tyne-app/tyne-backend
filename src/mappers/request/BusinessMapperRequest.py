@@ -1,3 +1,5 @@
+from starlette import status
+
 from src.repository.entity.ManagerEntity import ManagerEntity
 from src.repository.entity.LegalRepresentativeEntity import LegalRepresentativeEntity
 from src.repository.entity.RestaurantEntity import RestaurantEntity
@@ -12,11 +14,12 @@ from src.dto.request.business_request_dto import Branch
 from src.dto.request.business_request_dto import BranchBank
 from src.dto.request.business_request_dto import Manager
 from src.dto.response.business_response_dto import PreviewBranch
+from src.util.Constants import Constants
 
 
 class BusinessMapperRequest:
 
-    def to_manager_entity(self, manager: Manager):
+    async def to_manager_entity(self, manager: Manager):
         manager_dict = manager.dict()
         del (manager_dict['email'])
         del (manager_dict['password'])
@@ -49,6 +52,9 @@ class BusinessMapperRequest:
         return branch_bank_entity
 
     def to_user_entity(self, user_dict: dict, id_user_type: int):
+        print("Entr")
+        print(user_dict)
+        print(id_user_type)
         user_dict['id_user_type'] = id_user_type
         user_entity = UserEntity(**user_dict)
         user_entity.is_active = True

@@ -42,19 +42,19 @@ class ClientSocialRegistrationRequest(BaseModel):
         return entity
 
     async def validate_fields(self):
-        invalid_data = {}
+        invalid_data = []
 
         if not self._utils_validator_.validate_not_empty(self.name):
-            invalid_data["name"] = self._utils_validator_.INVALID_DATA_MESSAGE
+            invalid_data.append(self._utils_validator_.INVALID_DATA_MESSAGE)
 
         if not self._utils_validator_.validate_not_empty(self.lastName):
-            invalid_data["lastName"] = self._utils_validator_.INVALID_DATA_MESSAGE
+            invalid_data.append(self._utils_validator_.INVALID_DATA_MESSAGE)
 
         if not self._utils_validator_.validate_not_empty(self.email):
-            invalid_data["email"] = self._utils_validator_.INVALID_DATA_MESSAGE
+            invalid_data.append(self._utils_validator_.INVALID_DATA_MESSAGE)
 
         if not self._utils_validator_.validate_not_empty(self.token):
-            invalid_data["token"] = self._utils_validator_.INVALID_DATA_MESSAGE
+            invalid_data.append(self._utils_validator_.INVALID_DATA_MESSAGE)
 
         if invalid_data:
             await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,

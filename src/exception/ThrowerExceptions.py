@@ -10,9 +10,11 @@ class ThrowerExceptions:
 
     async def throw_custom_exception(self,
                                      name=Constants.INTERNAL_ERROR,
-                                     detail=Constants.INTERNAL_ERROR_DETAIL,
+                                     detail=None,
                                      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                      cause=""):
+        if detail is None:
+            detail = [Constants.INTERNAL_ERROR_DETAIL]
         raise CustomError(name=name,
                           detail=detail,
                           status_code=status_code,
@@ -23,7 +25,7 @@ class ThrowerExceptions:
             status_code=exc.status_code,
             content=jsonable_encoder({
                 "name": f"{exc.name}",
-                "details": f"{exc.detail}"
+                "details": exc.detail
             })
         )
 
