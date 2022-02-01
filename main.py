@@ -14,6 +14,7 @@ from src.controller import business_controller, menu_controller, bank_controller
     user_controller, client_controller, reservation_controller
 
 from src.exception.ThrowerExceptions import ThrowerExceptions
+from src.service.EmailService import EmailService
 
 api_local = FastAPI(
     docs_url="/v1/docs",

@@ -80,3 +80,6 @@ class Constants:
     IMAGE_DELETE_ERROR = "Error eliminar imagen"
     IMAGE_UPLOAD_ERROR = "Error al subir imagen"
     IMAGE_NOT_FOUND_ERROR = "Imagen no encontrada"
+
+    CLIENT = 'client'
+    LOCAL = 'local'

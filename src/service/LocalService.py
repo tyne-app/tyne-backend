@@ -7,8 +7,10 @@ from src.mappers.request.BusinessMapperRequest import BusinessMapperRequest
 from src.repository.dao.LocalDao import LocalDAO
 from src.repository.dao.StateDao import StateDao
 from src.service.MapboxService import MapBoxService
+from src.util.EmailSubject import EmailSubject
 from src.validator.LocalValidator import LocalValidator
-
+from src.service.EmailService import EmailService
+from src.util.Constants import Constants
 
 class LocalService:
     MSG_CREATE_ACCOUNT_SUCCESSFULLY = "Local creado correctamente"
@@ -29,14 +31,14 @@ class LocalService:
     ID_USER_TYPE = 1
     _business_mapper_request = BusinessMapperRequest()
     DEFAULT_LOCAL_IMAGE_PROFILE = "https://res.cloudinary.com/dqdtvbynk/image/upload/v1636295279/Development/users/default%20main%20local%20image/Sart%C3%A9n_Tyne_Fondo_Transparente_zflbrr.png"
-
+    _email_service = EmailService()
     _local_dao = LocalDAO()
     _state_dao_ = StateDao()
 
     async def create_new_account(self, new_account: NewAccount, db: Session):
         local_validator = LocalValidator()
         local_validator.validate_new_account(new_account=new_account)
-        print(new_account.restaurant.description)
+        print(new_account.restaurant.description) # TODO: Reemplazar por log
         branch = new_account.branch
 
         state = self._state_dao_.get_state_by_id(id_state=branch.state_id, db=db)
@@ -75,6 +77,8 @@ class LocalService:
                                    branch_bank_entity=branch_bank_entity,
                                    branch_image_entity=branch_image_entity,
                                    db=db)
+
+        self._email_service.send_email(user=Constants.LOCAL, subject=EmailSubject.WELCOME, receiver_email=manager.email)
 
         return self._business_mapper_request.to_branch_create_response(content=self.MSG_CREATE_ACCOUNT_SUCCESSFULLY)
 
