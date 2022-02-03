@@ -1,9 +1,9 @@
 from datetime import datetime
 
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import exists
 
 from src.repository.entity.UserEntity import UserEntity
-from src.repository.entity.UserTypeEntity import UserTypeEntity
 
 
 class UserDao:
@@ -69,3 +69,6 @@ class UserDao:
             return user
 
         return None
+
+    def send_email_forgotten_password(self, email: str, db: Session) -> bool:
+        return db.query(exists().where(UserEntity.email == email)).scalar()

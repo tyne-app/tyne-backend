@@ -94,8 +94,4 @@ class MapBoxService:
                     coordenates = feature['center']
                     # logger.info("coordenates: {}", coordenates)
                     return coordenates
-
-        print(state_name)
-        print(is_state)
-        print(is_country)
         return coordenates
