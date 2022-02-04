@@ -40,7 +40,8 @@ class ClientService:
 
         # create user
         id_login_created = await self._login_service_.create_user_login(client_req.email, client_req.password,
-                                                                        int(UserTypeEnum.cliente.value), # TODO: NO es necesario un Enum
+                                                                        int(UserTypeEnum.cliente.value),
+                                                                        # TODO: NO es necesario un Enum
                                                                         db)
         if id_login_created:  # TODO: Refactorizar creación de cuenta clienta
             client_is_created = self._client_dao_.create_client(client_req, id_login_created, db)
@@ -70,8 +71,10 @@ class ClientService:
                                                                      status_code=status.HTTP_400_BAD_REQUEST,
                                                                      cause=f"token.email: {token.email} es diferente a client_request.email: {client_request.email}")
             # create client entity
+
+            passWordService = PasswordService()
             new_user = client_request.to_user_entity(image_url=token.picture,
-                                                     password=PasswordService.generate_password())
+                                                     password=passWordService.generate_password())
             new_client = client_request.to_client_entity(user=new_user)
             self._client_dao_.create_client_v2(client=new_client, db=db)
             return SimpleResponse("Cliente creado correctamente")
