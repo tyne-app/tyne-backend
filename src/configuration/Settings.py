@@ -24,4 +24,8 @@ class Settings:
     JWT_KEY = os.getenv("JWT_KEY")
     MAPBOX_API = os.getenv("MAPBOX_API")
     MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN")
+    SENDER_EMAIL = os.getenv("SENDER_EMAIL")
+    PASSWORD_EMAIL = os.getenv("PASSWORD_EMAIL")
+    PORT_EMAIL = os.getenv("PORT_EMAIL")
+    ENCODING_EMAIL = os.getenv("ENCODING_EMAIL")
 
