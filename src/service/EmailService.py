@@ -3,7 +3,8 @@ import smtplib, ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from src.util.EmailSubject import EmailSubject
-
+from loguru import logger
+from src.util.Constants import Constants
 
 class EmailService:
     port: int = 465
@@ -13,10 +14,12 @@ class EmailService:
     ENCODING: str = 'utf-8'
 
     def send_email(self, user: str, subject: str, receiver_email: str) -> None:
+        logger.info('Subject: {}, receiver_email: {}, user: {}', subject, receiver_email, user)
+
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL("smtp.gmail.com", self.port, context=context) as server:
 
-            template_name: str = self.get_template_name(subject=subject)
+            template_name: str = self.get_template_name(user=user, subject=subject)
             template: str = self.read_email_template(user=user, template_name=template_name)
 
             plain_text: str = "Texto plano de prueba para ver si funciona" # TODO: Reemplazarlo con la alternativa oficial por cada template
@@ -36,13 +39,25 @@ class EmailService:
             server.sendmail(self.sender_email, receiver_email, message.as_string())
 
     def read_email_template(self, user: str, template_name: str) -> str:
+        logger.info('user: {}, template_name: {}', user, template_name)
+
         template_path: str = os.path.abspath('src/util/email_template/%s/%s' % (user, template_name))
+        logger.info('template_path: {}', template_path)
+
         with open(template_path, self.READ, encoding=self.ENCODING) as file:
             return file.read()
 
-    def get_template_name(self, subject: str) -> str:
-        match subject:
-            case EmailSubject.WELCOME:
-                return 'welcome.html'
+    def get_template_name(self, user: str, subject: str) -> str:
+        # TODO: Agregar los demás casos para todos los match
+        if user is Constants.CLIENT:
+            match subject:
+                case EmailSubject.CLIENT_WELCOME:
+                    return 'welcome.html'
 
-            # TODO: Agregar los demás casos
+        if user is Constants.LOCAL:
+            match subject:
+                case EmailSubject.LOCAL_WELCOME:
+                    return 'welcome.html'
+
+        if user is Constants.USER:
+            return 'forgotten_password.html'

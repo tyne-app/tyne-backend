@@ -46,8 +46,7 @@ class ClientService:
         if id_login_created:  # TODO: Refactorizar creación de cuenta clienta
             client_is_created = self._client_dao_.create_client(client_req, id_login_created, db)
             if client_is_created:
-                self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.WELCOME,
-                                               receiver_email=client_req.email)
+                self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CLIENT_WELCOME, receiver_email=client_req.email)
             if not client_is_created:
                 self._user_dao_.delete_user_by_id(id_login_created, db)
                 self._login_service_.delete_user_login(client_req.email, db)

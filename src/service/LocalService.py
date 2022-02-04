@@ -91,7 +91,7 @@ class LocalService:
                                    branch_image_entity=branch_image_entity,
                                    db=db)
 
-        self._email_service.send_email(user=Constants.LOCAL, subject=EmailSubject.WELCOME, receiver_email=manager.email)
+        self._email_service.send_email(user=Constants.LOCAL, subject=EmailSubject.LOCAL_WELCOME, receiver_email=manager.email)
 
         return self._business_mapper_request.to_branch_create_response(content=self.MSG_CREATE_ACCOUNT_SUCCESSFULLY)
 

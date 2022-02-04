@@ -79,3 +79,9 @@ async def update_password(request: Request, response: Response, change_password:
     token_payload = await _jwt_service_.verify_and_get_token_data(request)
     _service_.change_password(token_payload.id_user, change_password.password, db)
     return SimpleResponse("Contraseña actualizada correctamente")
+
+
+@user_controller.post('/forgotten-password/{email}', status_code=status.HTTP_200_OK)
+async def forgotten_password(email: str, db: Session = Depends(database.get_data_base)):
+    await _service_.send_email_forgotten_password(email=email, db=db)
+    return SimpleResponse("Se ha enviado un correo para restablecer la contraseña")

@@ -30,6 +30,9 @@ class Constants:
     USER_CREATE_ERROR = "Error al crear usuario"
     USER_TYPE_MOT_FOUND = "Tipo de usuario no encontrado"
 
+    USER_NOT_FOUND = "Usuario no encontrado"
+    USER_NOT_FOUND_DETAIL = "No existe usuario en el sistema"
+
     ACCOUNT_PROFILE_GET_ERROR = "Error al obtener el perfil"
     ACCOUNT_PROFILE_ERROR = "Error get_account_profile"
 
@@ -83,3 +86,4 @@ class Constants:
 
     CLIENT = 'client'
     LOCAL = 'local'
+    USER = 'user'

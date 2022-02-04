@@ -1,6 +1,7 @@
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 from starlette import status
+from loguru import logger
 
 from src.dto.request.LoginSocialRequest import LoginSocialRequest
 from src.dto.request.LoginUserRequest import LoginUserRequest
@@ -17,6 +18,8 @@ from src.service.CloudinaryService import CloudinaryService
 from src.service.JwtService import JwtService
 from src.util.Constants import Constants
 from src.exception.ThrowerExceptions import ThrowerExceptions
+from src.service.EmailService import EmailService
+from src.util.EmailSubject import EmailSubject
 
 
 class UserService:
@@ -26,6 +29,7 @@ class UserService:
     _clientDao_ = ClientDao()
     _localDao_ = LocalDAO()
     _throwerExceptions = ThrowerExceptions()
+    _email_service = EmailService()
 
     async def login_user(self, loginRequest: LoginUserRequest, ip: str, db: Session):
 
@@ -165,3 +169,15 @@ class UserService:
         self._user_dao_.change_password(user_id=user_id, password=password, db=db)
         return True
 
+    async def send_email_forgotten_password(self, email: str, db: Session):
+        logger.info('email: {}', email)
+        is_user: bool = self._user_dao_.send_email_forgotten_password(email=email, db=db)
+
+        if not is_user:
+            await self._throwerExceptions.throw_custom_exception(name=Constants.USER_NOT_FOUND,
+                                                           detail=Constants.USER_NOT_FOUND_DETAIL,
+                                                           status_code=status.HTTP_400_BAD_REQUEST)
+
+        self._email_service.send_email(user=Constants.USER,
+                                       subject=EmailSubject.FORGOTTEN_PASSWORD,
+                                       receiver_email=email)
