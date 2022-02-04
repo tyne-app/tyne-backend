@@ -52,9 +52,7 @@ class BusinessMapperRequest:
         return branch_bank_entity
 
     def to_user_entity(self, user_dict: dict, id_user_type: int):
-        print("Entr")
         print(user_dict)
-        print(id_user_type)
         user_dict['id_user_type'] = id_user_type
         user_entity = UserEntity(**user_dict)
         user_entity.is_active = True
