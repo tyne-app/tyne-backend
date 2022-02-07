@@ -1,6 +1,6 @@
 import uuid
 from datetime import timezone, datetime
-
+from loguru import logger
 from sqlalchemy.orm import Session
 from starlette import status
 
@@ -187,18 +187,16 @@ class ReservationService:
                                                                   page_number)
         return response
 
-    async def reservation_detail(self, reservation_id: int, db):
+    async def reservation_detail(self, reservation_id: int, db) -> ReservationDetailResponse:
+        logger.info("reservation_id: {}", reservation_id)
 
-        reservations = self._reservation_dao_.reservation_detail(reservation_id=reservation_id, db=db)
+        reservations: list = self._reservation_dao_.reservation_detail(reservation_id=reservation_id, db=db)
+        logger.info("reservations: {}", reservations)
 
-        if not reservations:
-            await self._thrower_exceptions.throw_custom_exception(name=Constants.RESERVATION_NOT_FOUND_ERROR,
-                                                                  detail=Constants.RESERVATION_NOT_FOUND_ERROR,
-                                                                  status_code=status.HTTP_204_NO_CONTENT)
+        reservation_detail: ReservationDetailResponse = ReservationDetailResponse()
+        logger.info("reservation_detail: {}", reservation_detail)
 
-        reservation_detail = ReservationDetailResponse()
-        response = reservation_detail.reservation_detail(reservations)
-        return response
+        return reservation_detail.reservation_detail(reservations)
 
     async def get_reservations(self, client_id: int, db: Session) -> list:
         reservations = self._reservation_dao_.get_reservations(client_id, db)

@@ -14,7 +14,6 @@ from src.controller import business_controller, menu_controller, bank_controller
     user_controller, client_controller, reservation_controller
 
 from src.exception.ThrowerExceptions import ThrowerExceptions
-from src.service.EmailService import EmailService
 
 api_local = FastAPI(
     docs_url="/v1/docs",
@@ -87,6 +86,7 @@ async def custom_exception_handler(request: Request, exc: CustomError):
         "custom_error": f"{exc.__dict__}",
     }
     logger.error(json.dumps(error_detail, indent=4))
+
     return await _throwerExceptions.response_custom_exception(exc)
 
 
