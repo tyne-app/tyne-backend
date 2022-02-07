@@ -1,5 +1,5 @@
 from datetime import date
-
+from loguru import logger
 from sqlalchemy import func, distinct, extract
 from sqlalchemy.orm import Session
 
@@ -16,6 +16,7 @@ from src.repository.entity.ReservationProductEntity import ReservationProductEnt
 from src.repository.entity.ReservationStatusEntity import ReservationStatusEntity
 from src.repository.entity.RestaurantEntity import RestaurantEntity
 from src.repository.entity.StateEntity import StateEntity
+from src.exception.exceptions import CustomError
 
 
 class ReservationDao:
@@ -155,58 +156,69 @@ class ReservationDao:
 
         return reservations_date_response
 
-    def reservation_detail(self, reservation_id: int, db: Session):
+    def reservation_detail(self, reservation_id: int, db: Session) -> list:
+        try:
+            reservation_detail: list = db.query(ReservationProductEntity.reservation_id,
+                                          ClientEntity.name,
+                                          ClientEntity.last_name,
+                                          ReservationEntity.people,
+                                          BranchEntity.street,
+                                          BranchEntity.street_number,
+                                          StateEntity.name.label("state"),
+                                          CityEntity.name.label("city"),
+                                          CountryEntity.name.label("country"),
+                                          ReservationEntity.preference,
+                                          ReservationEntity.reservation_date,
+                                          ReservationEntity.hour,
+                                          ReservationEntity.payment_id,
+                                          CategoryEntity.id.label("category_id"),
+                                          ReservationProductEntity.name_product,
+                                          ReservationProductEntity.description.label("product_description"),
+                                          ReservationProductEntity.amount.label("product_amount"),
+                                          ReservationProductEntity.quantity.label("product_quantity")) \
+                .filter(ReservationProductEntity.reservation_id == reservation_id) \
+                .join(CategoryEntity, CategoryEntity.name == ReservationProductEntity.category_product) \
+                .join(ReservationEntity, ReservationEntity.id == ReservationProductEntity.reservation_id) \
+                .join(ClientEntity, ClientEntity.id == ReservationEntity.client_id) \
+                .join(BranchEntity, BranchEntity.id == ReservationEntity.branch_id) \
+                .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
+                .join(CityEntity, CityEntity.id == StateEntity.city_id) \
+                .join(CountryEntity, CountryEntity.id == CityEntity.country_id) \
+                .all()
 
-        reservation_detail = db.query(ReservationProductEntity.reservation_id,
-                                      ClientEntity.name,
-                                      ClientEntity.last_name,
-                                      ReservationEntity.people,
-                                      BranchEntity.street,
-                                      BranchEntity.street_number,
-                                      StateEntity.name.label("state"),
-                                      CityEntity.name.label("city"),
-                                      CountryEntity.name.label("country"),
-                                      ReservationEntity.preference,
-                                      ReservationEntity.reservation_date,
-                                      ReservationEntity.hour,
-                                      ReservationEntity.payment_id,
-                                      CategoryEntity.id.label("category_id"),
-                                      ReservationProductEntity.name_product,
-                                      ReservationProductEntity.description.label("product_description"),
-                                      ReservationProductEntity.amount.label("product_amount"),
-                                      ReservationProductEntity.quantity.label("product_quantity")) \
-            .filter(ReservationProductEntity.reservation_id == reservation_id) \
-            .join(CategoryEntity, CategoryEntity.name == ReservationProductEntity.category_product) \
-            .join(ReservationEntity, ReservationEntity.id == ReservationProductEntity.reservation_id) \
-            .join(ClientEntity, ClientEntity.id == ReservationEntity.client_id) \
-            .join(BranchEntity, BranchEntity.id == ReservationEntity.branch_id) \
-            .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
-            .join(CityEntity, CityEntity.id == StateEntity.city_id) \
-            .join(CountryEntity, CountryEntity.id == CityEntity.country_id) \
-            .all()
-
-        return reservation_detail
+            return reservation_detail
+        except Exception as ex:
+            logger.error(ex)
+            raise ex
 
     def get_reservations(self, client_id, db: Session):
-        return db \
-            .query(ReservationEntity.id,
-                   RestaurantEntity.name.label("restaurant_name"), ReservationEntity.people,
-                   ReservationEntity.reservation_date,
-                   ReservationEntity.hour, PaymentEntity.amount,
-                   BranchEntity.street.label("branch_street_address"),
-                   BranchEntity.street_number.label("branch_street_number"),
-                   BranchImageEntity.url_image,
-                   PaymentEntity.date.label("payment_datetime")) \
-            .join(BranchEntity, BranchEntity.id == ReservationEntity.branch_id) \
-            .join(PaymentEntity, PaymentEntity.reservation_id == ReservationEntity.id) \
-            .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
-            .join(BranchImageEntity, BranchImageEntity.branch_id == BranchEntity.id) \
-            .filter(ReservationEntity.client_id == client_id) \
-            .filter(BranchImageEntity.is_main_image) \
-            .all()
+        try:
+            return db \
+                .query(ReservationEntity.id,
+                       RestaurantEntity.name.label("restaurant_name"), ReservationEntity.people,
+                       ReservationEntity.reservation_date,
+                       ReservationEntity.hour, PaymentEntity.amount,
+                       BranchEntity.street.label("branch_street_address"),
+                       BranchEntity.street_number.label("branch_street_number"),
+                       BranchImageEntity.url_image,
+                       PaymentEntity.date.label("payment_datetime")) \
+                .join(BranchEntity, BranchEntity.id == ReservationEntity.branch_id) \
+                .join(PaymentEntity, PaymentEntity.reservation_id == ReservationEntity.id) \
+                .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
+                .join(BranchImageEntity, BranchImageEntity.branch_id == BranchEntity.id) \
+                .filter(ReservationEntity.client_id == client_id) \
+                .filter(BranchImageEntity.is_main_image) \
+                .all()
+        except Exception as ex:
+            logger.error(ex)
+            raise ex
 
     def get_reservation(self, reservation_id: int, payment_id: str, db: Session) -> ReservationEntity:
-        return db \
-            .query(ReservationEntity).filter(ReservationEntity.id == reservation_id) \
-            .filter(ReservationEntity.payment_id == payment_id) \
-            .first()
+        try:
+            return db \
+                .query(ReservationEntity).filter(ReservationEntity.id == reservation_id) \
+                .filter(ReservationEntity.payment_id == payment_id) \
+                .first()
+        except Exception as ex:
+            logger.error(ex)
+            raise ex
