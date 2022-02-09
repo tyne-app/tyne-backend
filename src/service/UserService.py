@@ -92,10 +92,10 @@ class UserService:
 
         if user is not None:
 
-            if token_firebase.email != loginRequest.email:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.LOGIN_ERROR,
-                                                                     detail=Constants.LOGIN_ERROR,
-                                                                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # if token_firebase.email != loginRequest.email:
+            #    await self._throwerExceptions.throw_custom_exception(name=Constants.LOGIN_ERROR,
+            #                                                         detail=Constants.LOGIN_ERROR,
+            #                                                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             if user.is_active is not True:
                 await self._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_UNAUTHORIZED,
@@ -175,8 +175,8 @@ class UserService:
 
         if not is_user:
             await self._throwerExceptions.throw_custom_exception(name=Constants.USER_NOT_FOUND,
-                                                           detail=Constants.USER_NOT_FOUND_DETAIL,
-                                                           status_code=status.HTTP_400_BAD_REQUEST)
+                                                                 detail=Constants.USER_NOT_FOUND_DETAIL,
+                                                                 status_code=status.HTTP_400_BAD_REQUEST)
 
         self._email_service.send_email(user=Constants.USER,
                                        subject=EmailSubject.FORGOTTEN_PASSWORD,
