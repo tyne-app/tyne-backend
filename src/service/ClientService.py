@@ -46,7 +46,8 @@ class ClientService:
         if id_login_created:  # TODO: Refactorizar creación de cuenta clienta
             client_is_created = self._client_dao_.create_client(client_req, id_login_created, db)
             if client_is_created:
-                self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CLIENT_WELCOME, receiver_email=client_req.email)
+                self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CLIENT_WELCOME,
+                                               receiver_email=client_req.email)
             if not client_is_created:
                 self._user_dao_.delete_user_by_id(id_login_created, db)
                 self._login_service_.delete_user_login(client_req.email, db)
@@ -65,11 +66,11 @@ class ClientService:
             # try to verify the token and decode it
             token = await self._tokenService_.decode_token_firebase(client_request.token)
 
-            if token.email != client_request.email:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.LOGIN_ERROR,
-                                                                     detail=[Constants.LOGIN_ERROR],
-                                                                     status_code=status.HTTP_400_BAD_REQUEST,
-                                                                     cause=f"token.email: {token.email} es diferente a client_request.email: {client_request.email}")
+            #if token.email != client_request.email:
+            #    await self._throwerExceptions.throw_custom_exception(name=Constants.LOGIN_ERROR,
+            #                                                         detail=[Constants.LOGIN_ERROR],
+            #                                                         status_code=status.HTTP_400_BAD_REQUEST,
+            #                                                         cause=f"token.email: {token.email} es diferente a client_request.email: {client_request.email}")
             # create client entity
 
             passWordService = PasswordService()

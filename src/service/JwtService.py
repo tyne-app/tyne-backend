@@ -53,8 +53,8 @@ class JwtService:
             token_firebase.picture = decoded_token['picture']
             token_firebase.aud = decoded_token['aud']
             token_firebase.user_id = decoded_token['user_id']
-            token_firebase.email = decoded_token['email']
-            token_firebase.email_verified = decoded_token['email_verified']
+            #token_firebase.email = decoded_token['email']
+            #token_firebase.email_verified = decoded_token['email_verified']
             return token_firebase
         except:
             await self._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_INVALID_ERROR,
