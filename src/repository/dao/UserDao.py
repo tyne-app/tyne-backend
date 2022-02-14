@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import exists
 
 from src.repository.entity.UserEntity import UserEntity
-
+from src.repository.entity.ManagerEntity import ManagerEntity
+from src.repository.entity.BranchEntity import BranchEntity
 
 class UserDao:
 
@@ -72,3 +73,9 @@ class UserDao:
 
     def send_email_forgotten_password(self, email: str, db: Session) -> bool:
         return db.query(exists().where(UserEntity.email == email)).scalar()
+
+    def get_email_by_branch(self, branch_id: int, db: Session) -> str:
+        return db.query(UserEntity.email)\
+            .join(ManagerEntity, ManagerEntity.id_user == UserEntity.id)\
+            .join(BranchEntity, BranchEntity.manager_id == ManagerEntity.id)\
+            .filter(BranchEntity.id == branch_id).first()

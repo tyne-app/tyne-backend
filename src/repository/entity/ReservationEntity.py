@@ -16,6 +16,8 @@ class ReservationEntity(Base):
     payment_id = Column(String(100))
     hour = Column(String(5))
     transaction_id = Column(String(50))
+    amount = Column(Integer)
+    tyne_commission = Column(Integer)
 
     client_id = Column(Integer, ForeignKey('tyne.client.id'))
     branch_id = Column(Integer, ForeignKey('tyne.branch.id'))

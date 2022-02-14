@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from pydantic import BaseModel
 from starlette import status
@@ -17,7 +17,7 @@ class ProductRequest(BaseModel):
 class NewReservationRequest(BaseModel):
     branch_id: int
     people: int
-    date: datetime
+    date: date
     hour: str
     preference: str
     products: list[ProductRequest]
@@ -27,9 +27,3 @@ class NewReservationRequest(BaseModel):
         for product in self.products:
             response.append(product.id)
         return response
-
-    async def validate_fields(self):
-        if self.people <= 0 or self.people > 10:
-            await _throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
-                                                            detail=Constants.PEOPLE_FIELD_LEN_ERROR,
-                                                            status_code=status.HTTP_400_BAD_REQUEST)

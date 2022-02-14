@@ -18,7 +18,7 @@ from src.exception.ThrowerExceptions import ThrowerExceptions
 api_local = FastAPI(
     docs_url="/v1/docs",
     title="MS-API-Local",
-    description="...",  # TODO: Definir descripción
+    description="Encargado de toda la lógica de negocio de la aplicación, configuración y conexiones a APIs externas",
     version="1.0.0"
 )
 
@@ -90,11 +90,9 @@ async def custom_exception_handler(request: Request, exc: CustomError):
     return await _throwerExceptions.response_custom_exception(exc)
 
 
-# init firebase
 firebase_config = FirebaseConfig()
 firebase_config.init_firebase()
 
-# init routes
 api_local.include_router(bank_controller.bank_controller)
 api_local.include_router(business_controller.business_controller)
 api_local.include_router(client_controller.client_controller)
@@ -103,6 +101,5 @@ api_local.include_router(reservation_controller.reservation_controller)
 api_local.include_router(territory_controller.territory_controller)
 api_local.include_router(user_controller.user_controller)
 
-# run program
 if __name__ == "__main__":
     uvicorn.run("main:api_local", host="127.0.0.1", port=8001, reload=True)

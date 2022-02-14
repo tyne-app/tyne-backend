@@ -21,8 +21,8 @@ class EmailService:
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL("smtp.gmail.com", self.__PORT, context=context) as server:
 
-            template_name: str = self.get_template_name(user=user, subject=subject)
-            template: str = self.read_email_template(user=user, template_name=template_name)
+            template_name: str = self._get_template_name(user=user, subject=subject)
+            template: str = self._read_email_template(user=user, template_name=template_name)
 
             plain_text: str = "Texto plano de prueba para ver si funciona" # TODO: Reemplazarlo con la alternativa oficial por cada template
 
@@ -40,7 +40,7 @@ class EmailService:
             server.login(self.__SENDER_EMAIL, self.__PASSWORD)
             server.sendmail(self.__SENDER_EMAIL, receiver_email, message.as_string())
 
-    def read_email_template(self, user: str, template_name: str) -> str:
+    def _read_email_template(self, user: str, template_name: str) -> str:
         logger.info('user: {}, template_name: {}', user, template_name)
 
         template_path: str = os.path.abspath('src/util/email_template/%s/%s' % (user, template_name))
@@ -49,12 +49,14 @@ class EmailService:
         with open(template_path, self.__READ, encoding=self.__ENCODING) as file:
             return file.read()
 
-    def get_template_name(self, user: str, subject: str) -> str:
+    def _get_template_name(self, user: str, subject: str) -> str:
         # TODO: Agregar los demás casos para todos los match
         if user is Constants.CLIENT:
             match subject:
                 case EmailSubject.CLIENT_WELCOME:
                     return 'welcome.html'
+                case EmailSubject.SUCCESSFUL_PAYMENT:
+                    return 'successful_payment.html'
 
         if user is Constants.LOCAL:
             match subject:

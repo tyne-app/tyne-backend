@@ -23,7 +23,6 @@ class SearchDAO:
         try:
 
             all_branches = None
-            print(client_id)
             if client_id:
                 all_branches = db.query(
                     distinct(BranchEntity.id),

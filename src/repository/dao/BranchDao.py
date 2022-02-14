@@ -223,3 +223,8 @@ class BranchDao:
 
         # branch_dict['opinions'] = opinions
         return branch_dict
+
+    def get_day_schedule(self, branch_id: int, day: int, db: Session) -> BranchScheduleEntity:
+        return db.query(BranchScheduleEntity)\
+            .filter(BranchScheduleEntity.branch_id == branch_id)\
+            .filter(BranchScheduleEntity.day == day).first()

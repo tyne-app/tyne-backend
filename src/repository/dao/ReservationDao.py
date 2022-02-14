@@ -2,7 +2,7 @@ from datetime import date
 from loguru import logger
 from sqlalchemy import func, distinct, extract
 from sqlalchemy.orm import Session
-
+from datetime import date
 from src.repository.entity.BranchEntity import BranchEntity
 from src.repository.entity.BranchImageEntity import BranchImageEntity
 from src.repository.entity.CategoryEntity import CategoryEntity
@@ -16,14 +16,14 @@ from src.repository.entity.ReservationProductEntity import ReservationProductEnt
 from src.repository.entity.ReservationStatusEntity import ReservationStatusEntity
 from src.repository.entity.RestaurantEntity import RestaurantEntity
 from src.repository.entity.StateEntity import StateEntity
-from src.exception.exceptions import CustomError
+from src.util.ReservationStatus import ReservationStatus
 
 
 class ReservationDao:
 
     def create_reservation(self, reservation: ReservationEntity, reservation_status: ReservationChangeStatusEntity,
                            products: list[ReservationProductEntity],
-                           db: Session) -> ReservationEntity:
+                           db: Session) -> int:
         try:
             db.add(reservation)
             db.flush()
@@ -33,20 +33,18 @@ class ReservationDao:
             db.add(reservation_status)
             db.flush()
 
-            for x in products:
-                x.reservation_id = reservation.id
+            for product in products:
+                product.reservation_id = reservation.id
 
             db.bulk_save_objects(products)
             db.flush()
-
             db.commit()
-
-            return reservation
+            return reservation.id
         except Exception as ex:
             db.rollback()
             raise ex
 
-    def update_payment_id_reservation(self, reservation_id: int, payment_id: str, db: Session):
+    def update_payment_id_reservation(self, reservation_id: int, payment_id: str, db: Session):  # TODO: Parece que no es necesario
         reservation: ReservationEntity = db \
             .query(ReservationEntity) \
             .filter(ReservationEntity.id == reservation_id) \
@@ -222,3 +220,10 @@ class ReservationDao:
         except Exception as ex:
             logger.error(ex)
             raise ex
+
+    def get_reservation_count_by_date(self, branch_id: int, date_reservation: date, db: Session) -> int:
+        return db.query(ReservationEntity)\
+            .join(ReservationChangeStatusEntity, ReservationChangeStatusEntity.reservation_id == ReservationEntity.id)\
+            .filter(ReservationEntity.branch_id == branch_id)\
+            .filter(ReservationEntity.reservation_date == date_reservation)\
+            .filter(ReservationChangeStatusEntity.status_id == ReservationStatus.CONFIRMED).count()
