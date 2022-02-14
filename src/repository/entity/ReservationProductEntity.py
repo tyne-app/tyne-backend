@@ -12,7 +12,6 @@ class ReservationProductEntity(Base):
     name_product = Column(String)
     description = Column(String)
     category_product = Column(String)
-    amount = Column(Float(100))
-    commission_tyne = Column(Float(100))
+    amount = Column(Integer)
     quantity = Column(Integer)
 

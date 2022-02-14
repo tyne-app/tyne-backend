@@ -8,9 +8,10 @@ class EmailSubject:
     PARTIAL_CANCELLATION_BY_CLIENT = "Se ha cancelado tu reserva con éxito en Tyne"
     REFUND_CANCELLATION = "Se ha cancelado tu reserva con éxito en Tyne"
     REMINDER_TO_CLIENT = "Recuerda que hoy tienes una reserva en Tyne"
+    SUCCESSFUL_PAYMENT = "Pago exitoso de reserva en Tyne"
 
     LOCAL_WELCOME = 'Somos Tyne App, ¡El mejor socio para tu negocio!'
-    CANCELLATIOBN_BY_CLIENT = "Ups, alguien ha cancelado una reserva"
+    CANCELLATION_BY_CLIENT = "Ups, alguien ha cancelado una reserva"
     CHANGE_BANK_DATA = "Cambio de datos bancarios"
     LOCAL_NO_CONFIRMATION_TO_LOCAL = "Ups, no confirmaste a tiempo la reserva"  # TODO: para que es el mismo para local
     REMINDER_TO_LOCAL = "Recuerda que hoy tienes una reserva en tu local"

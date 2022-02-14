@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from src.configuration.database.database import Base
 from src.repository.entity.CategoryEntity import CategoryEntity
 
-
+# TODO: Sacar métodos de clase de la entidad
 class ProductEntity(Base):
     __tablename__ = "product"
     __table_args__ = {"schema": "tyne"}
@@ -13,8 +13,7 @@ class ProductEntity(Base):
     name = Column(String)
     description = Column(String)
     url_image = Column(Text)
-    amount = Column(Float(100))
-    commission_tyne = Column(Float(100))
+    amount = Column(Integer)
 
     # FK
     category_id = Column(Integer, ForeignKey('tyne.category.id'))

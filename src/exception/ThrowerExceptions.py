@@ -5,7 +5,12 @@ from starlette.responses import JSONResponse
 from src.exception.exceptions import CustomError
 from src.util.Constants import Constants
 
-
+'''
+    Esta clasese invoca dentro de los servicios llamando al método throw_custom_exception
+    para que luego sea capturado por el middleware de excepciones y este mismo middleware
+    llama denuevo a esta clase ThrowerExceptions para que se genere la respuesta.
+    Vuelta innecesara, puede mejorar el código invocando solamente a CustomError()
+'''
 class ThrowerExceptions:
 
     async def throw_custom_exception(self,

@@ -1,5 +1,6 @@
+import time
 import uuid
-from datetime import timezone, datetime
+from datetime import timezone, datetime, timedelta
 from loguru import logger
 from sqlalchemy.orm import Session
 from starlette import status
@@ -12,8 +13,9 @@ from src.dto.response.ReservationDetailResponse import ReservationDetailResponse
 from src.dto.response.ReservationResponse import ReservationResponse
 from src.dto.response.SimpleResponse import SimpleResponse
 from src.dto.response.UpdateReservationResponse import UpdateReservationResponse
-from src.enums.ReservationStatusEnum import ReservationStatusEnum
+from src.util.ReservationStatus import ReservationStatus
 from src.exception.exceptions import CustomError
+from src.repository.dao.BranchDao import BranchDao
 from src.repository.dao.ClientDao import ClientDao
 from src.repository.dao.PaymentDao import PaymentDao
 from src.repository.dao.ProductDao import ProductDao
@@ -23,9 +25,16 @@ from src.repository.entity.PaymentEntity import PaymentEntity
 from src.repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
 from src.repository.entity.ReservationEntity import ReservationEntity
 from src.repository.entity.ReservationProductEntity import ReservationProductEntity
+from src.repository.entity.ProductEntity import ProductEntity
+from src.repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from src.service.KhipuService import KhipuService
 from src.util.Constants import Constants
 from src.exception.ThrowerExceptions import ThrowerExceptions
+from src.service.Thread import ReservationEvent
+from threading import Thread, Timer
+from src.service.EmailService import EmailService
+from src.util.EmailSubject import EmailSubject
+from src.repository.dao.UserDao import UserDao
 
 
 class ReservationService:
@@ -35,123 +44,218 @@ class ReservationService:
     _reservation_dao_ = ReservationDao()
     _payment_dao_ = PaymentDao()
     _thrower_exceptions = ThrowerExceptions()
+    _use_dao = UserDao()
+    _MIN_AMOUNT = 10000
+    _MAX_RESERVATION = 4
+    _TYNE_COMMISSION = 0.15
+    _WEEK_AS_DAYS = 7
+    _DAY_ADJUSTMENT = 1
+    _HOUR_AS_SECONDS = 3600
+    _TYNE_LIMIT_HOUR = 2
+    _email_service = EmailService()
+    _reservation_timer = {}
+    _branch_dao = BranchDao()
+    # TODO: Remover prints
+    def create_reservation_event(self, reservation_id: int, client_email: str, branch_email: str):
+        if reservation_id not in self._reservation_timer:
+            reservation_event = Timer(interval=15, function=self.cancel_reservation, args=[reservation_id, client_email, branch_email])
+            self._reservation_timer[reservation_id] = reservation_event
+            print("Se agrega a diccionario: %", self._reservation_timer)
+            self._reservation_timer[reservation_id].start()
+            return "Reservation created"
 
-    async def create_reservation(self, client_id: int, reservation: NewReservationRequest, db: Session):
+        return "Reservation already exists"
 
-        reservation_id = 0
+    def cancel_reservation(self, *args):
+        print("Borrar Reservation event: %s", self._reservation_timer[args[0]])
+        print("Borrar reserva con ID: %s", args[0])
+        del(self._reservation_timer[args[0]])
+        print("Diccionario actualizado: %s", self._reservation_timer)
+        # Obtener email de cliente y de local
+        self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.LOCAL_NO_CONFIRMATION_TO_CLIENT, receiver_email=args[1])
+        self._email_service.send_email(user=Constants.LOCAL, subject=EmailSubject.LOCAL_NO_CONFIRMATION_TO_LOCAL, receiver_email=args[2])
+        # TODO: llamar función para cancelar reserva en base de datos
 
-        try:
-            await reservation.validate_fields()
+    def search_reservation_event\
+                    (self, reservation_id: int):
+        reservation_event = self._reservation_timer[reservation_id]
+        print("Reservation event: %s", reservation_event)
+        self._reservation_timer[reservation_id].cancel()
 
-            products = self._product_dao_.get_products_by_ids(
-                products_id=reservation.get_products_ids(),
-                branch_id=reservation.branch_id, db=db)
+    async def create_reservation(self, client_id: int, new_reservation: NewReservationRequest, db: Session):
+        logger.info("new_reservation: {}", dict(new_reservation))
+        # TODO: Queda pendiente
+        # TODO: Discutir en la parte de reservation status, se crean dos registros started y in proces
+        # TODO: No es necesario crear más registros, sólo actualizar el existente enlazado a la reserva
+        # TODO: porque se sabe si es in proces ya fué started y así
+        # TODO: Ver los cambios de product amount a tipo entero en DB
+        # TODO: Discutir eliminar campos tyne commision de product reservation y product
 
-            if not products:
-                await self._thrower_exceptions.throw_custom_exception(name=Constants.PRODUCT_NOT_EXIST,
-                                                                      detail=Constants.PRODUCT_NOT_EXIST,
-                                                                      status_code=status.HTTP_400_BAD_REQUEST,
-                                                                      cause=f"No existen productos con branch_id {reservation.branch_id} para la reserva")
+        # TODO: Validar cliente existente
+        # TODO: Preguntar si es necesario desde frontend saber si cliente no existe o está inactivo
+        client: ClientEntity = self._client_dao_.get_client_by_id(client_id=client_id, db=db)  # TODO: Comprobar si no es necesaio agregar try catch ala query
 
-            client: ClientEntity = self._client_dao_.get_client_by_id(client_id=client_id, db=db)
+        if client is None:
+            raise CustomError(name=Constants.CLIENT_NOT_EXIST,
+                              detail=Constants.CLIENT_NOT_EXIST,
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause=f"Cliente no existe para crear la reserva")
+        if not client.user.is_active:
+            raise CustomError(name=Constants.CLIENT_UNAUTHORIZED,
+                              detail=Constants.CLIENT_UNAUTHORIZED,
+                              status_code=status.HTTP_401_UNAUTHORIZED,
+                              cause=f"Clienten esta inactivo")
 
-            if client is None:
-                await self._thrower_exceptions.throw_custom_exception(name=Constants.CLIENT_NOT_EXIST,
-                                                                      detail=Constants.CLIENT_NOT_EXIST,
-                                                                      status_code=status.HTTP_400_BAD_REQUEST,
-                                                                      cause=f"Cliente con el id {client_id} no existe para crear la reserva")
+        reservation_count: int = self._reservation_dao_.\
+            get_reservation_count_by_date(branch_id=new_reservation.branch_id,
+                                          date_reservation=new_reservation.date, db=db)
+        logger.info("reservation_count: {}", reservation_count)
 
-            if not client.user.is_active:
-                await self._thrower_exceptions.throw_custom_exception(name=Constants.CLIENT_UNAUTHORIZED,
-                                                                      detail=Constants.CLIENT_UNAUTHORIZED,
-                                                                      status_code=status.HTTP_401_UNAUTHORIZED,
-                                                                      cause=f"Cliente con el id {client_id} esta inactivo")
+        if reservation_count >= self._MAX_RESERVATION:
+            raise CustomError(name=Constants.BRANCH_MAX_RESERVATION,
+                              detail=Constants.CLIENT_UNAUTHORIZED,
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause=f"Sucursal ya cuenta con el máximo de reservas para el día")
 
-            amount = 0
+        request_reservation_date: datetime = datetime.now(tz=timezone.utc)
+        reservation_day: int = new_reservation.date.isoweekday() - self._DAY_ADJUSTMENT
+        branch_schedule_entity = self._branch_dao.get_day_schedule(branch_id=new_reservation.branch_id,
+                                                                   day=reservation_day, db=db)
 
-            reservation_products: list[ReservationProductEntity] = []
+        is_valid_time = self._difference_hour(opening_hour=branch_schedule_entity.opening_hour,
+                                              closing_hour=branch_schedule_entity.closing_hour,
+                                              request_hour=new_reservation.hour)
 
-            for product in products:
-                for x in reservation.products:
-                    if product.id == x.id:
-                        amount += x.quantity * (product.amount + product.commission_tyne)
-                        reservation_product = ReservationProductEntity()
-                        reservation_product.name_product = product.name
-                        reservation_product.category_product = product.category.name
-                        reservation_product.amount = product.amount
-                        reservation_product.commission_tyne = product.commission_tyne
-                        reservation_product.quantity = x.quantity
-                        reservation_product.description = product.description
-                        reservation_products.append(reservation_product)
+        if not is_valid_time or (new_reservation.date - request_reservation_date.date()).days > self._WEEK_AS_DAYS:
+            raise CustomError(name=Constants.RESERVATION_DATETIME_ERROR,
+                              detail=Constants.RESERVATION_DATETIME_ERROR,
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause=f"Fecha y/o hora de reserva no válida(s)")
 
-            amount = round(amount)
-            MIN_BUY: int = 10000
-            if amount < MIN_BUY:
-                await self._thrower_exceptions.throw_custom_exception(name=Constants.BUY_INVALID_ERROR,
-                                                                      detail=Constants.BUY_INVALID_ERROR,
-                                                                      status_code=status.HTTP_400_BAD_REQUEST,
-                                                                      cause=f"La compra debe ser mayor a {str(MIN_BUY)}")
+        products = self._product_dao_.get_products_by_ids(products_id=new_reservation.get_products_ids(),
+                                                          branch_id=new_reservation.branch_id, db=db)
 
-            entity = ReservationEntity()
-            entity.reservation_date = reservation.date
-            entity.preference = reservation.preference
-            entity.client_id = client_id
-            entity.branch_id = reservation.branch_id
-            entity.people = reservation.people
-            entity.hour = reservation.hour
-            entity.transaction_id = str(uuid.uuid4())
+        if not products or len(new_reservation.products) != len(products):
+            raise CustomError(name=Constants.PRODUCT_NOT_EXIST,
+                              detail=Constants.PRODUCT_NOT_EXIST,
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause=f"No existe(n) producto(s) para la reserva")
 
-            reservation_status = ReservationChangeStatusEntity()
-            reservation_status.status_id = ReservationStatusEnum.reserva_iniciada.value
-            reservation_status.datetime = datetime.now(tz=timezone.utc)
-            reservation_status.reservation_id = entity.id
+        reservation_products: list[ReservationProductEntity] = []
+        product_list: list = new_reservation.products
+        product_dict: dict = {product_list[i].id: product_list[i].quantity for i in range(len(product_list))}
+        logger.info("product_dict: {}", product_dict)
 
-            # save reservation
-            reservation_response = self._reservation_dao_.create_reservation(reservation=entity,
-                                                                             reservation_status=reservation_status,
-                                                                             products=reservation_products,
-                                                                             db=db)
+        amount: int = 0
+        for product in products:
+            quantity = product_dict[product.id]
+            amount += product.amount * quantity
+            reservation_product = self._create_reservation_product(product=product, quantity=quantity)
+            reservation_products.append(reservation_product)
 
-            reservation_id = reservation_response.id
+        logger.info("amount: {}", amount)
 
-            # request payment link
-            response_khipu = self._khipu_service.create_link(amount=amount, payer_email=client.user.email,
-                                                             transaction_id=entity.transaction_id)
+        if amount < self._MIN_AMOUNT:
+            raise CustomError(name=Constants.BUY_INVALID_ERROR,
+                              detail=Constants.BUY_INVALID_ERROR,
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause=f"La compra debe ser mayor a {self._MIN_AMOUNT}")
 
-            if response_khipu.status != 201:
-                await self._thrower_exceptions.throw_custom_exception(name=Constants.KHIPU_GET_ERROR,
-                                                                      detail=Constants.KHIPU_GET_ERROR,
-                                                                      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                                                      cause="Error obtener datos khipu")
+        fifteen_percent: int = round(amount * self._TYNE_COMMISSION)
+        logger.info("15% amount: {}", fifteen_percent)
 
-            # update reservation with payment_id from khipu
-            self._reservation_dao_.update_payment_id_reservation(reservation_id=reservation_id,
-                                                                 payment_id=response_khipu.payment_id,
-                                                                 db=db)
+        total_amount: int = amount + fifteen_percent
+        logger.info("Tota amount: {}", total_amount)
 
-            # add new reservation change status
-            change_status = ReservationChangeStatusEntity()
-            change_status.status_id = ReservationStatusEnum.reserva_en_proceso.value
-            change_status.datetime = datetime.now(tz=timezone.utc)
-            change_status.reservation_id = reservation_id
-            self._reservation_dao_.add_reservation_status(reservation_status=change_status, db=db)
+        reservation_entity: ReservationEntity = self._create_reservation_entity(new_reservation=new_reservation,
+                                                                                client_id=client_id, amount=amount,
+                                                                                fifteen_percent=fifteen_percent)
 
-            response = ReservationResponse()
-            response.url_payment = response_khipu.url
-            response.reservation_id = reservation_id
-            response.payment_id = response_khipu.payment_id
-            return response
+        reservation_status = ReservationChangeStatusEntity()
+        reservation_status.status_id = ReservationStatus.STARTED
+        reservation_status.datetime = datetime.now(tz=timezone.utc)
 
-        except Exception as error:
+        reservation_id = self._reservation_dao_.create_reservation(reservation=reservation_status,
+                                                                   reservation_status=reservation_status,
+                                                                   products=reservation_products,
+                                                                   db=db)
 
-            if reservation_id > 0:
-                change_status = ReservationChangeStatusEntity()
-                change_status.status_id = ReservationStatusEnum.reserva_con_problemas.value
-                change_status.datetime = datetime.now(tz=timezone.utc)
-                change_status.reservation_id = reservation_id
-                self._reservation_dao_.add_reservation_status(reservation_status=change_status, db=db)
+        response_khipu = self._khipu_service.create_link(amount=total_amount, payer_email=client.user.email,
+                                                         transaction_id=reservation_entity.transaction_id)
 
-            raise error
+        if response_khipu.status != status.HTTP_201_CREATED:
+            await self._thrower_exceptions.throw_custom_exception(name=Constants.KHIPU_GET_ERROR,
+                                                                  detail=Constants.KHIPU_GET_ERROR,
+                                                                  status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                                                  cause="Error obtener datos khipu")
+
+        self._reservation_dao_.update_payment_id_reservation(reservation_id=reservation_id,
+                                                             payment_id=response_khipu.payment_id,
+                                                             db=db)
+
+        change_status = ReservationChangeStatusEntity()
+        change_status.status_id = ReservationStatus.IN_PROCESS
+        change_status.datetime = datetime.now(tz=timezone.utc)
+        change_status.reservation_id = reservation_id
+        self._reservation_dao_.add_reservation_status(reservation_status=change_status, db=db)
+
+        response = ReservationResponse()
+        response.url_payment = response_khipu.url
+        response.reservation_id = reservation_id
+        response.payment_id = response_khipu.payment_id
+
+        self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.SUCCESSFUL_PAYMENT,
+                                       receiver_email=client.user.email) # TODO: Agregar template. Actualizar archivo html
+
+        # TODO: Agregar lógica escucha 15 minutos para confirmar reserva desde local
+        # TODO: Agregar lógica para saber cuando da error, cambiar estado reserva a "con problemas" antes habia un try catch pero no aseguraba el reservation id
+        return response
+
+    def _difference_hour(self, opening_hour: str, closing_hour: str, request_hour: str) -> bool:
+        opening_hour_datetime = datetime.strptime(opening_hour, "%H:%M")
+        closing_hour_datetime = datetime.strptime(closing_hour, "%H:%M")
+
+        if request_hour < opening_hour:
+            difference_opening_seconds = opening_hour_datetime - datetime.strptime(request_hour, "%H:%M")
+        else:
+            difference_opening_seconds = datetime.strptime(request_hour, "%H:%M") - opening_hour_datetime
+
+        difference_opening_hour = difference_opening_seconds.total_seconds() / self._HOUR_AS_SECONDS
+        logger.info("difference_opening_hour: {}", difference_opening_hour)
+
+        if request_hour < closing_hour:
+            difference_closing_seconds = closing_hour_datetime - datetime.strptime(request_hour, "%H:%M")
+        else:
+            difference_closing_seconds = datetime.strptime(request_hour, "%H:%M") - closing_hour_datetime
+
+        difference_closing_hour = difference_closing_seconds.total_seconds() / self._HOUR_AS_SECONDS
+        logger.info("difference_closing_hour: {}", difference_closing_hour)
+
+        return difference_opening_hour >= self._TYNE_LIMIT_HOUR and difference_closing_hour >= self._TYNE_LIMIT_HOUR
+
+    def _create_reservation_product(self, product: ProductEntity, quantity: int) -> ReservationProductEntity:  #TODO: Se podría moder metodo a otro lado
+        reservation_product = ReservationProductEntity()
+        reservation_product.name_product = product.name
+        reservation_product.category_product = product.category.name
+        reservation_product.amount = product.amount
+        reservation_product.commission_tyne = product.commission_tyne
+        reservation_product.quantity = quantity
+        reservation_product.description = product.description
+        return reservation_product
+
+    def _create_reservation_entity(self, new_reservation: NewReservationRequest,
+                                  client_id: int, amount: int, fifteen_percent: int) -> ReservationEntity: #TODO: Se podría moder metodo a otro lado
+        reservation_entity: ReservationEntity = ReservationEntity()
+        reservation_entity.reservation_date = new_reservation.date
+        reservation_entity.preference = new_reservation.preference
+        reservation_entity.client_id = client_id
+        reservation_entity.branch_id = new_reservation.branch_id
+        reservation_entity.people = new_reservation.people
+        reservation_entity.hour = new_reservation.hour
+        reservation_entity.transaction_id = str(uuid.uuid4())
+        reservation_entity.amount = amount
+        reservation_entity.tyne_commission = fifteen_percent
+        return reservation_entity
 
     async def local_reservations(self,
                                  branch_id: int,
@@ -228,11 +332,11 @@ class ReservationService:
                               cause="Ya existe un pago asociado")
 
         # save the status pago cancelado or pago rechazado
-        if reservation_updated.status.value == ReservationStatusEnum.pago_cancelado.value or \
-                reservation_updated.status.value == ReservationStatusEnum.pago_rechazado.value or \
-                reservation_updated.status.value == ReservationStatusEnum.cancelado_local.value or \
-                reservation_updated.status.value == ReservationStatusEnum.reserva_confirmada.value or \
-                reservation_updated.status.value == ReservationStatusEnum.reserva_atendida.value:
+        if reservation_updated.status.value == ReservationStatus.CANCELED_PAYMENT or \
+                reservation_updated.status.value == ReservationStatus.REJECTED_PAYMENT or \
+                reservation_updated.status.value == ReservationStatus.REJECTED_BY_LOCAL or \
+                reservation_updated.status.value == ReservationStatus.CONFIRMED or \
+                reservation_updated.status.value == ReservationStatus.SERVICED:
             reservation_status = ReservationChangeStatusEntity()
             reservation_status.status_id = reservation_updated.status.value
             reservation_status.datetime = datetime.now(tz=timezone.utc)
@@ -253,7 +357,7 @@ class ReservationService:
         payment.reservation_id = reservation_updated.reservation_id
 
         reservation_status = ReservationChangeStatusEntity()
-        reservation_status.status_id = ReservationStatusEnum.pago_exitoso.value
+        reservation_status.status_id = ReservationStatus.SUCCESSFUL_PAYMENT
         reservation_status.datetime = datetime.now(tz=timezone.utc)
         reservation_status.reservation_id = reservation_updated.reservation_id
 
@@ -264,5 +368,5 @@ class ReservationService:
         response.amount = payment_response.amount
         response.reservation_id = payment_response.reservation_id
         response.receipt_url = payment_response.receipt_url
-
+        # TODO: ReservationEvent checkear si existe el evento de reserva con el id de reserva
         return response
