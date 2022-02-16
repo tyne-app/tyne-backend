@@ -15,13 +15,13 @@ class Menu:
     def __init__(self):
         self.sections = list()
 
-    def to_menu_read_domain(self, products: list[ProductEntity], branch: BranchEntity, opinions):
+    def to_menu_read_domain(self, products: list[ProductEntity], branch: BranchEntity):
         menu_domain = Menu()
 
         menu_domain.set_branch_id(branch)
         menu_domain.set_name(branch)
         menu_domain.set_sections_and_rango_precio(products)
-        menu_domain.set_rating(opinions)
+        menu_domain.set_rating("")
 
         return menu_domain
 

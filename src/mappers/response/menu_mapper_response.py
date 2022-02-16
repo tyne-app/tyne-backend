@@ -3,9 +3,9 @@ from src.repository.entity.BranchEntity import BranchEntity
 from src.repository.entity.ProductEntity import ProductEntity
 
 
-def to_menu_read_response(products: list[ProductEntity], branch: BranchEntity, opinions):
+def to_menu_read_response(products: list[ProductEntity], branch: BranchEntity,):
     menu = Menu()
-    return menu.to_menu_read_domain(products, branch, opinions)
+    return menu.to_menu_read_domain(products, branch)
 
 
 def to_menu_create_response():
