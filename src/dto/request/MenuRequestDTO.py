@@ -1,5 +1,4 @@
 from typing import Optional
-
 from pydantic import BaseModel
 
 
@@ -7,18 +6,12 @@ class ProductDTO(BaseModel):
     id: Optional[str]
     name: str
     description: str
-    url_image: str
-    amount: str
-    commission_tyne: str
-
-
-class CategoryDTO(BaseModel):
-    id: Optional[str]
-    name: str
+    url_image: Optional[str]
+    amount: int
 
 
 class SectionMenuDTO(BaseModel):
-    category: CategoryDTO
+    category_id: int
     products: list[ProductDTO]
 
 

@@ -22,7 +22,7 @@ class ProductEntity(Base):
     branch = relationship('BranchEntity', back_populates="product_branch")
     category: CategoryEntity = relationship('CategoryEntity', back_populates='product')
 
-    def __init__(self, id, category_id, name, description, url_image, amount, commission_tyne, branch_id):
+    def __init__(self, id, category_id, name, description, url_image, amount, branch_id):
         self.id = id
         self.category_id = category_id
         self.name = name
@@ -30,7 +30,6 @@ class ProductEntity(Base):
         self.url_image = url_image
         self.branch_id = branch_id
         self.amount = amount
-        self.commission_tyne = commission_tyne
 
     def product_dict(self):
         return {
@@ -38,8 +37,7 @@ class ProductEntity(Base):
             "name": self.name,
             "description": self.description,
             "image_url": self.url_image,
-            "amount": self.amount,
-            "commission_tyne": self.commission_tyne
+            "amount": self.amount
         }
 
     def get_category_dict(self):

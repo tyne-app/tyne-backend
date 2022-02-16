@@ -14,6 +14,9 @@ _menu_service_ = MenuService()
 _jwt_service = JwtService()
 
 
+# TODO: Falta endpoint para actualizar productos de un menu
+# TODO: Falta endpoint para que local obtenga menú
+
 @menu_controller.get('/categories', status_code=status.HTTP_200_OK)
 async def all_category(response: Response, db: Session = Depends(database.get_data_base)):
     categories = await _menu_service_.all_category(db)
