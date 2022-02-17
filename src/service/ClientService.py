@@ -53,7 +53,8 @@ class ClientService:
         await client_request.validate_fields()
 
         token = await self._tokenService_.decode_token_firebase(client_request.token)
-        print(token.__dict__)  # TODO: Eliminar
+        logger.info("Token dict: {}", token.__dict__)  # TODO: Eliminar
+        logger.inf("client_request: {}", client_request.__dict__)  # TODO: Eliminar
         password_service: PasswordService() = PasswordService()
         user_entity = client_request.to_user_entity(image_url=token.picture,
                                                     password=password_service.generate_password())  # TODO: Crea una contraseña random
