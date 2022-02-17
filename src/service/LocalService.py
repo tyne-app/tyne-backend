@@ -1,6 +1,5 @@
 from loguru import logger
 from sqlalchemy.orm import Session
-
 from src.dto.request.business_request_dto import NewAccount
 from src.dto.request.business_request_dto import NewBranch
 from src.mappers.request.BusinessMapperRequest import BusinessMapperRequest
@@ -12,6 +11,7 @@ from src.util.EmailSubject import EmailSubject
 from src.validator.LocalValidator import LocalValidator
 from src.service.EmailService import EmailService
 from src.util.Constants import Constants
+
 
 class LocalService:
     MSG_CREATE_ACCOUNT_SUCCESSFULLY = "Local creado correctamente"
@@ -29,7 +29,7 @@ class LocalService:
     MANAGER_EMAIL_KEY_WORD = 'user_un_email'
     MANAGER_EMAIL_ERROR_MESSAGE = 'Email {0} ya está registrado'
     MSG_NEW_BRANCH = 'Sucursal agregado correctamente'
-    ID_USER_TYPE = 1
+    ID_USER_TYPE = 1  # TODO: Cambiar por UserType.MANAGER
     _business_mapper_request = BusinessMapperRequest()
     DEFAULT_LOCAL_IMAGE_PROFILE = "https://res.cloudinary.com/dqdtvbynk/image/upload/v1636295279/Development/users/default%20main%20local%20image/Sart%C3%A9n_Tyne_Fondo_Transparente_zflbrr.png"
 

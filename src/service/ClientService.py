@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session
 from starlette import status
-
+from loguru import logger
 from src.dto.request.ClientRequest import ClientRequest
 from src.dto.request.ClientSocialRegistrationRequest import ClientSocialRegistrationRequest
 from src.dto.response.ClientResponse import ClientResponse
 from src.dto.response.SimpleResponse import SimpleResponse
-from src.enums.UserTypeEnum import UserTypeEnum
+from src.util.UserType import UserType
 from src.repository.dao.ClientDao import ClientDao
 from src.repository.dao.UserDao import UserDao
 from src.repository.entity.ClientEntity import ClientEntity
@@ -18,6 +18,8 @@ from src.exception.ThrowerExceptions import ThrowerExceptions
 from src.validator.ClientValidator import ClientValidator
 from src.service.EmailService import EmailService
 from src.util.EmailSubject import EmailSubject
+from src.mappers.ClientMapper import ClientMapper
+from src.mappers.UserMapper import UserMapper
 
 
 class ClientService:
@@ -28,6 +30,8 @@ class ClientService:
     _tokenService_ = JwtService()
     _throwerExceptions = ThrowerExceptions()
     _email_service: EmailService = EmailService()
+    _client_mapper = ClientMapper()
+    _user_mapper = UserMapper()
 
     async def get_client_by_id(self, client_id: int, db: Session):
         client: ClientEntity = self._client_dao_.get_client_by_id(client_id=client_id, db=db)
@@ -35,25 +39,17 @@ class ClientService:
         return client_dto.map(client_entity=client)
 
     async def create_client(self, client_req: ClientRequest, db: Session):
-        # validate fields
+        logger.info("Inicio creación credenciales cliente")
         await self._client_validator_.validate_fields(client_req.__dict__)
 
-        # create user
-        id_login_created = await self._login_service_.create_user_login(client_req.email, client_req.password,
-                                                                        int(UserTypeEnum.cliente.value),
-                                                                        # TODO: NO es necesario un Enum
-                                                                        db)
-        if id_login_created:  # TODO: Refactorizar creación de cuenta clienta
-            client_is_created = self._client_dao_.create_client(client_req, id_login_created, db)
-            if client_is_created:
-                self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CLIENT_WELCOME,
-                                               receiver_email=client_req.email)
-            if not client_is_created:
-                self._user_dao_.delete_user_by_id(id_login_created, db)
-                self._login_service_.delete_user_login(client_req.email, db)
-                await self._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_CREATE_ERROR_DETAIL,
-                                                                     detail=Constants.CLIENT_CREATE_ERROR_DETAIL,
-                                                                     status_code=status.HTTP_400_BAD_REQUEST)
+        user_entity: UserEntity = self._user_mapper.to_user_entity(client_request=client_req)
+        client_entity: ClientEntity = self._client_mapper.to_client_entity(client_request=client_req)
+        self._client_dao_.create_account(user_entity=user_entity, client_entity=client_entity, db=db)
+
+        logger.info("Credenciales cliente creadas")
+        logger.info("Cliente creado. Se enviará email de confirmación")
+        self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CLIENT_WELCOME,
+                                       receiver_email=client_req.email)
 
     async def create_client_social_networks(self, client_request: ClientSocialRegistrationRequest, db: Session):
         # fields validations

@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from starlette import status
 
-from src.enums.UserTypeEnum import UserTypeEnum
+from src.util.UserType import UserType
 from src.repository.entity.ClientEntity import ClientEntity
 from src.repository.entity.UserEntity import UserEntity
 from src.util.Constants import Constants
@@ -36,7 +36,7 @@ class ClientSocialRegistrationRequest(BaseModel):
         entity.created_date = datetime.now()
         entity.password = password
         entity.is_active = True
-        entity.id_user_type = int(UserTypeEnum.cliente.value)
+        entity.id_user_type = UserType.CLIENT
         entity.email = self.email
         entity.image_url = image_url
         return entity
