@@ -14,7 +14,7 @@ class UserDao:
             .filter(UserEntity.id == user_id) \
             .first()
 
-    def verify_email(self, email: str, db: Session):
+    def verify_email(self, email: str, db: Session):  # TODO: Es necesario esto?
         return db.query(UserEntity) \
             .filter(UserEntity.email == email) \
             .first()

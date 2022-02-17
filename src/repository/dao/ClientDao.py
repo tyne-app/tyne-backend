@@ -18,6 +18,7 @@ class ClientDao:
             client_entity.id_user = user_entity.id
             db.add(client_entity)
         except IntegrityError as err:
+            db.rollback()
             logger.info("Integrity error: {}", err)
             raise CustomError(name=Constants.EMAIL_INVALID_ERROR,
                               status_code=status.HTTP_400_BAD_REQUEST,

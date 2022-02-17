@@ -20,7 +20,7 @@ class ClientSocialRegistrationRequest(BaseModel):
     _utils_validator_ = UtilsValidator()
     _throwerExceptions = ThrowerExceptions()
 
-    def to_client_entity(self, user: UserEntity):
+    def to_client_entity(self):
         entity = ClientEntity()
         entity.name = self.name
         entity.last_name = self.lastName
@@ -28,7 +28,6 @@ class ClientSocialRegistrationRequest(BaseModel):
         entity.phone = None
         entity.created_date = datetime.now()
         entity.update_date = datetime.now()
-        entity.user = user
         return entity
 
     def to_user_entity(self, image_url: str, password: str):
