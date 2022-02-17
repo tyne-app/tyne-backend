@@ -52,14 +52,15 @@ class ClientService:
     async def create_client_social_networks(self, client_request: ClientSocialRegistrationRequest, db: Session):
         await client_request.validate_fields()
 
-        token = await self._tokenService_.decode_token_firebase(client_request.token)
-        logger.info("Token dict: {}", token.__dict__)  # TODO: Eliminar
-        logger.info("client_request: {}", client_request.__dict__)  # TODO: Eliminar
+        token = await self._tokenService_.decode_token_firebase(client_request.token)  # TODO: Tiene un atributo user_id se podría utilizar, en vez de generar passwrod
+        logger.info("Se decodifica token")
         password_service: PasswordService() = PasswordService()
         user_entity = client_request.to_user_entity(image_url=token.picture,
                                                     password=password_service.generate_password())  # TODO: Crea una contraseña random
         client_entity = client_request.to_client_entity()
         self._client_dao_.create_account(user_entity=user_entity, client_entity=client_entity, db=db)
+        logger.info("Se crea cliente")
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CLIENT_WELCOME,
                                        receiver_email=client_request.email)
+        logger.info("Email enviado a correo de cliente")
         return SimpleResponse(self._created_client)
