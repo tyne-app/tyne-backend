@@ -58,8 +58,6 @@ class ClientService:
         user_entity = client_request.to_user_entity(image_url=token.picture,
                                                     password=password_service.generate_password())  # TODO: Crea una contraseña random
         client_entity = client_request.to_client_entity()
-        logger.info("User entity: {}", user_entity.__dict__)
-        logger.info("Client entity: {}", client_entity.__dict__)
         self._client_dao_.create_account(user_entity=user_entity, client_entity=client_entity, db=db)
 
         logger.info("Se crea cliente")
