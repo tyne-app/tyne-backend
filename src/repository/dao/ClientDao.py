@@ -14,10 +14,10 @@ class ClientDao:
     def create_account(self, user_entity: UserEntity, client_entity: ClientEntity, db: Session):
         try:
             db.add(user_entity)
-            logger.info("User creado: {}", dict(user_entity))
+            logger.info("User creado: {}", user_entity.__dict__)
             db.flush()
             client_entity.id_user = user_entity.id
-            logger.info("Cliente creado")
+            logger.info("Cliente creado: {}", client_entity.__dict__)
             db.add(client_entity)
             logger.info("Se hizo commit de transaccion")
         except IntegrityError as err:
