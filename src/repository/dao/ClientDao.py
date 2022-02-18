@@ -20,6 +20,7 @@ class ClientDao:
             logger.info("Cliente creado: {}", client_entity.__dict__)
             db.add(client_entity)
             logger.info("Se hizo commit de transaccion")
+            db.commit()
         except IntegrityError as err:
             db.rollback()
             logger.info("Integrity error: {}", err)
