@@ -93,3 +93,18 @@ class JwtService:
                                                                  detail=Constants.TOKEN_DECODE_ERROR,
                                                                  status_code=status.HTTP_400_BAD_REQUEST,
                                                                  cause=content_detail)
+
+    async def verify_email_firebase(self, email: str):
+        is_valid = False
+        try:
+            auth.get_user_by_email(email)
+            is_valid = True
+            logger.info("Usuario registrado con redes sociales")
+        except Exception as e:
+            logger.error("Exception: {}", e)
+            logger.error("Exception dictionary: {}", e.__dict__)
+        finally:
+            if is_valid:
+                raise CustomError(name=Constants.USER_EXIST_FIREBASE,
+                                  detail=Constants.USER_EXIST_FIREBASE,
+                                  status_code=status.HTTP_401_UNAUTHORIZED)
