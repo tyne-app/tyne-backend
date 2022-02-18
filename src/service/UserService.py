@@ -7,7 +7,7 @@ from src.dto.request.LoginSocialRequest import LoginSocialRequest
 from src.dto.request.LoginUserRequest import LoginUserRequest
 from src.dto.response.UpdateProfileImageResponse import UpdateProfileImageDto
 from src.dto.response.UserTokenResponse import UserTokenResponse
-from src.enums.UserTypeEnum import UserTypeEnum
+from src.util.UserType import UserType
 from src.repository.dao.ClientDao import ClientDao
 from src.repository.dao.LocalDao import LocalDAO
 from src.repository.dao.UserDao import UserDao
@@ -54,7 +54,7 @@ class UserService:
                                                                      detail=Constants.PASSWORD_INVALID_ERROR,
                                                                      status_code=status.HTTP_401_UNAUTHORIZED)
 
-            if user.id_user_type == UserTypeEnum.encargado_local.value:
+            if user.id_user_type == UserType.MANAGER:
                 branch: BranchEntity = self._localDao_.find_branch_by_email_user_manager(email=loginRequest.email,
                                                                                          db=db)
                 if branch is not None:
@@ -104,7 +104,7 @@ class UserService:
                                                                      detail=Constants.CLIENT_UNAUTHORIZED,
                                                                      status_code=status.HTTP_401_UNAUTHORIZED)
 
-            if user.id_user_type == UserTypeEnum.encargado_local.value:
+            if user.id_user_type == UserType.MANAGER:
                 branch: BranchEntity = self._localDao_.find_branch_by_email_user_manager(email=loginRequest.email,
                                                                                          db=db)
                 if branch is not None:

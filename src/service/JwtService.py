@@ -45,21 +45,13 @@ class JwtService:
         return tokenResponse
 
     async def decode_token_firebase(self, token: str):
-
-        try:
-            decoded_token = auth.verify_id_token(token)
-            token_firebase = TokenFirebase()
-            token_firebase.name = decoded_token['name']
-            token_firebase.picture = decoded_token['picture']
-            token_firebase.aud = decoded_token['aud']
-            token_firebase.user_id = decoded_token['user_id']
-            # token_firebase.email = decoded_token['email']
-            # token_firebase.email_verified = decoded_token['email_verified']
-            return token_firebase
-        except:
-            await self._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_INVALID_ERROR,
-                                                                 detail=Constants.TOKEN_INVALID_ERROR,
-                                                                 status_code=status.HTTP_400_BAD_REQUEST)
+        decoded_token = auth.verify_id_token(token)  # TODO: Verificar qué error da
+        token_firebase = TokenFirebase()
+        token_firebase.name = decoded_token['name']
+        token_firebase.picture = decoded_token['picture']
+        token_firebase.aud = decoded_token['aud']
+        token_firebase.user_id = decoded_token['user_id']
+        return token_firebase
 
     async def verify_and_get_token_data(self, request):
         try:

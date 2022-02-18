@@ -48,9 +48,9 @@ async def get_client_by_id(response: Response, id: int, db: Session = Depends(da
     '',
     status_code=status.HTTP_201_CREATED
 )
-async def create_client(response: Response, client_req: ClientRequest,
+async def create_client(response: Response, client_request: ClientRequest,
                         db: Session = Depends(database.get_data_base)):
-    return await _client_service_.create_client(client_req, db)
+    return await _client_service_.create_client(client_request=client_request, db=db)
 
 
 @client_controller.post(
