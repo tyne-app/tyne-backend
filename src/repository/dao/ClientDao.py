@@ -14,7 +14,7 @@ class ClientDao:
     def create_account(self, user_entity: UserEntity, client_entity: ClientEntity, db: Session):
         try:
             db.add(user_entity)
-            logger.info("User creado")
+            logger.info("User creado: {}", dict(user_entity))
             db.flush()
             client_entity.id_user = user_entity.id
             logger.info("Cliente creado")
