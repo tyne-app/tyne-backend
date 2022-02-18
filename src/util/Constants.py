@@ -30,6 +30,7 @@ class Constants:
     USER_NO_AUTH_DETAIL = "X"
     USER_EMAIL_EXIST = "Usuario con el email ya existe"
     USER_ALREADY_EXIST = "Usuario ya existe en el sistema"
+    USER_EXIST_FIREBASE = "Usuario registrado con redes sociales"
 
     USER_CREATE_ERROR = "Error al crear usuario"
     USER_TYPE_MOT_FOUND = "Tipo de usuario no encontrado"

@@ -41,6 +41,8 @@ class UserService:
         tokenResponse: UserTokenResponse = None
         user: UserEntity = self._user_dao_.verify_email(loginRequest.email, db)
 
+        await self._tokenService_.verify_email_firebase(loginRequest.email)
+
         if user is not None:
             if user.is_active is not True:
                 await self._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_UNAUTHORIZED,
