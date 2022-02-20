@@ -81,7 +81,7 @@ class SearchService:
             'name': branch_dict['branch']['name'],
             'state_name': branch_dict['branch']['state_name'],
             'rating': branch_dict['aggregate_values']['rating'] if branch_dict['aggregate_values'] else 0,
-            'avg_price': branch_dict['aggregate_values']['avg_price'] if branch_dict['aggregate_values'] else 0,
+            'avg_price': round(branch_dict['aggregate_values']['avg_price']) if branch_dict['aggregate_values'] else 0,
             'min_price': branch_dict['aggregate_values']['min_price'] if branch_dict['aggregate_values'] else 0,
             'max_price': branch_dict['aggregate_values']['max_price'] if branch_dict['aggregate_values'] else 0,
             'branches': branch_dict['branches'],
