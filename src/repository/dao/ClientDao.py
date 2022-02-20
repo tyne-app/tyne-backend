@@ -47,17 +47,3 @@ class ClientDao:
         db.add(client_req.to_entity(id_login_created))
         db.commit()
         return True
-
-    def create_client_v2(self, client: ClientEntity, db: Session):  # TODO: Nombre más explicativo
-        try:
-            db.add(client.user)
-            db.flush()
-
-            client.id_user = client.user.id
-            db.add(client)
-
-            db.commit()
-            return True
-        except Exception as ex:
-            db.rollback()
-            raise ex

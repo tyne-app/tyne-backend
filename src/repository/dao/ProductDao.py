@@ -15,11 +15,28 @@ class ProductDao:
         db.commit()
         return True
 
-    def save_all_products_menu(self, db: Session, seccions_list_entity, branch_id) -> None:
-        db.query(ProductEntity).filter(ProductEntity.branch_id == branch_id).delete()
+    def save_all_products_menu(self, branch_id: int, sections_list_entity: list, db: Session) -> None:
 
-        for products in seccions_list_entity:
-            db.bulk_save_objects(products)
+        products: list
+        product: ProductEntity
+
+        for products_list in sections_list_entity:
+
+            products_to_insert: list = []
+
+            for product in products_list:
+                product_exists = db.query(ProductEntity.id)\
+                    .filter(ProductEntity.name == product.name)\
+                    .filter(ProductEntity.category_id == product.category_id)\
+                    .filter(ProductEntity.branch_id == branch_id)\
+                    .first()
+
+                if not product_exists:
+                    products_to_insert.append(product)
+
+            if products_to_insert:
+                db.bulk_save_objects(products_list)
+
         db.commit()
 
     def get_products_by_branch(self, db: Session, branch_id: int) -> ProductEntity:

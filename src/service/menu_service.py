@@ -24,12 +24,12 @@ class MenuService:
     async def create_menu(self, branch_id, db, menu_request: MenuRequestDTO):
         logger.info("branch_id: {}, menu_request: {}", branch_id, menu_request)
 
-        self._menu_validator.list_has_product(menu_list=menu_request.menu)
+        # TODO: Momentaneamente congelado self._menu_validator.list_has_product(menu_list=menu_request.menu)
 
         sections_list_entity = self._menu_mapper_request.to_entities(menu_request, branch_id)
         logger.info("seccions_list_entity: {}", sections_list_entity)
 
-        self._product_dao_.save_all_products_menu(db, sections_list_entity, branch_id)
+        self._product_dao_.save_all_products_menu(branch_id=branch_id, sections_list_entity=sections_list_entity, db=db)
 
         return menu_mapper_response.to_menu_create_response()
 

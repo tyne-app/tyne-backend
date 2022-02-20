@@ -12,7 +12,6 @@ class MenuValidator:
 
         section: SectionMenuDTO
         for section in menu_list:
-            print(section)
             if not section.products:
                 raise CustomError(name=Constants.MENU_CREATE_ERROR,
                                   status_code=status.HTTP_400_BAD_REQUEST,
