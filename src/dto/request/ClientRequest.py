@@ -29,6 +29,7 @@ class ClientRequest(BaseModel):
         logger.info("Creacion de entidad cliente en client request")
         client_entity = ClientEntity()
         client_entity.name = self.name
+        client_entity.last_name = self.lastName
         client_entity.birth_date = self.birthDate  # TODO: cambiar a snake_case. Hablar con frontend
         client_entity.phone = self.phone
         client_entity.created_date = datetime.now(tz=timezone.utc)

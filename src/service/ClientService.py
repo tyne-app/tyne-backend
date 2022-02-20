@@ -38,6 +38,7 @@ class ClientService:
 
     async def create_client(self, client_request: ClientRequest, db: Session):
         logger.info("Inicio creación credenciales cliente")
+        logger.info("cliete_request: {}", client_request)
         await self._client_validator_.validate_fields(client_request.__dict__)  # TODO: Lo que es validación puede ser más general
 
         user_entity: UserEntity = client_request.to_user_entity()
