@@ -19,7 +19,6 @@ class ClientDao:
             db.add(client_entity)
             db.commit()
         except IntegrityError as err:
-            print("Integration error")
             db.rollback()
             logger.info("Integrity error: {}", err)
             raise CustomError(name=Constants.EMAIL_INVALID_ERROR,
@@ -27,7 +26,6 @@ class ClientDao:
                               detail=Constants.USER_EMAIL_EXIST,
                               cause=Constants.USER_EMAIL_EXIST)
         except Exception as ex:
-            print("Excepciones")
             db.rollback()
             raise ex
 
