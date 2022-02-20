@@ -18,7 +18,7 @@ class BranchResponse:
             branch_response = BranchResponse()
 
             if client_id:
-                branch_response.avg_price = branch.avg_price
+                branch_response.avg_price = round(branch.avg_price)
                 branch_response.min_price = branch.min_price
                 branch_response.max_price = branch.max_price
                 branch_response.rating = branch.rating

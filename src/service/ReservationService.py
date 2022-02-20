@@ -91,7 +91,6 @@ class ReservationService:
         # TODO: Ver los cambios de product amount a tipo entero en DB
         # TODO: Discutir eliminar campos tyne commision de product reservation y product
 
-        # TODO: Validar cliente existente
         # TODO: Preguntar si es necesario desde frontend saber si cliente no existe o está inactivo
         client: ClientEntity = self._client_dao_.get_client_by_id(client_id=client_id, db=db)  # TODO: Comprobar si no es necesaio agregar try catch ala query
 
@@ -100,11 +99,14 @@ class ReservationService:
                               detail=Constants.CLIENT_NOT_EXIST,
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause=f"Cliente no existe para crear la reserva")
+        logger.info("CLiente existe")
+
         if not client.user.is_active:
             raise CustomError(name=Constants.CLIENT_UNAUTHORIZED,
                               detail=Constants.CLIENT_UNAUTHORIZED,
                               status_code=status.HTTP_401_UNAUTHORIZED,
                               cause=f"Clienten esta inactivo")
+        logger.info("Cliente está activo")
 
         reservation_count: int = self._reservation_dao_.\
             get_reservation_count_by_date(branch_id=new_reservation.branch_id,

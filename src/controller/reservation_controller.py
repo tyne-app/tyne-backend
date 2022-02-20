@@ -19,17 +19,6 @@ reservation_controller = APIRouter(
 
 _jwt_service_ = JwtService()
 _reservation_service_ = ReservationService()
-# TODO: Eiminar endopoint
-@reservation_controller.get('/check/{reservation_id}', status_code=status.HTTP_200_OK)
-async def check(reservation_id: str):
-    return _reservation_service_.check_thread(thread_name=reservation_id)
-# TODO: Eiminar endopoint
-@reservation_controller.post('/{reservation_id}', status_code=status.HTTP_200_OK)
-async def test_path(reservation_id: int):
-    print("Reservation time dict")
-    print(_reservation_service_._reservation_timer)
-    print("Largo diccionario: %s", len(_reservation_service_._reservation_timer))
-    return _reservation_service_.crear(reservation_id=reservation_id)
 
 
 @reservation_controller.post('', status_code=status.HTTP_200_OK, response_model=ReservationResponse)
