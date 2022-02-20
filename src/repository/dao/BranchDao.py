@@ -14,6 +14,7 @@ from src.repository.entity.ReservationEntity import ReservationEntity
 from src.repository.entity.RestaurantEntity import RestaurantEntity
 from src.repository.entity.StateEntity import StateEntity
 from src.repository.entity.UserEntity import UserEntity
+from src.util.ReservationStatus import ReservationStatus
 
 
 class BranchDao:
@@ -29,7 +30,8 @@ class BranchDao:
                             db: Session,
                             client_id: int,
                             limit: int):
-        all_branches = None
+
+        MAX_RESERVATION_COUNT: int = 4
 
         all_branches = db.query(
             distinct(BranchEntity.id),
@@ -52,14 +54,14 @@ class BranchDao:
             .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
             .join(BranchImageEntity, BranchImageEntity.branch_id == BranchEntity.id) \
             .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
-            .join(UserEntity, UserEntity.id == ManagerEntity.id_user)
-        all_branches = all_branches \
-            .join(ProductEntity, ProductEntity.branch_id == BranchEntity.id, isouter=True) \
-            .join(OpinionEntity, OpinionEntity.branch_id == BranchEntity.id, isouter=True)
-
-        all_branches = all_branches \
+            .join(UserEntity, UserEntity.id == ManagerEntity.id_user) \
+            .join(BranchScheduleEntity, BranchScheduleEntity.branch_id == BranchEntity.id) \
+            .join(ProductEntity, ProductEntity.branch_id == BranchEntity.id) \
+            .join(OpinionEntity, OpinionEntity.branch_id == BranchEntity.id, isouter=True) \
             .filter(BranchImageEntity.is_main_image) \
-            .filter(UserEntity.is_active)
+            .filter(UserEntity.is_active) \
+            .filter(BranchScheduleEntity.active)
+
         if search_parameters['name']:
             name = search_parameters['name'].lower()
             all_branches = all_branches.filter(func.lower(RestaurantEntity.name).like("%" + name + "%"))
@@ -73,21 +75,21 @@ class BranchDao:
             ).select_from(ReservationEntity) \
                 .join(ReservationChangeStatusEntity,
                       ReservationChangeStatusEntity.reservation_id == ReservationEntity.id) \
-                .filter(or_(ReservationChangeStatusEntity.status_id < 3, ReservationChangeStatusEntity == 4)) \
+                .filter(ReservationChangeStatusEntity.status_id == ReservationStatus.CONFIRMED) \
                 .filter(ReservationEntity.reservation_date == date_reservation) \
                 .group_by(ReservationEntity.id).cte(name='reservation_data')
 
-            all_branches = all_branches.filter(BranchEntity.id.in_(db.query(reservation_data.c.branch_id) \
-                .select_from(reservation_data) \
-                .group_by(reservation_data.c.branch_id) \
+            all_branches = all_branches.filter(BranchEntity.id.not_in(db.query(reservation_data.c.branch_id)
+                .select_from(reservation_data)
+                .group_by(reservation_data.c.branch_id)
                 .having(
-                func.count(reservation_data.c.reservation_id) < 4)))
+                func.count(reservation_data.c.reservation_id) == MAX_RESERVATION_COUNT)))
 
         if search_parameters['state_id']:
             state_id = search_parameters['state_id']
             all_branches = all_branches.filter(StateEntity.id == state_id)
 
-        if search_parameters['sort_by'] and search_parameters['order_by']:  # TODO: Se implementa después
+        if search_parameters['sort_by'] and search_parameters['order_by']:  # TODO: Se implementa después. Refactorizar.
             if search_parameters['order_by'] == 1:
                 if search_parameters['sort_by'] == 1:
                     all_branches = all_branches.order_by(
@@ -107,6 +109,7 @@ class BranchDao:
                 elif search_parameters['sort_by'] == 3:
                     all_branches = all_branches.order_by(
                         (func.min(ProductEntity.amount).over(partition_by=BranchEntity.id)).desc())
+
         total_number_all_branches = all_branches.count()
 
         page = search_parameters['page']
@@ -225,6 +228,6 @@ class BranchDao:
         return branch_dict
 
     def get_day_schedule(self, branch_id: int, day: int, db: Session) -> BranchScheduleEntity:
-        return db.query(BranchScheduleEntity)\
-            .filter(BranchScheduleEntity.branch_id == branch_id)\
+        return db.query(BranchScheduleEntity) \
+            .filter(BranchScheduleEntity.branch_id == branch_id) \
             .filter(BranchScheduleEntity.day == day).first()

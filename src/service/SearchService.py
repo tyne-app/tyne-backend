@@ -25,7 +25,8 @@ class SearchService:
     async def search_all_branches(self, parameters: SearchParameter, db: Session, client_id: int):
         search_parameters = self.clear_null_values(
             values=parameters)  # TODO: Formato datetime validar con otra función y no con REGEX
-
+        # TODO: Refactorizar todo el flujo de datos
+        logger.info("search_parameters: {}", search_parameters)
         await self.search_validator.validate_search_parameters(search_parameters=search_parameters)
 
         if search_parameters['date_reservation']:
@@ -36,15 +37,14 @@ class SearchService:
             .search_all_branches(search_parameters=search_parameters,
                                  client_id=client_id,
                                  db=db, limit=self.TOTAL_ITEMS_PAGE)
-
-        if type(all_branches_result) is str:
-            self.raise_custom_error(name=self.MSG_ERROR_ALL_BRANCHES, message=all_branches_result)
+        logger.info('all_branches_result: {}', all_branches_result)
 
         branch_response = BranchResponse()
-        result = branch_response.to_all_branch(client_id, all_branches_result['all_branches'])
+        all_branches = branch_response.to_all_branch(client_id, all_branches_result['all_branches'])
+        logger.info("all_branches: {}", all_branches)
 
         total_number_all_branches = all_branches_result['total_number_all_branches']
-        all_branches = result
+        logger.info("total_number_all_branches: {}", total_number_all_branches)
 
         return self._business_mapper_request. \
             to_search_branches_response(content=all_branches, total_items=total_number_all_branches,
