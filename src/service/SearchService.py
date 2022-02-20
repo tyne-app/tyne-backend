@@ -88,4 +88,5 @@ class SearchService:
             'images': branch_dict['images'],
             'schedule': branch_dict['schedule']
         }
+        logger.info('branch_profile: {}', branch_profile)
         return branch_profile

@@ -167,7 +167,7 @@ class BranchDao:
                 func.max(ProductEntity.amount).label("max_price"),
                 func.min(ProductEntity.amount).label("min_price")) \
                 .select_from(BranchEntity) \
-                .join(OpinionEntity, OpinionEntity.branch_id == BranchEntity.id) \
+                .join(OpinionEntity, OpinionEntity.branch_id == BranchEntity.id, isouter=True) \
                 .join(ProductEntity, ProductEntity.branch_id == BranchEntity.id) \
                 .filter(BranchEntity.id == branch.id).first()
 
