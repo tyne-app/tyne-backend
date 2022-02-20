@@ -184,18 +184,19 @@ class BranchDao:
         logger.info('branch_dict: {}', branch_dict)
 
         branches = db.query(
+            distinct(BranchEntity.id),
             BranchEntity.id.label(name='branch_id'),
             RestaurantEntity.name.label(name='restaurant_name'),
             StateEntity.name.label(name='state_name'),
             BranchEntity.street,
-            BranchEntity.street_number,
-            BranchEntity.latitude,
-            BranchEntity.longitude, ) \
+            BranchEntity.street_number) \
             .select_from(BranchEntity) \
             .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
             .join(StateEntity, StateEntity.id == BranchEntity.state_id) \
             .join(ManagerEntity, ManagerEntity.id == BranchEntity.manager_id) \
             .join(UserEntity, UserEntity.id == ManagerEntity.id_user) \
+            .join(ProductEntity, ProductEntity.branch_id == BranchEntity.id) \
+            .join(BranchScheduleEntity, BranchScheduleEntity.branch_id == BranchEntity.id) \
             .filter(RestaurantEntity.id == branch.restaurant_id) \
             .filter(BranchEntity.id != branch.id) \
             .filter(UserEntity.is_active).all()
