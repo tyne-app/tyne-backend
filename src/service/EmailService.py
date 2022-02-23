@@ -57,11 +57,15 @@ class EmailService:
                     return 'welcome.html'
                 case EmailSubject.SUCCESSFUL_PAYMENT:
                     return 'successful_payment.html'
+                case EmailSubject.LOCAL_NO_CONFIRMATION_TO_CLIENT:
+                    return 'local_no_confirmation.html'
 
-        if user is Constants.LOCAL:
+        if user is Constants.BRANCH:
             match subject:
                 case EmailSubject.LOCAL_WELCOME:
                     return 'welcome.html'
+                case EmailSubject.LOCAL_NO_CONFIRMATION_TO_LOCAL:
+                    return 'local_no_confirmation.html'
 
         if user is Constants.USER:
             return 'forgotten_password.html'

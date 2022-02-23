@@ -19,6 +19,12 @@ Base = declarative_base()
 
 logger.info('Conexión con base de datos: engine = {}', _engine_)
 
+scheduler = BackgroundScheduler()
+jobstore = SQLAlchemyJobStore(url=_connection_string_, engine=_engine_, tableschema='tyne')
+scheduler.add_jobstore(jobstore=jobstore)
+scheduler.start() # TODO: Ver una manera de no tener ejecutándose el scheduler siempre
+
+logger.info("jobstore = {}", jobstore)
 
 def get_data_base():
     db = _session_local_()
@@ -28,15 +34,3 @@ def get_data_base():
         db.close()
 
 
-
-#def say_hello():
-#    print('Hello World!')
-
-
-#scheduler = BackgroundScheduler()
-#jobstore = SQLAlchemyJobStore(url=_connection_string_, engine=_engine_, tableschema='tyne')
-#scheduler.add_jobstore(jobstore)
-
-#scheduler.add_job(func=say_hello, id='test', replace_existing=True, trigger='interval', seconds=15)
-#scheduler.start()
-#print(" Se inicio el scheduler")

@@ -90,5 +90,5 @@ class Constants:
     IMAGE_NOT_FOUND_ERROR = "Imagen no encontrada"
 
     CLIENT = 'client'
-    LOCAL = 'local'
+    BRANCH = 'branch'
     USER = 'user'

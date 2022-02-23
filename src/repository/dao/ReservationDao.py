@@ -1,6 +1,7 @@
-from datetime import date
+from datetime import date, datetime
+from fastapi import Depends
 from loguru import logger
-from sqlalchemy import func, distinct, extract
+from sqlalchemy import func, distinct, extract, update
 from sqlalchemy.orm import Session
 from datetime import date
 from src.repository.entity.BranchEntity import BranchEntity
@@ -17,7 +18,7 @@ from src.repository.entity.ReservationStatusEntity import ReservationStatusEntit
 from src.repository.entity.RestaurantEntity import RestaurantEntity
 from src.repository.entity.StateEntity import StateEntity
 from src.util.ReservationStatus import ReservationStatus
-
+from src.configuration.database import database
 
 class ReservationDao:
 
@@ -44,7 +45,8 @@ class ReservationDao:
             db.rollback()
             raise ex
 
-    def update_payment_id_reservation(self, reservation_id: int, payment_id: str, db: Session):  # TODO: Parece que no es necesario
+    def update_payment_id_reservation(self, reservation_id: int, payment_id: str,
+                                      db: Session):  # TODO: Parece que no es necesario
         reservation: ReservationEntity = db \
             .query(ReservationEntity) \
             .filter(ReservationEntity.id == reservation_id) \
@@ -60,7 +62,16 @@ class ReservationDao:
     def add_reservation_status(self, reservation_status: ReservationChangeStatusEntity, db: Session):
         db.add(reservation_status)
         db.commit()
-        return reservation_status
+
+    def update_reservation_status(self, reservation_status: ReservationChangeStatusEntity, db: Session) -> None:
+        reservation_change_status: ReservationChangeStatusEntity = db.query(ReservationChangeStatusEntity)\
+            .filter(ReservationChangeStatusEntity.id == reservation_status.id)\
+            .first()
+
+        if reservation_change_status:
+            for key, value in reservation_status.__dict__.items():
+                setattr(reservation_change_status, key, value)
+            db.commit()
 
     def local_reservations(self, db: Session, branch_id: int, reservation_date: date, status_reservation: int):
 
@@ -157,23 +168,23 @@ class ReservationDao:
     def reservation_detail(self, reservation_id: int, db: Session) -> list:
         try:
             reservation_detail: list = db.query(ReservationProductEntity.reservation_id,
-                                          ClientEntity.name,
-                                          ClientEntity.last_name,
-                                          ReservationEntity.people,
-                                          BranchEntity.street,
-                                          BranchEntity.street_number,
-                                          StateEntity.name.label("state"),
-                                          CityEntity.name.label("city"),
-                                          CountryEntity.name.label("country"),
-                                          ReservationEntity.preference,
-                                          ReservationEntity.reservation_date,
-                                          ReservationEntity.hour,
-                                          ReservationEntity.payment_id,
-                                          CategoryEntity.id.label("category_id"),
-                                          ReservationProductEntity.name_product,
-                                          ReservationProductEntity.description.label("product_description"),
-                                          ReservationProductEntity.amount.label("product_amount"),
-                                          ReservationProductEntity.quantity.label("product_quantity")) \
+                                                ClientEntity.name,
+                                                ClientEntity.last_name,
+                                                ReservationEntity.people,
+                                                BranchEntity.street,
+                                                BranchEntity.street_number,
+                                                StateEntity.name.label("state"),
+                                                CityEntity.name.label("city"),
+                                                CountryEntity.name.label("country"),
+                                                ReservationEntity.preference,
+                                                ReservationEntity.reservation_date,
+                                                ReservationEntity.hour,
+                                                ReservationEntity.payment_id,
+                                                CategoryEntity.id.label("category_id"),
+                                                ReservationProductEntity.name_product,
+                                                ReservationProductEntity.description.label("product_description"),
+                                                ReservationProductEntity.amount.label("product_amount"),
+                                                ReservationProductEntity.quantity.label("product_quantity")) \
                 .filter(ReservationProductEntity.reservation_id == reservation_id) \
                 .join(CategoryEntity, CategoryEntity.name == ReservationProductEntity.category_product) \
                 .join(ReservationEntity, ReservationEntity.id == ReservationProductEntity.reservation_id) \
@@ -222,8 +233,8 @@ class ReservationDao:
             raise ex
 
     def get_reservation_count_by_date(self, branch_id: int, date_reservation: date, db: Session) -> int:
-        return db.query(ReservationEntity)\
-            .join(ReservationChangeStatusEntity, ReservationChangeStatusEntity.reservation_id == ReservationEntity.id)\
-            .filter(ReservationEntity.branch_id == branch_id)\
-            .filter(ReservationEntity.reservation_date == date_reservation)\
+        return db.query(ReservationEntity) \
+            .join(ReservationChangeStatusEntity, ReservationChangeStatusEntity.reservation_id == ReservationEntity.id) \
+            .filter(ReservationEntity.branch_id == branch_id) \
+            .filter(ReservationEntity.reservation_date == date_reservation) \
             .filter(ReservationChangeStatusEntity.status_id == ReservationStatus.CONFIRMED).count()
