@@ -292,7 +292,7 @@ class ReservationService:
         logger.info("difference_closing_hour: {}", difference_closing_hour)
 
         # TODO: Menor 2 hrs de cierre O Mayor 2 horas de apertura
-        return difference_opening_hour >= self._TYNE_LIMIT_HOUR or difference_closing_hour >= self._TYNE_LIMIT_HOUR
+        return difference_opening_hour >= self._TYNE_LIMIT_HOUR and difference_closing_hour >= self._TYNE_LIMIT_HOUR
 
     def _create_reservation_product(self, product: ProductEntity, quantity: int) -> ReservationProductEntity:  #TODO: Se podría moder metodo a otro lado
         reservation_product = ReservationProductEntity()
