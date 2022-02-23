@@ -17,6 +17,9 @@ class Constants:
     BRANCH_NOT_FOUND_ERROR_DETAIL = "Branch no encontrado"
     BRANCH_ADD_ERROR = "Error al agregar branch"
 
+    BRANCH_DAY_UNABLE = "Error día no válido"
+    BRANCH_DAY_UNABLE_DETAIL = "Día no disponible/registrado para la sucursal"
+
     BRANCH_MAX_RESERVATION = "Sucursal con máximo de reservas"
 
     RESERVATION_DATETIME_ERROR = "Fecha y hora para reserva no válidas"

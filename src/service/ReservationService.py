@@ -141,7 +141,13 @@ class ReservationService:
 
         branch_schedule_entity = self._branch_dao.get_day_schedule(branch_id=new_reservation.branch_id,
                                                                    day=reservation_day, db=db)
-        logger.info("Obtiene horario de sucursal: {}", branch_schedule_entity.__dict__)
+        logger.info("Obtiene horario de sucursal: {}", branch_schedule_entity)
+
+        if not branch_schedule_entity:
+            raise CustomError(name=Constants.BRANCH_DAY_UNABLE,
+                              detail=Constants.BRANCH_DAY_UNABLE_DETAIL,
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause="Sucursal no disponible para el día requerido")
 
         is_valid_time = self._is_valid_hour(opening_hour=branch_schedule_entity.opening_hour,
                                             closing_hour=branch_schedule_entity.closing_hour,
