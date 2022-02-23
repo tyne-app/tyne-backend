@@ -17,7 +17,7 @@ class ProductRequest(BaseModel):
 class NewReservationRequest(BaseModel):
     branch_id: int
     people: int
-    date: date
+    date: datetime
     hour: str
     preference: str
     products: list[ProductRequest]
