@@ -135,7 +135,7 @@ class ReservationService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause=f"Sucursal ya cuenta con el máximo de reservas para el día")
 
-        request_reservation_date: datetime = datetime.now(tz=timezone.utc)
+        request_reservation_date: datetime = datetime.now().astimezone()
         reservation_day: int = new_reservation.date.isoweekday() - self._DAY_ADJUSTMENT
         logger.info("reservation_day: {}", reservation_day)
 
@@ -154,13 +154,13 @@ class ReservationService:
                                             request_hour=new_reservation.hour)
 
         logger.info("is_valid_time: {}", is_valid_time)
-
-        datetime_reservation: datetime = datetime.strptime(str(new_reservation.date) + ' ' + new_reservation.hour,
+        # TODO: Validar con front que devuelva la fecha solamente en campo date
+        datetime_reservation: datetime = datetime.strptime(str(new_reservation.date.date()) + ' ' + new_reservation.hour,
                                                            '%Y-%m-%d %H:%M').astimezone()
         current_datetime: datetime = datetime.now().astimezone()
 
         if not is_valid_time or \
-                (new_reservation.date - request_reservation_date.date()).days > self._WEEK_AS_DAYS or \
+                (new_reservation.date - request_reservation_date).days > self._WEEK_AS_DAYS or \
                 datetime_reservation < current_datetime:
             raise CustomError(name=Constants.RESERVATION_DATETIME_ERROR,
                               detail=Constants.RESERVATION_DATETIME_ERROR,
