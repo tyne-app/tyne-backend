@@ -137,9 +137,11 @@ class ReservationService:
 
         request_reservation_date: datetime = datetime.now(tz=timezone.utc)
         reservation_day: int = new_reservation.date.isoweekday() - self._DAY_ADJUSTMENT
+        logger.info("reservation_day: {}", reservation_day)
+
         branch_schedule_entity = self._branch_dao.get_day_schedule(branch_id=new_reservation.branch_id,
                                                                    day=reservation_day, db=db)
-        logger.info("Obtiene horario de sucursal: {}", dict(branch_schedule_entity))
+        logger.info("Obtiene horario de sucursal: {}", branch_schedule_entity.__dict__)
 
         is_valid_time = self._is_valid_hour(opening_hour=branch_schedule_entity.opening_hour,
                                             closing_hour=branch_schedule_entity.closing_hour,
