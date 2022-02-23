@@ -38,10 +38,20 @@ class ClientDao:
             .first()
 
     def get_client_by_id(self, client_id: int, db: Session) -> ClientEntity:
-        return db \
-            .query(ClientEntity) \
-            .filter(ClientEntity.id == client_id) \
-            .first()
+        client_entity: ClientEntity = db.query(ClientEntity).filter(ClientEntity.id == client_id).first()
+
+        if client_entity is None:
+            raise CustomError(name=Constants.CLIENT_NOT_EXIST,
+                              detail=Constants.CLIENT_NOT_EXIST,
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause="Cliente no existe para crear la reserva")
+
+        if not client_entity.user.is_active:
+            raise CustomError(name=Constants.CLIENT_UNAUTHORIZED,
+                              detail=Constants.CLIENT_UNAUTHORIZED,
+                              status_code=status.HTTP_401_UNAUTHORIZED,
+                              cause="Clienten esta inactivo")
+        return client_entity
 
     def create_client(self, client_req: ClientRequest, id_login_created: int, db: Session):
         db.add(client_req.to_entity(id_login_created))

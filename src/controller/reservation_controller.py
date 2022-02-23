@@ -1,17 +1,13 @@
 from datetime import datetime
-
 from fastapi import APIRouter, Depends, status, Request
 from sqlalchemy.orm import Session
-
 from src.configuration.database import database
 from src.dto.request.NewReservationRequest import NewReservationRequest
 from src.dto.request.UpdateReservationRequest import UpdateReservationRequest
 from src.dto.response.ReservationResponse import ReservationResponse
 from src.service.JwtService import JwtService
 from src.service.ReservationService import ReservationService
-from threading import Thread
-from time import sleep
-# TODO: Verify
+
 reservation_controller = APIRouter(
     prefix="/v1/reservations",
     tags=["Reservations"]
@@ -20,6 +16,13 @@ reservation_controller = APIRouter(
 _jwt_service_ = JwtService()
 _reservation_service_ = ReservationService()
 
+# TODO: Falta endpoint para confirmar/cancelar reserva por parte de cliente/sucursal
+@reservation_controller.post('/test/{id}')
+async def test_reservation(request: Request, id: str, db: Session = Depends(database.get_data_base)):
+    # TODO: Agregar una funció de prueba
+    print("ID para el job: " + id)
+    _reservation_service_.test_reservation_event(id=id)
+    return "OK"
 
 @reservation_controller.post('', status_code=status.HTTP_200_OK, response_model=ReservationResponse)
 async def create_reservation(request: Request,
