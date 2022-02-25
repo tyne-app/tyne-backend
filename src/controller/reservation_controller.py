@@ -16,7 +16,7 @@ reservation_controller = APIRouter(
 _jwt_service_ = JwtService()
 _reservation_service_ = ReservationService()
 
-# TODO: Falta endpoint para confirmar/cancelar reserva por parte de cliente/sucursal
+# TODO: Falta endpoint para confirmar/cancelar reserva por parte de sucursal
 @reservation_controller.post('/test/{id}')
 async def test_reservation(request: Request, id: str, db: Session = Depends(database.get_data_base)):
     # TODO: Agregar una funció de prueba

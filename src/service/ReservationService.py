@@ -299,7 +299,6 @@ class ReservationService:
         reservation_product.name_product = product.name
         reservation_product.category_product = product.category.name
         reservation_product.amount = product.amount
-        reservation_product.commission_tyne = product.commission_tyne
         reservation_product.quantity = quantity
         reservation_product.description = product.description
         return reservation_product
