@@ -205,6 +205,7 @@ class ReservationService:
         total_amount: int = amount + fifteen_percent
         logger.info("Tota amount: {}", total_amount)
 
+        # TODO: Retornar khipu url y continuar con el proceso de crear evento, verificar commits anteriores
         reservation_entity: ReservationEntity = self._create_reservation_entity(new_reservation=new_reservation,
                                                                                 client_id=client_id, amount=amount,
                                                                                 fifteen_percent=fifteen_percent)
