@@ -38,7 +38,6 @@ class ReservationDao:
                 product.reservation_id = reservation.id
 
             db.bulk_save_objects(products)
-            db.flush()
             db.commit()
             return reservation.id
         except Exception as ex:

@@ -208,18 +208,21 @@ class ReservationService:
         reservation_entity: ReservationEntity = self._create_reservation_entity(new_reservation=new_reservation,
                                                                                 client_id=client_id, amount=amount,
                                                                                 fifteen_percent=fifteen_percent)
+        logger.info("reservation_entity: {}", reservation_entity.__dict__)
 
         reservation_status = ReservationChangeStatusEntity()
         reservation_status.status_id = ReservationStatus.STARTED
         reservation_status.datetime = datetime.now().astimezone()
+        logger.info("Reservation status: {}", reservation_status.__dict__)
 
-        reservation_id = self._reservation_dao_.create_reservation(reservation=reservation_status,
+        reservation_id = self._reservation_dao_.create_reservation(reservation=reservation_entity,
                                                                    reservation_status=reservation_status,
                                                                    products=reservation_products,
                                                                    db=db)
 
         response_khipu = self._khipu_service.create_link(amount=total_amount, payer_email=client.user.email,
                                                          transaction_id=reservation_entity.transaction_id)
+        logger.info("response_khipu: {}", response_khipu.__dict__)
 
         if response_khipu.status != status.HTTP_201_CREATED:
             # TODO: Persistir con change status = 3 la entidad
@@ -237,11 +240,13 @@ class ReservationService:
         reservation_status.datetime = datetime.now().astimezone()
         reservation_status.reservation_id = reservation_id
         self._reservation_dao_.update_reservation_status(reservation_status=reservation_status, db=db)
+        logger.info("Se actualiza status de reserva")
 
         response = ReservationResponse()
         response.url_payment = response_khipu.url
         response.reservation_id = reservation_id
         response.payment_id = response_khipu.payment_id
+        logger.info("reservation response: {}", response.__dict__)
 
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.SUCCESSFUL_PAYMENT,
                                        receiver_email=client.user.email) # TODO: Agregar template. Actualizar archivo html
