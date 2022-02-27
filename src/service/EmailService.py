@@ -30,15 +30,18 @@ class EmailService:
             message["Subject"] = subject
             message["From"] = self.__SENDER_EMAIL
             message["To"] = receiver_email
+            logger.info("Detail message done")
 
             alternative_message = MIMEText(plain_text, "plain")
             main_message = MIMEText(template, "html")
 
             message.attach(alternative_message)
             message.attach(main_message)
+            logger.info("Message attach done")
 
             server.login(self.__SENDER_EMAIL, self.__PASSWORD)
             server.sendmail(self.__SENDER_EMAIL, receiver_email, message.as_string())
+            logger.info("Email sent!")
 
     def _read_email_template(self, user: str, template_name: str) -> str:
         logger.info('user: {}, template_name: {}', user, template_name)

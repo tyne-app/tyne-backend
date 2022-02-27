@@ -90,7 +90,7 @@ class ReservationService:
 
     async def create_reservation(self, client_id: int, new_reservation: NewReservationRequest, db: Session):
         logger.info("new_reservation: {}", dict(new_reservation))
-
+        # TODO: Validar cantidad de personas en la reserva
         # TODO: Ver los links para template email con variables
         #  -  https://sabuhish.github.io/fastapi-mail/
         #  -  https://jinja2docs.readthedocs.io/en/stable/
