@@ -1,5 +1,5 @@
 import json
-
+import os
 import uvicorn
 from fastapi import FastAPI, status, Request
 from fastapi.responses import JSONResponse
@@ -101,5 +101,7 @@ api_local.include_router(reservation_controller.reservation_controller)
 api_local.include_router(territory_controller.territory_controller)
 api_local.include_router(user_controller.user_controller)
 
+
 if __name__ == "__main__":
-    uvicorn.run("main:api_local", host="127.0.0.1", port=8001, reload=True)
+    port = int(os.environ.get("PORT", 5000))
+    uvicorn.run("main:api_local", host="127.0.0.1", port=port, reload=True)
