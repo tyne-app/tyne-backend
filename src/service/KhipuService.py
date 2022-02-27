@@ -1,6 +1,6 @@
 import time
 from datetime import time
-
+from loguru import logger
 from khipupy import Khipupy
 from starlette import status
 from pykhipu.client import Client as KhipuClient
@@ -25,18 +25,19 @@ class KhipuService:
             'bank_id': '',
             'transaction_id': transaction_id,
             'custom': '',
-            'notify_url': self._settings_.KHIPU_NOTIFY_URL,
-            'return_url': self._settings_.KHIPU_RETURN_URL,
-            'cancel_url': self._settings_.KHIPU_CANCEL_URL,
+            'notify_url': 'https://tyne-app.herokuapp.com/estado-pago/exitoso',#self._settings_.KHIPU_NOTIFY_URL,
+            'return_url': 'https://tyne-app.herokuapp.com/estado-pago/rechazado', #self._settings_.KHIPU_RETURN_URL,
+            'cancel_url': 'https://tyne-app.herokuapp.com/estado-pago/cancelado',#self._settings_.KHIPU_CANCEL_URL,
             'picture_url': self._settings_.KHIPU_PICTURE_URL,
             'currency': 'CLP',
             'notify_api_version': '1.3'
         })
         # 'expires_date': str((datetime.now() + timedelta(minutes=30)).isoformat())
+        logger.info("result: {}", result)
 
         response = KhipuResponse(payment_id=result["response"].get("payment_id"),
                                  url=result["response"].get("payment_url"), status=result["status"])
-
+        logger.info("response: {}", response.__dict__)
         return response
 
     def verify_payment(self, payment_id: str):
