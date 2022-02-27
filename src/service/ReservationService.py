@@ -430,9 +430,11 @@ class ReservationService:
 
         difference_as_seconds: int = round((branch_opening_datetime - request_datetime).total_seconds())
         logger.info("Difference as seconds: {}", difference_as_seconds)
+        seconds: int = difference_as_seconds if difference_as_seconds > 5 else 5
+        logger.info("seconds: {}", seconds)
 
         self._scheduler.add_job(func=self.create_reservation_event, id=job_id, misfire_grace_time=5, coalesce=True,
-                                replace_existing=True, trigger='interval', seconds=difference_as_seconds, kwargs=kwargs)
+                                replace_existing=True, trigger='interval', seconds=seconds, kwargs=kwargs)
 
         logger.info("Event reservation job created: {}", job_id)
 
