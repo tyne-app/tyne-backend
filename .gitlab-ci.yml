@@ -12,10 +12,10 @@ docker-build:
   stage: build
   script:
   - echo $HEROKU_API_KEY
-  - docker build -f Dockerfile --iidfile imageid.txt -t registry.heroku.com/api-clients-tyne .
+  - docker build -f Dockerfile --iidfile imageid.txt -t registry.heroku.com/api-locals-tyne .
   - docker login -u _ -p $HEROKU_API_KEY registry.heroku.com
-  - docker push registry.heroku.com/api-clients-tyne
+  - docker push registry.heroku.com/api-locals-tyne
   - apk add --no-cache curl
   - echo "Docker Image ID is $(cat imageid.txt)"
   - |-
-    curl -X PATCH https://api.heroku.com/apps/api-clients-tyne/formation --header "Content-Type: application/json" --header "Accept: application/vnd.heroku+json; version=3.docker-releases" --header "Authorization: Bearer $HEROKU_API_KEY" --data '{ "updates": [ { "type": "web", "docker_image": "'$(cat imageid.txt)'" } ] }'
+    curl -X PATCH https://api.heroku.com/apps/api-locals-tyne/formation --header "Content-Type: application/json" --header "Accept: application/vnd.heroku+json; version=3.docker-releases" --header "Authorization: Bearer $HEROKU_API_KEY" --data '{ "updates": [ { "type": "web", "docker_image": "'$(cat imageid.txt)'" } ] }'
