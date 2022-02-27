@@ -18,7 +18,7 @@ from src.repository.entity.ReservationStatusEntity import ReservationStatusEntit
 from src.repository.entity.RestaurantEntity import RestaurantEntity
 from src.repository.entity.StateEntity import StateEntity
 from src.util.ReservationStatus import ReservationStatus
-from src.configuration.database import database
+
 
 class ReservationDao:
 

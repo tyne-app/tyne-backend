@@ -66,6 +66,8 @@ class EmailService:
                     return 'welcome.html'
                 case EmailSubject.LOCAL_NO_CONFIRMATION_TO_LOCAL:
                     return 'local_no_confirmation.html'
+                case EmailSubject.REMINDER_TO_LOCAL:
+                    return 'reminder.html'
 
         if user is Constants.USER:
             return 'forgotten_password.html'

@@ -34,7 +34,6 @@ from src.configuration.database.database import scheduler
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
-
 class ReservationService:
     _client_dao_ = ClientDao()
     _khipu_service = KhipuService()
@@ -57,24 +56,28 @@ class ReservationService:
     def create_reservation_event(self, **kwargs):
 
         logger.info("Se inicia el evento de la reserva. Se envia email hacia sucursal para confirmar/cancelar")
-        print(kwargs) # TODO: Eliminar
-
+        logger.info("kwargs: {}", kwargs)
         # TODO: Enviar mensaje de reserva pendiente a confirmar/cancelar a sucursal, falta un endpoint con reserva id como dato
-        # self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject) # TODO: Mensaje para cliente. Falta template
+        self._email_service.send_email(user=Constants.BRANCH,
+                                       subject=EmailSubject.REMINDER_TO_LOCAL, # TODO: Mensaje para cliente. Falta template
+                                       receiver_email=kwargs.get('branch_email'))
 
         self._scheduler.add_job(func=self.cancel_reservation, kwargs=kwargs,
                                 id=kwargs.get('job_id'), misfire_grace_time=5, coalesce=True,
-                                replace_existing=True, trigger='interval', seconds=15)  # TODO: Este job dura 15 minutos. 900 segundos
+                                replace_existing=True, trigger='interval', seconds=900)  # TODO: Este job dura 15 minutos. 900 segundos
 
         logger.info("Evento reserva se actualiza a 15 minutos para anular reserva")
 
     def cancel_reservation(self, **kwargs):
         logger.info("Se inicia el evento de anulación de reserva")
-        print(kwargs) # TODO: Eliminar
+        logger.info("kwargs: {}", kwargs)
+
         self._scheduler.pause_job(kwargs.get('job_id'))
-        print("SE ha pausado job " + kwargs.get('job_id'))
+        logger.info("SE ha pausado job con id: {} ", kwargs.get('job_id'))
+
         self._scheduler.remove_job(kwargs.get('job_id'))
-        print("SE ha eliminado job de cancelar reserva" + kwargs.get('job_id'))
+        logger.info("SE ha eliminado job de cancelar reserva con id: {}", kwargs.get('job_id'))
+
         # TODO: Se podría dejar esta lógica en otro servicio ej ReservationEventService
         # TODO: Ver https://apscheduler.readthedocs.io/en/master/modules/triggers/interval.html#module-apscheduler.triggers.interval
 
@@ -84,35 +87,6 @@ class ReservationService:
                                        receiver_email=kwargs.get('branch_email'))
 
         # TODO: Actualizar anulación de reserva en base de datos.
-
-    # TODO: Función de prueba para verificar reservation evento
-    def test_reservation_event(self, id: str):
-        print("Entra a test reservation")
-        kwargs: dict = {
-            'job_id': id,
-            'branch_email': 'tonyn.rome@gmail.com',
-            'client_email': 'tonyn.rome@gmail.com',
-            'reservation_id': 1
-        }
-        date: str = '2022-02-21'
-        hour: str = '20:15'  # TODO: Cambiar para pruebas
-        datetime_reservation = datetime.strptime(date + ' ' + hour, '%Y-%m-%d %H:%M').astimezone()
-        current_datetime: datetime = datetime.now().astimezone()
-        if datetime_reservation < current_datetime:
-            raise CustomError(name=Constants.RESERVATION_DATETIME_ERROR,
-                              detail=Constants.RESERVATION_DATETIME_ERROR,
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="Fecha y/o hora de reserva no válida")
-
-        difference_as_seconds: int = round((datetime_reservation - current_datetime).total_seconds())
-        print("datetime de reserva: " + str(datetime_reservation) + " datetime actual: " + str(current_datetime))
-        print("diferencia en fecha: " + str((datetime_reservation - current_datetime)))
-        print("diferencia en segundos: " + str(difference_as_seconds))
-        self._scheduler.add_job(func=self.create_reservation_event, kwargs=kwargs,
-                                id=kwargs.get('job_id'), misfire_grace_time=5, coalesce=True,
-                                replace_existing=True, trigger='interval', seconds=difference_as_seconds)
-
-        print("Se inicia el job: " + id)
 
     async def create_reservation(self, client_id: int, new_reservation: NewReservationRequest, db: Session):
         logger.info("new_reservation: {}", dict(new_reservation))
@@ -155,20 +129,15 @@ class ReservationService:
 
         logger.info("is_valid_time: {}", is_valid_time)
         # TODO: Validar con front que devuelva la fecha solamente en campo date
-        datetime_reservation: datetime = datetime.strptime(str(new_reservation.date.date()) + ' ' + new_reservation.hour,
-                                                           '%Y-%m-%d %H:%M').astimezone()
+
+        difference_as_days: int = (new_reservation.date - request_reservation_date).days
         current_datetime: datetime = datetime.now().astimezone()
 
-        if not is_valid_time or \
-                (new_reservation.date - request_reservation_date).days > self._WEEK_AS_DAYS or \
-                datetime_reservation < current_datetime:
+        if not is_valid_time or difference_as_days > self._WEEK_AS_DAYS or new_reservation.date < current_datetime:
             raise CustomError(name=Constants.RESERVATION_DATETIME_ERROR,
                               detail=Constants.RESERVATION_DATETIME_ERROR,
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Fecha y/o hora de reserva no válida")
-
-        difference_as_seconds: int = round((datetime_reservation - current_datetime).total_seconds())
-        logger.info("Diferencia en segundos: {}", difference_as_seconds)
 
         products = self._product_dao_.get_products_by_ids(products_id=new_reservation.get_products_ids(),
                                                           branch_id=new_reservation.branch_id, db=db)
@@ -211,13 +180,13 @@ class ReservationService:
                                                                                 fifteen_percent=fifteen_percent)
         logger.info("reservation_entity: {}", reservation_entity.__dict__)
 
-        reservation_status = ReservationChangeStatusEntity()
-        reservation_status.status_id = ReservationStatus.STARTED
-        reservation_status.datetime = datetime.now().astimezone()
-        logger.info("Reservation status: {}", reservation_status.__dict__)
+        reservation__status_started: ReservationChangeStatusEntity = ReservationChangeStatusEntity()
+        reservation__status_started.status_id = ReservationStatus.STARTED
+        reservation__status_started.datetime = datetime.now().astimezone()
+        logger.info("Reservation status started: {}", reservation__status_started.__dict__)
 
         reservation_id = self._reservation_dao_.create_reservation(reservation=reservation_entity,
-                                                                   reservation_status=reservation_status,
+                                                                   reservation_status=reservation__status_started,
                                                                    products=reservation_products,
                                                                    db=db)
 
@@ -226,22 +195,29 @@ class ReservationService:
         logger.info("response_khipu: {}", response_khipu.__dict__)
 
         if response_khipu.status != status.HTTP_201_CREATED:
-            # TODO: Persistir con change status = 3 la entidad
-            await self._thrower_exceptions.throw_custom_exception(name=Constants.KHIPU_GET_ERROR,
-                                                                  detail=Constants.KHIPU_GET_ERROR,
-                                                                  status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                                                  cause="Error obtener datos khipu")
+            reservation_status_error: ReservationChangeStatusEntity = ReservationChangeStatusEntity()
+            reservation_status_error.status_id = ReservationStatus.ERROR
+            reservation_status_error.datetime = datetime.now().astimezone()
+            reservation_status_error.reservation_id = reservation_id
+            logger.info("Reservation status error: {}", reservation_status_error.__dict__)
+            self._reservation_dao_.add_reservation_status(reservation_status=reservation_status_error, db=db)
+
+            raise CustomError(name=Constants.KHIPU_GET_ERROR,
+                              detail=Constants.KHIPU_GET_ERROR,
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause="Error obtener datos khipu")
 
         self._reservation_dao_.update_payment_id_reservation(reservation_id=reservation_id,
                                                              payment_id=response_khipu.payment_id,
                                                              db=db)
         logger.info("Se actualiza id de pago")
 
-        reservation_status.status_id = ReservationStatus.IN_PROCESS
-        reservation_status.datetime = datetime.now().astimezone()
-        reservation_status.reservation_id = reservation_id
-        self._reservation_dao_.update_reservation_status(reservation_status=reservation_status, db=db)
-        logger.info("Se actualiza status de reserva")
+        reservation_status_in_process: ReservationChangeStatusEntity = ReservationChangeStatusEntity()
+        reservation_status_in_process.status_id = ReservationStatus.IN_PROCESS
+        reservation_status_in_process.datetime = datetime.now().astimezone()
+        reservation_status_in_process.reservation_id = reservation_id
+        logger.info("Reservation status in process: {}", reservation_status_in_process.__dict__)
+        self._reservation_dao_.add_reservation_status(reservation_status=reservation_status_in_process, db=db)
 
         response = ReservationResponse()
         response.url_payment = response_khipu.url
@@ -249,33 +225,9 @@ class ReservationService:
         response.payment_id = response_khipu.payment_id
         logger.info("reservation response: {}", response.__dict__)
 
-        self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.SUCCESSFUL_PAYMENT,
-                                       receiver_email=client.user.email) # TODO: Agregar template. Actualizar archivo html
-        logger.info("Se envia correo a cliente")
-
-        branch_email: str = self._use_dao.get_email_by_branch(branch_id=new_reservation.branch_id, db=db)
-
-        job_id: str = str(reservation_id)
-        kwargs: dict = {
-            'job_id': job_id,
-            'branch_email': branch_email,
-            'client_email': client.user.email,
-            'reservation_change_status_id': reservation_status.id
-        }
-
-        self._scheduler.add_job(func=self.create_reservation_event, id=job_id, misfire_grace_time=5, coalesce=True,
-                                replace_existing=True, trigger='interval', seconds=difference_as_seconds, kwargs=kwargs)
-
-        logger.info("Se crea job evento reserva")
-
-        # TODO: Agregar lógica para saber cuando da error, cambiar estado reserva a "con problemas" antes habia un try catch pero no aseguraba el reservation id
-        reservation_status.status_id = ReservationStatus.NO_CONFIRMED
-        reservation_status.datetime = datetime.now().astimezone()
-        self._reservation_dao_.update_reservation_status(reservation_status=reservation_status, db=db)
-        logger.info("Se actualiza estado de reserva a no confirmado")
-
         return response
-    # TODO: Creo que se debe cambiar el nombre de esta función
+
+
     def _is_valid_hour(self, opening_hour: str, closing_hour: str, request_hour: str) -> bool:
         opening_hour_datetime = datetime.strptime(opening_hour, "%H:%M")
         closing_hour_datetime = datetime.strptime(closing_hour, "%H:%M")
@@ -297,7 +249,6 @@ class ReservationService:
         difference_closing_hour = difference_closing_seconds.total_seconds() / self._HOUR_AS_SECONDS
         logger.info("difference_closing_hour: {}", difference_closing_hour)
 
-        # TODO: Menor 2 hrs de cierre O Mayor 2 horas de apertura
         return difference_opening_hour >= self._TYNE_LIMIT_HOUR and difference_closing_hour >= self._TYNE_LIMIT_HOUR
 
     def _create_reservation_product(self, product: ProductEntity, quantity: int) -> ReservationProductEntity:  #TODO: Se podría moder metodo a otro lado
@@ -374,13 +325,12 @@ class ReservationService:
 
     async def update_reservation(self, reservation_updated: UpdateReservationRequest,
                                  db: Session):
-
-        # validate request
+        logger.info("reservation_updated: {}", reservation_updated.__dict__)
         reservation_updated.validate_fields()
 
-        # get the reservation
-        reservation = self._reservation_dao_.get_reservation(reservation_id=reservation_updated.reservation_id,
-                                                             payment_id=reservation_updated.payment_id, db=db)
+        reservation: ReservationEntity = self._reservation_dao_\
+            .get_reservation(reservation_id=reservation_updated.reservation_id,
+                             payment_id=reservation_updated.payment_id, db=db)
 
         if not reservation:
             raise CustomError(name="Reserva no existe",
@@ -388,7 +338,6 @@ class ReservationService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Reserva no existe")
 
-        # verify if exists a payment with the same reservation id
         payment = self._payment_dao_.get_payment(reservation_id=reservation_updated.reservation_id, db=db)
 
         if payment:
@@ -396,43 +345,88 @@ class ReservationService:
                               detail="Error",
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Ya existe un pago asociado")
-
-        # save the status pago cancelado or pago rechazado
-        if reservation_updated.status.value == ReservationStatus.CANCELED_PAYMENT or \
-                reservation_updated.status.value == ReservationStatus.REJECTED_PAYMENT or \
-                reservation_updated.status.value == ReservationStatus.REJECTED_BY_LOCAL or \
-                reservation_updated.status.value == ReservationStatus.CONFIRMED or \
-                reservation_updated.status.value == ReservationStatus.SERVICED:
+        if reservation_updated.is_during_payment():
+            # TODO: Mejorar response
             reservation_status = ReservationChangeStatusEntity()
-            reservation_status.status_id = reservation_updated.status.value
+            reservation_status.status_id = reservation_updated.status
             reservation_status.datetime = datetime.now().astimezone()
             reservation_status.reservation_id = reservation_updated.reservation_id
+            logger.info("Reservation status: {}", reservation_status.__dict__)
+            self._reservation_dao_.add_reservation_status(reservation_status=reservation_status, db=db)
+            return SimpleResponse("Reserva actualizada con estado {}".format(reservation_updated.status))
+
+        if reservation_updated.is_after_payment():
+            # TODO: Mejorar respuesta hacia front. Buscar job con reserva id, pausarlo y eliminarl
+            reservation_status = ReservationChangeStatusEntity()
+            reservation_status.status_id = reservation_updated.status
+            reservation_status.datetime = datetime.now().astimezone()
+            reservation_status.reservation_id = reservation_updated.reservation_id
+            logger.info("Reservation status: {}", reservation_status.__dict__)
             self._reservation_dao_.add_reservation_status(reservation_status=reservation_status, db=db)
             return SimpleResponse("Reserva actualizada correctamente")
 
-        # get and verify the payment in khipu
         payment_khipu = self._khipu_service.verify_payment(reservation_updated.payment_id)
+        logger.info("payment_khipu: {}", payment_khipu)
 
-        # set data to create the payment and update the reservation status
         payment = PaymentEntity()
         payment.date = datetime.now().astimezone()
         payment.method = "Khipu"
         payment.amount = payment_khipu.amount
-        payment.type_coin_id = 1
+        payment.type_coin_id = 1  # TODO: Sacar código harcodeado. Crear Entidad con los tipos de moneda
         payment.receipt_url = payment_khipu.receipt_url
         payment.reservation_id = reservation_updated.reservation_id
 
-        reservation_status = ReservationChangeStatusEntity()
-        reservation_status.status_id = ReservationStatus.SUCCESSFUL_PAYMENT
-        reservation_status.datetime = datetime.now().astimezone()
-        reservation_status.reservation_id = reservation_updated.reservation_id
-
-        payment_response = self._payment_dao_.create_payment(payment=payment, reservation_status=reservation_status,
+        reservation_status_successful = ReservationChangeStatusEntity()
+        reservation_status_successful.status_id = ReservationStatus.SUCCESSFUL_PAYMENT
+        reservation_status_successful.datetime = datetime.now().astimezone()
+        reservation_status_successful.reservation_id = reservation_updated.reservation_id
+        logger.info("Reservation status successful: {}", reservation_status_successful.__dict__)
+        # TODO: Descomponer en payment dao y reservation status dao
+        payment_response = self._payment_dao_.create_payment(payment=payment,
+                                                             reservation_status=reservation_status_successful,
                                                              db=db)
         response = UpdateReservationResponse()
         response.payment_id = payment_response.id
         response.amount = payment_response.amount
         response.reservation_id = payment_response.reservation_id
         response.receipt_url = payment_response.receipt_url
-        # TODO: ReservationEvent checkear si existe el evento de reserva con el id de reserva
+        logger.info("response: {}", response.__dict__)
+
+        client_email: str = self._use_dao.get_email_by_cient(client_id=reservation.client_id, db=db)
+        logger.info("client_email: {}", client_email)
+
+        self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.SUCCESSFUL_PAYMENT,
+                                       receiver_email=client_email)  # TODO: Agregar template. Actualizar archivo html
+
+        branch_email: str = self._use_dao.get_email_by_branch(branch_id=reservation.branch_id, db=db)
+
+        job_id: str = str(reservation_updated.reservation_id)
+        kwargs: dict = {
+           'job_id': job_id,
+           'branch_email': branch_email,
+           'client_email': client_email
+        }
+        logger.info("kwargs: {}", kwargs)
+
+        reservation_datetime: datetime = datetime.strptime(str(reservation.date) + ' ' + reservation.hour,
+                                                           '%Y-%m-%d %H:%M').astimezone()
+        request_datetime: datetime = datetime.now().astimezone()
+        difference_as_seconds: int = round((reservation_datetime - request_datetime).total_seconds())
+        logger.info("Difference as seconds: {}", difference_as_seconds)
+
+        self._scheduler.add_job(func=self.create_reservation_event, id=job_id, misfire_grace_time=5, coalesce=True,
+                                replace_existing=True, trigger='interval', seconds=difference_as_seconds, kwargs=kwargs)
+
+        logger.info("Event reservation job created: {}", job_id)
+
+        reservation_status_no_confirmed = ReservationChangeStatusEntity()
+        reservation_status_no_confirmed.status_id = ReservationStatus.NO_CONFIRMED
+        reservation_status_no_confirmed.datetime = datetime.now().astimezone()
+        reservation_status_no_confirmed.reservation_id = reservation_updated.reservation_id
+        logger.info("reservation_status_no_confirmed: {}", reservation_status_no_confirmed.__dict__)
+        self._reservation_dao_.add_reservation_status(reservation_status=reservation_status_no_confirmed, db=db)
+
+        logger.info("Se actualiza estado de reserva a no confirmado")
+
+        # TODO: Agregar lógica para saber cuando da error, cambiar estado reserva a "con problemas" antes habia un try catch pero no aseguraba el reservation id
         return response

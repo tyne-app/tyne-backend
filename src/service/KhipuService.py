@@ -3,7 +3,7 @@ from datetime import time
 
 from khipupy import Khipupy
 from starlette import status
-from pykhipu.client import Client
+from pykhipu.client import Client as KhipuClient
 from src.configuration.Settings import Settings
 from src.dto.internal.KhipuResponse import KhipuResponse
 from src.exception.exceptions import CustomError
@@ -41,9 +41,9 @@ class KhipuService:
 
     def verify_payment(self, payment_id: str):
         try:
-            for x in range(3):
-                client = Client(receiver_id=self._settings_.KHIPU_RECEIVER_ID, secret=self._settings_.KHIPU_SECRET_ID)
-                payment = client.payments.get_id(id=payment_id)
+            for x in range(3):  # TODO: Analizar más esta lógica para refactorizarla
+                khipu_client = KhipuClient(receiver_id=self._settings_.KHIPU_RECEIVER_ID, secret=self._settings_.KHIPU_SECRET_ID)
+                payment = khipu_client.payments.get_id(id=payment_id)
 
                 print(payment.status)
 

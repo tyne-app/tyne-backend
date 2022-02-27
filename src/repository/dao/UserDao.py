@@ -6,6 +6,7 @@ from sqlalchemy.sql import exists
 from src.repository.entity.UserEntity import UserEntity
 from src.repository.entity.ManagerEntity import ManagerEntity
 from src.repository.entity.BranchEntity import BranchEntity
+from src.repository.entity.ClientEntity import ClientEntity
 
 class UserDao:
 
@@ -79,3 +80,8 @@ class UserDao:
             .join(ManagerEntity, ManagerEntity.id_user == UserEntity.id)\
             .join(BranchEntity, BranchEntity.manager_id == ManagerEntity.id)\
             .filter(BranchEntity.id == branch_id).first()
+
+    def get_email_by_cient(self, client_id: int, db: Session) -> str:
+        return db.query(UserEntity.email)\
+            .join(ClientEntity, ClientEntity.id_user == UserEntity.id)\
+            .filter(ClientEntity.id == client_id).first()
