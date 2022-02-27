@@ -345,7 +345,7 @@ class ReservationService:
                               detail="Error",
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Ya existe un pago asociado")
-        if reservation_updated.is_during_payment():
+        if reservation_updated.is_during_payment():  # TODO: Lógica en un método
             # TODO: Mejorar response
             reservation_status = ReservationChangeStatusEntity()
             reservation_status.status_id = reservation_updated.status
@@ -407,11 +407,19 @@ class ReservationService:
            'client_email': client_email
         }
         logger.info("kwargs: {}", kwargs)
+
         # TODO: Rescatar la hora de apertura del local para activar la reserva
+
+        reservation_day: int = reservation.reservation_date.isoweekday() - self._DAY_ADJUSTMENT
+        branch_schedule_entity = self._branch_dao.get_day_schedule(branch_id=reservation.branch_id,
+                                                                   day=reservation_day, db=db)
         reservation_datetime: datetime = datetime.strptime(str(reservation.reservation_date) + ' ' + reservation.hour,
                                                            '%Y-%m-%d %H:%M').astimezone()
-        request_datetime: datetime = datetime.now().astimezone()
-        difference_as_seconds: int = round((reservation_datetime - request_datetime).total_seconds())
+
+        branch_opening_datetime: datetime = datetime.strptime(str(reservation.reservation_date) + ' ' + str(branch_schedule_entity.opening_hour)).astimezone()
+        logger.info("branch opening: {}", branch_opening_datetime)
+
+        difference_as_seconds: int = round((reservation_datetime - branch_opening_datetime).total_seconds())
         logger.info("Difference as seconds: {}", difference_as_seconds)
 
         self._scheduler.add_job(func=self.create_reservation_event, id=job_id, misfire_grace_time=5, coalesce=True,
