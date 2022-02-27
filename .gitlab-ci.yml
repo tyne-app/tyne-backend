@@ -14,7 +14,7 @@ docker-build:
   - echo $HEROKU_API_KEY
   - docker build -f Dockerfile --iidfile imageid.txt -t registry.heroku.com/backbone-locals .
   - docker login -u _ -p $HEROKU_API_KEY registry.heroku.com
-  - docker push registry.heroku.com/backbone-locals
+  - docker push registry.heroku.com/api-locals-tyne
   - apk add --no-cache curl
   - echo "Docker Image ID is $(cat imageid.txt)"
   - |-
