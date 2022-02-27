@@ -10,4 +10,4 @@ EXPOSE $PORT
 
 COPY . .
 
-CMD uvicorn main:api_local --host 0.0.0.0
+CMD ["uvicorn main:api_local --host 0.0.0.0 --port $PORT"]
