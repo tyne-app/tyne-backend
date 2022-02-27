@@ -132,6 +132,8 @@ class ReservationService:
 
         difference_as_days: int = (new_reservation.date - request_reservation_date).days
         current_datetime: datetime = datetime.now().astimezone()
+        logger.info("current_datetime: {}", current_datetime)
+        logger.info("new reservation date: {}", new_reservation.date)
 
         if not is_valid_time or difference_as_days > self._WEEK_AS_DAYS or new_reservation.date < current_datetime:
             raise CustomError(name=Constants.RESERVATION_DATETIME_ERROR,
