@@ -46,7 +46,7 @@ class KhipuService:
                 khipu_client = KhipuClient(receiver_id=self._settings_.KHIPU_RECEIVER_ID, secret=self._settings_.KHIPU_SECRET_ID)
                 payment = khipu_client.payments.get_id(id=payment_id)
 
-                logger.info("payment: {}", payment)
+                logger.info("payment: {}", payment.__dict__)
 
                 if payment.status == "done":
                     return payment

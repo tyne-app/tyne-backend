@@ -407,7 +407,7 @@ class ReservationService:
            'client_email': client_email
         }
         logger.info("kwargs: {}", kwargs)
-
+        # TODO: Rescatar la hora de apertura del local para activar la reserva
         reservation_datetime: datetime = datetime.strptime(str(reservation.reservation_date) + ' ' + reservation.hour,
                                                            '%Y-%m-%d %H:%M').astimezone()
         request_datetime: datetime = datetime.now().astimezone()
