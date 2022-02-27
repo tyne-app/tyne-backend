@@ -6,8 +6,8 @@ COPY requirements.txt requirements.txt
 
 RUN pip3 install -r requirements.txt
 
-EXPOSE $PORT
+EXPOSE 5000
 
 COPY . .
 
-CMD ["uvicorn main:api_local --host 0.0.0.0 --port $PORT"]
+CMD uvicorn main:api_local
