@@ -23,6 +23,7 @@ class EmailService:
 
             template_name: str = self._get_template_name(user=user, subject=subject)
             template: str = self._read_email_template(user=user, template_name=template_name)
+            logger.info("template: {}", template)
 
             plain_text: str = "Texto plano de prueba para ver si funciona" # TODO: Reemplazarlo con la alternativa oficial por cada template
 

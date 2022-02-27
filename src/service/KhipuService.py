@@ -46,7 +46,7 @@ class KhipuService:
                 khipu_client = KhipuClient(receiver_id=self._settings_.KHIPU_RECEIVER_ID, secret=self._settings_.KHIPU_SECRET_ID)
                 payment = khipu_client.payments.get_id(id=payment_id)
 
-                print(payment.status)
+                logger.info("payment: {}", payment)
 
                 if payment.status == "done":
                     return payment
@@ -54,7 +54,6 @@ class KhipuService:
                     raise CustomError(name="Pago aún está pendiente",
                                       detail="Pago aún está pendiente",
                                       status_code=status.HTTP_400_BAD_REQUEST)
-
                 time.sleep(10)
 
         except CustomError as ex:
