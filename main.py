@@ -89,7 +89,7 @@ async def custom_exception_handler(request: Request, exc: CustomError):
 
     return await _throwerExceptions.response_custom_exception(exc)
 
-
+print('test')
 firebase_config = FirebaseConfig()
 firebase_config.init_firebase()
 
