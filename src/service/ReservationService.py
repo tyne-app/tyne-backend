@@ -131,11 +131,11 @@ class ReservationService:
         # TODO: Validar con front que devuelva la fecha solamente en campo date
 
         difference_as_days: int = (new_reservation.date - request_reservation_date).days
-        current_datetime: datetime = datetime.now().astimezone()
+        current_datetime: datetime = datetime.now().astimezone()  # TODO: Validar fecha reserva sea mayor a fecha de request
         logger.info("current_datetime: {}", current_datetime)
         logger.info("new reservation date: {}", new_reservation.date)
 
-        if not is_valid_time or difference_as_days > self._WEEK_AS_DAYS or new_reservation.date < current_datetime:
+        if not is_valid_time or difference_as_days > self._WEEK_AS_DAYS:
             raise CustomError(name=Constants.RESERVATION_DATETIME_ERROR,
                               detail=Constants.RESERVATION_DATETIME_ERROR,
                               status_code=status.HTTP_400_BAD_REQUEST,
