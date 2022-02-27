@@ -395,8 +395,8 @@ class ReservationService:
         client_email: str = self._use_dao.get_email_by_cient(client_id=reservation.client_id, db=db)
         logger.info("client_email: {}", client_email)
 
-        self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.SUCCESSFUL_PAYMENT,
-                                       receiver_email=client_email)  # TODO: Agregar template. Actualizar archivo html
+        #self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.SUCCESSFUL_PAYMENT,
+        #                               receiver_email=client_email)  # TODO: Agregar template. Actualizar archivo html
 
         branch_email: str = self._use_dao.get_email_by_branch(branch_id=reservation.branch_id, db=db)
 
