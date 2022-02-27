@@ -1,0 +1,3 @@
+class UpdateProfileImageDto:
+    url: str
+
