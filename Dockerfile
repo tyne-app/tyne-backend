@@ -2,11 +2,13 @@ FROM python:3.10.2-buster
 
 WORKDIR /app
 
+ENV PORT=$PORT
+
+EXPOSE $PORT
+
 COPY requirements.txt requirements.txt
 
 RUN pip3 install -r requirements.txt
-
-EXPOSE $PORT
 
 COPY . .
 
