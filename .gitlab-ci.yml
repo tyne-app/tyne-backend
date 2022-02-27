@@ -11,8 +11,7 @@ stages:
 docker-build:
   stage: build
   script:
-  - echo $HEROKU_API_KEY
-  - docker build -f Dockerfile --iidfile imageid.txt -t registry.heroku.com/backbone-locals .
+  - docker build -f Dockerfile --iidfile imageid.txt -t registry.heroku.com/api-locals-tyne .
   - docker login -u _ -p $HEROKU_API_KEY registry.heroku.com
   - docker push registry.heroku.com/api-locals-tyne
   - apk add --no-cache curl
