@@ -11,12 +11,12 @@ class UpdateReservationRequest(BaseModel):
     reservation_id: int
 
     def validate_fields(self):  # TODO: Refactorizar. Debe validar que sea un estado valido para actualizar (No necesariamente validar con todos los estados de negocio)
-        if self.status.value != ReservationStatus.SUCCESSFUL_PAYMENT and \
-                self.status.value != ReservationStatus.REJECTED_PAYMENT and \
-                self.status.value != ReservationStatus.CANCELED_PAYMENT and \
-                self.status.value != ReservationStatus.REJECTED_BY_LOCAL and \
-                self.status.value != ReservationStatus.CONFIRMED and \
-                self.status.value != ReservationStatus.SERVICED:
+        if self.status != ReservationStatus.SUCCESSFUL_PAYMENT and \
+                self.status != ReservationStatus.REJECTED_PAYMENT and \
+                self.status != ReservationStatus.CANCELED_PAYMENT and \
+                self.status != ReservationStatus.REJECTED_BY_LOCAL and \
+                self.status != ReservationStatus.CONFIRMED and \
+                self.status != ReservationStatus.SERVICED:
             raise CustomError(name="Validación body",
                               detail="Status debe ser 4, 5, 6, 7, 8 o 9",
                               status_code=status.HTTP_400_BAD_REQUEST,
