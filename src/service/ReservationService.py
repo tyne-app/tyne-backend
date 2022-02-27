@@ -413,7 +413,7 @@ class ReservationService:
         }
         logger.info("kwargs: {}", kwargs)
 
-        # TODO: Rescatar la hora de apertura del local para activar la reserva
+        # TODO: Rescatar la hora de apertura del local para activar la reserva.
 
         reservation_day: int = reservation.reservation_date.isoweekday() - self._DAY_ADJUSTMENT
         branch_schedule_entity = self._branch_dao.get_day_schedule(branch_id=reservation.branch_id,
