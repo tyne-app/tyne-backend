@@ -408,7 +408,7 @@ class ReservationService:
         }
         logger.info("kwargs: {}", kwargs)
 
-        reservation_datetime: datetime = datetime.strptime(str(reservation.date) + ' ' + reservation.hour,
+        reservation_datetime: datetime = datetime.strptime(str(reservation.reservation_date) + ' ' + reservation.hour,
                                                            '%Y-%m-%d %H:%M').astimezone()
         request_datetime: datetime = datetime.now().astimezone()
         difference_as_seconds: int = round((reservation_datetime - request_datetime).total_seconds())
