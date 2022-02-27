@@ -1,4 +1,5 @@
 import uuid
+import pytz
 from datetime import timezone, datetime
 from loguru import logger
 from sqlalchemy.orm import Session
@@ -52,6 +53,7 @@ class ReservationService:
     _email_service = EmailService()
     _branch_dao = BranchDao()
     _scheduler: BackgroundScheduler = scheduler
+    _country_time_zone = pytz.timezone('Chile/Continental')
 
     def create_reservation_event(self, **kwargs):
 
@@ -396,9 +398,10 @@ class ReservationService:
 
         client_email: str = self._use_dao.get_email_by_cient(client_id=reservation.client_id, db=db)
         logger.info("client_email: {}", client_email)
+        logger.info("tipo client email: {}", type(client_email))
 
-        #self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.SUCCESSFUL_PAYMENT,
-        #                               receiver_email=client_email)  # TODO: Agregar template. Actualizar archivo html
+        self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.SUCCESSFUL_PAYMENT,
+                                       receiver_email=client_email)  # TODO: Agregar template. Actualizar archivo html
 
         branch_email: str = self._use_dao.get_email_by_branch(branch_id=reservation.branch_id, db=db)
 
@@ -415,13 +418,17 @@ class ReservationService:
         reservation_day: int = reservation.reservation_date.isoweekday() - self._DAY_ADJUSTMENT
         branch_schedule_entity = self._branch_dao.get_day_schedule(branch_id=reservation.branch_id,
                                                                    day=reservation_day, db=db)
-        reservation_datetime: datetime = datetime.strptime(str(reservation.reservation_date) + ' ' + reservation.hour,
-                                                           '%Y-%m-%d %H:%M').astimezone()
 
-        branch_opening_datetime: datetime = datetime.strptime(str(reservation.reservation_date) + ' ' + str(branch_schedule_entity.opening_hour)).astimezone()
+        request_datetime: datetime = datetime.now(self._country_time_zone)
+
+        branch_opening_datetime: datetime = datetime.strptime(str(reservation.reservation_date) + ' ' +
+                                                              str(branch_schedule_entity.opening_hour),
+                                                              '%Y-%m-%d %H:%M').astimezone()
+
+        logger.info("request datetime: {}", request_datetime)
         logger.info("branch opening: {}", branch_opening_datetime)
 
-        difference_as_seconds: int = round((reservation_datetime - branch_opening_datetime).total_seconds())
+        difference_as_seconds: int = round((branch_opening_datetime - request_datetime).total_seconds())
         logger.info("Difference as seconds: {}", difference_as_seconds)
 
         self._scheduler.add_job(func=self.create_reservation_event, id=job_id, misfire_grace_time=5, coalesce=True,
@@ -440,3 +447,7 @@ class ReservationService:
 
         # TODO: Agregar lógica para saber cuando da error, cambiar estado reserva a "con problemas" antes habia un try catch pero no aseguraba el reservation id
         return response
+
+    def persist_new_reservation_status(self):
+        # TODO: Función para crear y persistir cambio estado de reserva
+        pass

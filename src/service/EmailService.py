@@ -23,7 +23,7 @@ class EmailService:
 
             template_name: str = self._get_template_name(user=user, subject=subject)
             template: str = self._read_email_template(user=user, template_name=template_name)
-            logger.info("template: {}", template)
+            logger.info("loaded template")
 
             plain_text: str = "Texto plano de prueba para ver si funciona" # TODO: Reemplazarlo con la alternativa oficial por cada template
 
@@ -60,7 +60,7 @@ class EmailService:
                 case EmailSubject.CLIENT_WELCOME:
                     return 'welcome.html'
                 case EmailSubject.SUCCESSFUL_PAYMENT:
-                    return 'successful_payment.html'
+                    return 'welcome.html'
                 case EmailSubject.LOCAL_NO_CONFIRMATION_TO_CLIENT:
                     return 'local_no_confirmation.html'
 
