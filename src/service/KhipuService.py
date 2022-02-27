@@ -26,7 +26,7 @@ class KhipuService:
             'transaction_id': transaction_id,
             'custom': '',
             'notify_url': 'https://tyne-app.herokuapp.com/estado-pago/exitoso',#self._settings_.KHIPU_NOTIFY_URL,
-            'return_url': 'https://tyne-app.herokuapp.com/estado-pago/rechazado', #self._settings_.KHIPU_RETURN_URL,
+            'return_url': 'https://tyne-app.herokuapp.com/estado-pago/exitoso', #self._settings_.KHIPU_RETURN_URL,
             'cancel_url': 'https://tyne-app.herokuapp.com/estado-pago/cancelado',#self._settings_.KHIPU_CANCEL_URL,
             'picture_url': self._settings_.KHIPU_PICTURE_URL,
             'currency': 'CLP',
