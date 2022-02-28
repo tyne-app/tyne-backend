@@ -7,17 +7,11 @@ from src.repository.entity.ReservationChangeStatusEntity import ReservationChang
 
 class PaymentDao:
 
-    def create_payment(self, payment: PaymentEntity, reservation_status: ReservationChangeStatusEntity,
-                       db: Session) -> PaymentEntity:
+    def create_payment(self, payment: PaymentEntity, db: Session) -> PaymentEntity:
         try:
             db.add(payment)
             db.flush()
-
-            db.add(reservation_status)
-            db.flush()
-
             db.commit()
-
             return payment
         except Exception as error:
             db.rollback()

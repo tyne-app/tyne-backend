@@ -40,9 +40,12 @@ class EmailService:
             message.attach(main_message)
             logger.info("Message attach done")
 
-            server.login(self.__SENDER_EMAIL, self.__PASSWORD)
-            server.sendmail(self.__SENDER_EMAIL, receiver_email, message.as_string())
-            logger.info("Email sent!")
+            try:
+                server.login(self.__SENDER_EMAIL, self.__PASSWORD)
+                server.sendmail(self.__SENDER_EMAIL, receiver_email, message.as_string())
+                logger.info("Email sent!")
+            except Exception as e:
+                logger.error("Error sending email: {}", e)
 
     def _read_email_template(self, user: str, template_name: str) -> str:
         logger.info('user: {}, template_name: {}', user, template_name)

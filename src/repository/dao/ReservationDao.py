@@ -22,16 +22,10 @@ from src.util.ReservationStatus import ReservationStatus
 
 class ReservationDao:
 
-    def create_reservation(self, reservation: ReservationEntity, reservation_status: ReservationChangeStatusEntity,
-                           products: list[ReservationProductEntity],
+    def create_reservation(self, reservation: ReservationEntity, products: list[ReservationProductEntity],
                            db: Session) -> int:
         try:
             db.add(reservation)
-            db.flush()
-
-            reservation_status.reservation_id = reservation.id
-
-            db.add(reservation_status)
             db.flush()
 
             for product in products:
