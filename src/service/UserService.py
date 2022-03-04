@@ -184,6 +184,6 @@ class UserService:
                                        subject=EmailSubject.FORGOTTEN_PASSWORD,
                                        receiver_email=email)
 
-    async def verify_password(self, user_id: int, password: str, db: Session):
+    async def verify_encrypted_password(self, user_id: int, password: str, db: Session):
         # verificar que este encriptada, sino romper el flujo. AES 256 
         user: UserEntity = self._user_dao_.get_user(user_id, db)
