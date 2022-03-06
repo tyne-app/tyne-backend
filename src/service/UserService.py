@@ -20,6 +20,7 @@ from src.util.Constants import Constants
 from src.exception.ThrowerExceptions import ThrowerExceptions
 from src.service.EmailService import EmailService
 from src.util.EmailSubject import EmailSubject
+from src.service.PasswordService import PasswordService
 
 
 class UserService:
@@ -30,6 +31,7 @@ class UserService:
     _localDao_ = LocalDAO()
     _throwerExceptions = ThrowerExceptions()
     _email_service = EmailService()
+    _password_service_ = PasswordService()
 
     async def login_user(self, loginRequest: LoginUserRequest, ip: str, db: Session):
 
@@ -40,6 +42,7 @@ class UserService:
 
         tokenResponse: UserTokenResponse = None
         user: UserEntity = self._user_dao_.verify_email(loginRequest.email, db)
+        user.password = self._password_service_.decrypt_password(user.password)
 
         await self._tokenService_.verify_email_firebase(loginRequest.email)
 
@@ -183,7 +186,3 @@ class UserService:
         self._email_service.send_email(user=Constants.USER,
                                        subject=EmailSubject.FORGOTTEN_PASSWORD,
                                        receiver_email=email)
-
-    async def verify_encrypted_password(self, user_id: int, password: str, db: Session):
-        # verificar que este encriptada, sino romper el flujo. AES 256 
-        user: UserEntity = self._user_dao_.get_user(user_id, db)
