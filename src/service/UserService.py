@@ -20,7 +20,7 @@ from src.util.Constants import Constants
 from src.exception.ThrowerExceptions import ThrowerExceptions
 from src.service.EmailService import EmailService
 from src.util.EmailSubject import EmailSubject
-from src.service.PasswordService import PasswordService
+# from src.service.PasswordService import PasswordService
 
 
 class UserService:
@@ -31,7 +31,7 @@ class UserService:
     _localDao_ = LocalDAO()
     _throwerExceptions = ThrowerExceptions()
     _email_service = EmailService()
-    _password_service_ = PasswordService()
+    # _password_service_ = PasswordService()
 
     async def login_user(self, loginRequest: LoginUserRequest, ip: str, db: Session):
 
