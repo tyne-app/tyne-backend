@@ -1,4 +1,5 @@
 import os
+import base64
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -28,4 +29,6 @@ class Settings:
     PASSWORD_EMAIL = os.getenv("PASSWORD_EMAIL")
     PORT_EMAIL = os.getenv("PORT_EMAIL")
     ENCODING_EMAIL = os.getenv("ENCODING_EMAIL")
+    ENCRYPTION_KEY = base64.b64decode(bytes(os.getenv("ENCRYPTION_KEY"), "utf-8")) # Sino importada como str 
+
 

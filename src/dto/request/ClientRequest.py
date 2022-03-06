@@ -4,9 +4,13 @@ from src.repository.entity.ClientEntity import ClientEntity
 from datetime import datetime, timezone
 from src.repository.entity.UserEntity import UserEntity
 from src.util.UserType import UserType
+from src.service.PasswordService import PasswordService
 
 
 class ClientRequest(BaseModel):
+
+    _password_service_ = PasswordService() 
+
     name: str
     lastName: str
     birthDate: datetime
@@ -19,6 +23,7 @@ class ClientRequest(BaseModel):
 
         user_entity = UserEntity()
         user_entity.email = self.email
+        self.password = self._password_service_.encrypt_password(self.password)
         user_entity.password = self.password
         user_entity.is_active = True
         user_entity.id_user_type = UserType.CLIENT
