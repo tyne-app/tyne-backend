@@ -27,3 +27,4 @@ class PasswordService:
         password = base64.b64decode(password)
         password = AESGCM(self.key).decrypt(password[:12], password[12:], b'')
         return password.decode()
+        
