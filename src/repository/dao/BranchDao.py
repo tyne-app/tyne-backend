@@ -214,21 +214,18 @@ class BranchDao:
         branch_dict['images'] = images
         logger.info('branch_dict: {}', branch_dict)
 
-        # opinions = db \
-        #     .query(OpinionEntity.id,
-        #            OpinionEntity.description,
-        #            OpinionEntity.qualification,
-        #            OpinionEntity.creation_date,
-        #            ClientEntity.name.label(name='client_name')) \
-        #     .select_from(OpinionEntity) \
-        #     .join(ClientEntity, ClientEntity.id == OpinionEntity.client_id) \
-        #     .join(BranchEntity, BranchEntity.id == OpinionEntity.branch_id) \
-        #     .filter(BranchEntity.id == branch.id).all()
-
-        # branch_dict['opinions'] = opinions
         return branch_dict
 
     def get_day_schedule(self, branch_id: int, day: int, db: Session) -> BranchScheduleEntity:
         return db.query(BranchScheduleEntity) \
             .filter(BranchScheduleEntity.branch_id == branch_id) \
+            .filter(BranchScheduleEntity.active) \
             .filter(BranchScheduleEntity.day == day).first()
+
+    def get_name(self, branch_id: int, db: Session) -> str:
+        name = db.query(RestaurantEntity.name).select_from(RestaurantEntity)\
+            .join(BranchEntity, BranchEntity.restaurant_id == RestaurantEntity.id)\
+            .filter(BranchEntity.id == branch_id).first()
+
+        logger.info('name: {}', name)
+        return name[0]
