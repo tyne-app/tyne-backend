@@ -1,6 +1,6 @@
 from datetime import datetime, date
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Optional
 from starlette import status
 
 from src.util.Constants import Constants
@@ -19,7 +19,7 @@ class NewReservationRequest(BaseModel):
     people: int
     date: datetime
     hour: str
-    preference: str
+    preference: Optional[str] = "Interior"
     products: list[ProductRequest]
 
     def get_products_ids(self):
