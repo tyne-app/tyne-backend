@@ -1,0 +1,8 @@
+class ReservationConstant:
+    MIN_AMOUNT = 10000
+    MAX_RESERVATION = 4
+    TYNE_COMMISSION = 0.15
+    WEEK_AS_DAYS = 7
+    DAY_ADJUSTMENT = 1
+    HOUR_AS_SECONDS = 3600
+    TYNE_LIMIT_HOUR = 2
