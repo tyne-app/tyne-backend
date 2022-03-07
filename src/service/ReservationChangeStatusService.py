@@ -1,7 +1,7 @@
 from fastapi import status
 from loguru import logger
 from pytz import timezone
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from sqlalchemy.orm import Session
 
@@ -48,8 +48,7 @@ class ReservationChangeStatusService:
 
     def successful_reservation_payment(self, reservation: ReservationEntity,
                                        reservation_updated: UpdateReservationRequest,
-                                       request_datetime: datetime, client_email: str,
-                                       branch_email: str, db: Session):
+                                       client_email: str, branch_email: str, db: Session):
 
         payment = self._payment_dao_.get_payment(reservation_id=reservation_updated.reservation_id, db=db)
 
@@ -58,6 +57,12 @@ class ReservationChangeStatusService:
                               detail="Error",
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Ya existe un pago asociado")
+
+        request_datetime: datetime = datetime.now(self._country_time_zone)
+        logger.info("request datetime: {}", request_datetime)
+
+        self._validate_request_date(request_date=request_datetime.date(),
+                                    reservation_date=reservation.reservation_date)
 
         payment_khipu = self._khipu_service.verify_payment(reservation_updated.payment_id)
         logger.info("payment_khipu: {}", payment_khipu)
@@ -111,11 +116,16 @@ class ReservationChangeStatusService:
                                                    difference_as_seconds=difference_as_seconds, kwargs=kwargs)
         return response
 
-    def rejected_reservation_by_local(self, reservation_id: int, client_email: str):
+    def rejected_reservation_by_local(self, reservation: ReservationEntity, client_email: str):
         # TODO: Las cancelaciones de rembolso sin rembolso, etc, se maneja por backend según el datetime de la cancelacion
         # TODO: Falta obtener la razón del por qué se rechaza.
+        request_datetime: datetime = datetime.now(self._country_time_zone)
+        logger.info("request datetime: {}", request_datetime)
 
-        job_id: str = str(reservation_id)
+        self._validate_request_date(request_date=request_datetime.date(),
+                                    reservation_date=reservation.reservation_date)
+
+        job_id: str = str(reservation.id)
         logger.info("job_id: {}", job_id)
 
         self._reservation_event_service.delete_job(job_id=job_id)
@@ -124,12 +134,18 @@ class ReservationChangeStatusService:
                                        receiver_email=client_email)
 
         self._reservation_dao_.add_reservation_status(status=ReservationStatus.REJECTED_BY_LOCAL,
-                                                      reservation_id=reservation_id)
+                                                      reservation_id=reservation.id)
 
         return SimpleResponse("Reserva actualizada correctamente a estado rechazado por local")
 
-    def confirmed_reservation(self, reservation: ReservationEntity, request_datetime: datetime, client_email: str, branch_email: str, db: Session):
+    def confirmed_reservation(self, reservation: ReservationEntity, client_email: str, branch_email: str, db: Session):
         logger.info("Confirmed reservation has been started")
+
+        request_datetime: datetime = datetime.now(self._country_time_zone)
+        logger.info("request datetime: {}", request_datetime)
+
+        self._validate_request_date(request_date=request_datetime.date(),
+                                    reservation_date=reservation.reservation_date)
 
         job_id: str = str(reservation.id)
         self._reservation_event_service.delete_job(job_id=job_id)
@@ -162,6 +178,9 @@ class ReservationChangeStatusService:
 
         self._reservation_event_service.create_job(func=self._reservation_event_service.reminder_email,
                                                    difference_as_seconds=difference_as_seconds, kwargs=kwargs)
+
+        self._email_service.send_email(user=Constants.USER, subject=EmailSubject.CONFIRMATION_TO_CLIENT,
+                                       receiver_email=client_email, data=data)
 
         self._reservation_dao_.add_reservation_status(status=ReservationStatus.CONFIRMED, reservation_id=reservation.id)
 
@@ -211,3 +230,12 @@ class ReservationChangeStatusService:
                           detail="No existe día dentro de una semana para avisar a local",
                           status_code=status.HTTP_400_BAD_REQUEST,
                           cause="No existe día")
+
+    def _validate_request_date(self, request_date: date, reservation_date: date) -> None:
+        logger.info("Validate request date has been started")
+
+        if request_date > reservation_date:
+            raise CustomError(name="Error con fecha de petición reserva",
+                              detail="No puede ser fecha de reserva menor a fecha petición reserva",
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause="No puede ser fecha de reserva menor a fecha petición reserva")

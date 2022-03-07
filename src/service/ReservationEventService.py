@@ -21,7 +21,7 @@ class ReservationEventService:
         logger.info("func: {}, difference_as_seconds: {}, kwargs: {}", func, difference_as_seconds, kwargs)
         kwargs = kwargs.get('kwargs')
         self._scheduler.add_job(func=func, id=kwargs.get('job_id'), misfire_grace_time=5, coalesce=True,
-                                replace_existing=True, trigger='interval', seconds=5, kwargs=kwargs)
+                                replace_existing=True, trigger='interval', seconds=difference_as_seconds, kwargs=kwargs)
         logger.info("Job reservation event created")
 
     def delete_job(self, job_id: str):
@@ -67,7 +67,7 @@ class ReservationEventService:
         reservation_id: int = int(kwargs.get('job_id'))
 
         self._reservation_dao_. add_reservation_status(status=ReservationStatus.NO_CONFIRMED,
-                                                      reservation_id=reservation_id)
+                                                       reservation_id=reservation_id)
 
     def reminder_email(self, **kwargs):
         logger.info("kwargs: {}", kwargs)

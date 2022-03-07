@@ -285,15 +285,6 @@ class ReservationService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Reserva no existe")
 
-        request_datetime: datetime = datetime.now(self._country_time_zone)
-        logger.info("request datetime: {}", request_datetime)
-
-        #if request_datetime.date() > reservation.reservation_date:
-        #    raise CustomError(name="Error con fecha de petición reserva",
-        #                      detail="No puede ser fecha de reserva menor a fecha petición reserva",
-        #                      status_code=status.HTTP_400_BAD_REQUEST,
-        #                      cause="No puede ser fecha de reserva menor a fecha petición reserva")
-
         last_reservation_status: int = self._reservation_dao_.get_last_reservation_status(reservation_id=reservation.id, db=db)
         logger.info("last_reservation_status: {}", last_reservation_status)
 
@@ -302,7 +293,7 @@ class ReservationService:
 
         branch_email: str = self._use_dao.get_email_by_branch(branch_id=reservation.branch_id, db=db)
         logger.info("branch_email: {}", branch_email)
-        # TODO: Puede que pago rechazado estado pueda tener reintentos. Tal vez no hay que limitarlo. Ojo ahí.
+
         match reservation_updated.status:
             case ReservationStatus.STARTED | ReservationStatus.IN_PROCESS |\
                  ReservationStatus.ERROR | ReservationStatus.NO_CONFIRMED:
@@ -322,24 +313,22 @@ class ReservationService:
 
                 return self._reservation_change_status_service\
                     .successful_reservation_payment(reservation=reservation, reservation_updated=reservation_updated,
-                                                    request_datetime=request_datetime, client_email=client_email,
-                                                    branch_email=branch_email, db=db)
+                                                    client_email=client_email, branch_email=branch_email, db=db)
 
             case ReservationStatus.REJECTED_BY_LOCAL:
                 if last_reservation_status != ReservationStatus.SUCCESSFUL_PAYMENT:
                     self._raise_reservation_status_error()
 
                 return self._reservation_change_status_service\
-                    .rejected_reservation_by_local(reservation_id=reservation_updated.reservation_id,
-                                                   client_email=client_email)
+                    .rejected_reservation_by_local(reservation=reservation, client_email=client_email)
 
             case ReservationStatus.CONFIRMED:
                 if last_reservation_status != ReservationStatus.SUCCESSFUL_PAYMENT:
                     self._raise_reservation_status_error()
 
                 return self._reservation_change_status_service\
-                    .confirmed_reservation(reservation=reservation, request_datetime=request_datetime,
-                                           client_email=client_email, branch_email=branch_email, db=db)
+                    .confirmed_reservation(reservation=reservation, client_email=client_email,
+                                           branch_email=branch_email, db=db)
 
             case ReservationStatus.SERVICED:
                 if last_reservation_status != ReservationStatus.CONFIRMED:
