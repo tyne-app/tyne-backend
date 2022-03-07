@@ -7,13 +7,11 @@ from src.repository.entity.UserEntity import UserEntity
 from src.exception.exceptions import CustomError
 from sqlalchemy.exc import IntegrityError
 from src.util.Constants import Constants
-from src.service.PasswordService import PasswordService
 
 
 class ClientDao:
 
     def create_account(self, user_entity: UserEntity, client_entity: ClientEntity, db: Session):
-        user_entity.password = PasswordService().encrypt_password(user_entity.password)
         try:
             db.add(user_entity)
             db.flush()

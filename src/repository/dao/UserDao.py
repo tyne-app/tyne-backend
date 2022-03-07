@@ -7,7 +7,6 @@ from src.repository.entity.UserEntity import UserEntity
 from src.repository.entity.ManagerEntity import ManagerEntity
 from src.repository.entity.BranchEntity import BranchEntity
 from src.repository.entity.ClientEntity import ClientEntity
-from src.service.PasswordService import PasswordService
 
 
 class UserDao:
@@ -39,7 +38,7 @@ class UserDao:
     def create_user(self, email: str, password: str, user_type: int, db: Session):
         user_entity = UserEntity()
         user_entity.email = email
-        user_entity.password = PasswordService.encrypt_password(password)
+        user_entity.password = password
         user_entity.created_date = datetime.now()
         user_entity.is_active = True
         user_entity.id_user_type = user_type
