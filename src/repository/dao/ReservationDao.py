@@ -85,7 +85,6 @@ class ReservationDao:
 
         reservations = db.query(ReservationEntity.id, ReservationEntity.client_id, ClientEntity.name,
                                 ClientEntity.last_name,
-                                ReservationEntity.preference,
                                 ReservationEntity.reservation_date,
                                 ReservationEntity.hour,
                                 ReservationEntity.people,
@@ -173,7 +172,6 @@ class ReservationDao:
                                             StateEntity.name.label("state"),
                                             CityEntity.name.label("city"),
                                             CountryEntity.name.label("country"),
-                                            ReservationEntity.preference,
                                             ReservationEntity.reservation_date,
                                             ReservationEntity.hour,
                                             ReservationEntity.payment_id,
