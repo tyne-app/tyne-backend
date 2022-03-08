@@ -144,7 +144,7 @@ class ReservationService:
                                                                    db=db)
 
         self._reservation_dao_.add_reservation_status(status=ReservationStatus.STARTED,
-                                                      reservation_id=reservation_id, db=db)
+                                                      reservation_id=reservation_id)
 
         response_khipu = self._khipu_service.create_link(amount=total_amount, payer_email=client.user.email,
                                                          transaction_id=reservation_entity.transaction_id)
@@ -152,7 +152,7 @@ class ReservationService:
 
         if response_khipu.status != status.HTTP_201_CREATED:
             self._reservation_dao_.add_reservation_status(status=ReservationStatus.ERROR,
-                                                                   reservation_id=reservation_id, db=db)
+                                                          reservation_id=reservation_id)
 
             raise CustomError(name=Constants.KHIPU_GET_ERROR,
                               detail=Constants.KHIPU_GET_ERROR,
@@ -165,7 +165,7 @@ class ReservationService:
         logger.info("Se actualiza id de pago")
 
         self._reservation_dao_.add_reservation_status(status=ReservationStatus.IN_PROCESS,
-                                                      reservation_id=reservation_id, db=db)
+                                                      reservation_id=reservation_id)
 
         response = ReservationResponse()
         response.url_payment = response_khipu.url
