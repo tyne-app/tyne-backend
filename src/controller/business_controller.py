@@ -30,8 +30,8 @@ async def search_parameters_params(
         name: Optional[str] = None,
         dateReservation: Optional[str] = None,
         stateId: Optional[int] = None,
-        sortBy: Optional[Union[int, str]] = None,
-        orderBy: Optional[Union[int, str]] = None):
+        sortBy: Optional[int] = None,
+        orderBy: Optional[int] = None):
     return {
         'result_for_page': result_for_page,
         'page': page,
