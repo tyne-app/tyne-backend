@@ -1,6 +1,7 @@
 from datetime import datetime, date
 
-from pydantic import BaseModel, Optional
+from pydantic import BaseModel
+from typing import Optional
 from starlette import status
 
 from src.util.Constants import Constants
