@@ -9,7 +9,7 @@ from src.service.PasswordService import PasswordService
 
 class ClientRequest(BaseModel):
 
-    _password_service_ = PasswordService() 
+    # _password_service_ = PasswordService() 
 
     name: str
     lastName: str
@@ -23,7 +23,7 @@ class ClientRequest(BaseModel):
 
         user_entity = UserEntity()
         user_entity.email = self.email
-        self.password = self._password_service_.encrypt_password(self.password)
+        self.password = PasswordService.encrypt_password(self.password)
         user_entity.password = self.password
         user_entity.is_active = True
         user_entity.id_user_type = UserType.CLIENT
