@@ -23,7 +23,7 @@ class ClientRequest(BaseModel):
 
         user_entity = UserEntity()
         user_entity.email = self.email
-        self.password = PasswordService.encrypt_password(self.password)
+        # self.password = PasswordService.encrypt_password(self.password)
         user_entity.password = self.password
         user_entity.is_active = True
         user_entity.id_user_type = UserType.CLIENT
