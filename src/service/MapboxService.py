@@ -31,6 +31,8 @@ class MapBoxService:
                 response = await client.get(url=mapbox_url)
                 logger.info("response: {}", response)
                 logger.info("response.text: {}", response.text)
+                logger.info("response.text: {}", response.text)
+
 
                 if response.status_code != status.HTTP_200_OK:
                     logger.error("response: {}", response)
