@@ -23,7 +23,7 @@ class CloudinaryService:
     async def upload_image(self, file: UploadFile, user_id: int):
         try:
             folder = self._settings_.ENVIRONMENT + "/users/" + str(user_id)
-            response = cloudinary.uploader.upload_image(file, folder=folder)
+            response = cloudinary.uploader.upload_image(file, transformation=[{'width':400, 'height':400, 'gravity':"face", 'crop':"fill"}], folder=folder)
             return response
         except cloudinary.exceptions.Error as exception:
             await self._throwerExceptions.throw_custom_exception(name=Constants.IMAGE_UPLOAD_ERROR,
