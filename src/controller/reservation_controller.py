@@ -1,7 +1,7 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, status, Request
 from sqlalchemy.orm import Session
-from src.configuration.database import database
+from src.configuration.database.database import get_data_base, db_session
 from src.dto.request.NewReservationRequest import NewReservationRequest
 from src.dto.request.UpdateReservationRequest import UpdateReservationRequest
 from src.dto.response.ReservationResponse import ReservationResponse
@@ -16,18 +16,11 @@ reservation_controller = APIRouter(
 _jwt_service_ = JwtService()
 _reservation_service_ = ReservationService()
 
-# TODO: Falta endpoint para confirmar/cancelar reserva por parte de cliente/sucursal
-@reservation_controller.post('/test/{id}')
-async def test_reservation(request: Request, id: str, db: Session = Depends(database.get_data_base)):
-    # TODO: Agregar una funció de prueba
-    print("ID para el job: " + id)
-    _reservation_service_.test_reservation_event(id=id)
-    return "OK"
 
 @reservation_controller.post('', status_code=status.HTTP_200_OK, response_model=ReservationResponse)
 async def create_reservation(request: Request,
                              new_reservation_request: NewReservationRequest,
-                             db: Session = Depends(database.get_data_base)):
+                             db: Session = Depends(get_data_base)):
     token_payload = await _jwt_service_.verify_and_get_token_data(request=request)
     return await _reservation_service_.create_reservation(client_id=token_payload.id_branch_client,
                                                           new_reservation=new_reservation_request,
@@ -37,14 +30,15 @@ async def create_reservation(request: Request,
 @reservation_controller.put('', status_code=status.HTTP_200_OK)
 async def update_reservation(request: Request,
                              reservation_updated: UpdateReservationRequest,
-                             db: Session = Depends(database.get_data_base)):
+                             db: Session = Depends(get_data_base)):
     await _jwt_service_.verify_and_get_token_data(request=request)
+    db_session.set(db)
     return await _reservation_service_.update_reservation(reservation_updated, db=db)
 
 
 @reservation_controller.get('/{id}', status_code=status.HTTP_200_OK)
 async def reservation_detail(request: Request, id: int,
-                             db: Session = Depends(database.get_data_base)):
+                             db: Session = Depends(get_data_base)):
     await _jwt_service_.verify_and_get_token_data(request=request)
     return await _reservation_service_.reservation_detail(reservation_id=id, db=db)
 
@@ -56,7 +50,7 @@ async def local_reservations(request: Request,
                              status_reservation: int,
                              result_for_page: int,
                              page_number: int,
-                             db: Session = Depends(database.get_data_base)):
+                             db: Session = Depends(get_data_base)):
     token_payload = await _jwt_service_.verify_and_get_token_data(request=request)
     return await _reservation_service_.local_reservations(branch_id=token_payload.id_branch_client,
                                                           reservation_date=reservation_date,

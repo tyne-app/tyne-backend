@@ -2,10 +2,12 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import exists
-
+from sqlalchemy.engine import Row
 from src.repository.entity.UserEntity import UserEntity
 from src.repository.entity.ManagerEntity import ManagerEntity
 from src.repository.entity.BranchEntity import BranchEntity
+from src.repository.entity.ClientEntity import ClientEntity
+
 
 class UserDao:
 
@@ -75,7 +77,15 @@ class UserDao:
         return db.query(exists().where(UserEntity.email == email)).scalar()
 
     def get_email_by_branch(self, branch_id: int, db: Session) -> str:
-        return db.query(UserEntity.email)\
+        branch_email: Row = db.query(UserEntity.email)\
             .join(ManagerEntity, ManagerEntity.id_user == UserEntity.id)\
             .join(BranchEntity, BranchEntity.manager_id == ManagerEntity.id)\
             .filter(BranchEntity.id == branch_id).first()
+        return branch_email[0]  # TODO: Ver forma de obtener email mas directa
+
+    def get_email_by_cient(self, client_id: int, db: Session) -> str:
+
+        client_email: Row = db.query(UserEntity.email)\
+            .join(ClientEntity, ClientEntity.id_user == UserEntity.id)\
+            .filter(ClientEntity.id == client_id).first()
+        return client_email[0]

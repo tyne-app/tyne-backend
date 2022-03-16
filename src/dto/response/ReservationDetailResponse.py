@@ -19,7 +19,6 @@ class ReservationDetailResponse:
     state: str
     city: str
     country: str
-    preference: str
     reservation_date: datetime
     hour: str
     total_price: int
@@ -51,7 +50,6 @@ class ReservationDetailResponse:
                 reservations_detail_response.state = reservation_detail.state
                 reservations_detail_response.city = reservation_detail.city
                 reservations_detail_response.country = reservation_detail.country
-                reservations_detail_response.preference = reservation_detail.preference
                 reservations_detail_response.reservation_date = reservation_detail.reservation_date
                 reservations_detail_response.reservation_week_day = reservation_detail.reservation_date.strftime("%A")
                 reservations_detail_response.hour = reservation_detail.hour

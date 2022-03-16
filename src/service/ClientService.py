@@ -17,6 +17,7 @@ from src.exception.ThrowerExceptions import ThrowerExceptions
 from src.validator.ClientValidator import ClientValidator
 from src.service.EmailService import EmailService
 from src.util.EmailSubject import EmailSubject
+from src.service.PasswordService import PasswordService
 
 
 class ClientService:
@@ -27,6 +28,7 @@ class ClientService:
     _tokenService_ = JwtService()
     _throwerExceptions = ThrowerExceptions()
     _email_service: EmailService = EmailService()
+    _password_service_ = PasswordService()
     _created_client: str = "Cliente creado correctamente"
 
     # TODO: Se pueden hacer más general los to_entity() y validadores
@@ -41,6 +43,7 @@ class ClientService:
         logger.info("cliete_request: {}", client_request)
         await self._client_validator_.validate_fields(client_request.__dict__)  # TODO: Lo que es validación puede ser más general
 
+        client_request.password= self._password_service_.encrypt_password(client_request.password)
         user_entity: UserEntity = client_request.to_user_entity()
         client_entity: ClientEntity = client_request.to_client_entity()
         self._client_dao_.create_account(user_entity=user_entity, client_entity=client_entity, db=db)
