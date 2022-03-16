@@ -2,12 +2,11 @@ import math
 from datetime import datetime
 
 
-class LocalReservations:
+class LocalReservation:
     reservation_id: int
     client_id: int
     name: str
     last_name: str
-    preference: str
     reservation_date: datetime
     reservation_date_status: datetime
     hour: str
@@ -29,7 +28,7 @@ class LocalReservationsDate:
     reservation_confirmed: int
     reservation_attended: int
     reservation_canceled: int
-    local_reservations: list[LocalReservations]
+    local_reservations: list[LocalReservation]
 
 
 class LocalReservationsResponse:
@@ -46,7 +45,7 @@ class LocalReservationsResponse:
         local_reservations_date_list: list[LocalReservationsDate] = []
         total_items: int = 0
         for idxDate, local_reservations_date in enumerate(localReservationsDate):
-            local_reservations_list: list[LocalReservations] = []
+            local_reservations_list: list[LocalReservation] = []
             local_reservations_date_obj = LocalReservationsDate()
             reservation_date_local_reservation_date: datetime = local_reservations_date.reservation_date
 
@@ -61,11 +60,10 @@ class LocalReservationsResponse:
                 reservation_date_local_reservation: datetime = local_reservations.reservation_date
 
                 if reservation_date_local_reservation.day == reservation_date_local_reservation_date.day:
-                    local_reservations_obj = LocalReservations()
+                    local_reservations_obj = LocalReservation()
                     local_reservations_obj.reservation_id = local_reservations.id
                     local_reservations_obj.name = local_reservations.name
                     local_reservations_obj.last_name = local_reservations.last_name
-                    local_reservations_obj.preference = local_reservations.preference
                     local_reservations_obj.reservation_date = local_reservations.reservation_date
                     local_reservations_obj.reservation_date_status = local_reservations.reservation_date_status
                     local_reservations_obj.hour = local_reservations.hour
