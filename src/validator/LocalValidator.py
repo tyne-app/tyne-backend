@@ -18,6 +18,7 @@ class LocalValidator:
     PHONE_REGEX = re.compile(r"\+569[0-9]{8}")
     ADDRESS_REGEX = re.compile(r"[A-Za-z\s\.0-9#áéíóúÁÉÍÓÚ]+")
     EMAIL_REGEX = re.compile(r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.?[A-Za-z]+")
+    VALID_STATE_ID = range(83, 134)
     INVALID_DATA_MESSAGE = "Formato no válido"
     INVALID_DATA_PHONE_MESSAGE = "Formato de teléfono {0} no válido"
     INVALID_DATA_NAME_MESSAGE = "Formato del nombre {0} no válido"
@@ -31,6 +32,7 @@ class LocalValidator:
     INVALID_DATA_STATE_ID_MESSAGE = "Formato comuna no válido"
     INVALID_DATA_ACCEPT_PET_MESSAGE = "Formato de aceptación de mascotas no válido"
     INVALID_ACCOUNT_NUMBER = "Formato número de cuenta no válido"
+    INVALID_STATE_ID_CITY = "Ciudad no valida"
 
     LEGAL_REPRESENTATIVE = "del representante legal"
     MANAGER = "del encargado"
@@ -123,6 +125,8 @@ class LocalValidator:
             invalid_data.append(self.INVALID_DATA_PHONE_MESSAGE.replace("{0}", self.RESTAURANT))
         if type(restaurant.state_id) != int:
             invalid_data.append(self.INVALID_DATA_STATE_ID_MESSAGE)
+        if (restaurant.state_id) not in self.VALID_STATE_IDS:
+            invalid_data.append(self.INVALID_STATE_ID_CITY)
 
         if invalid_data:
             await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
