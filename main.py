@@ -1,11 +1,11 @@
 import json
 
 import uvicorn
-from fastapi import FastAPI, status, Request
+from fastapi import status, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
-from fastapi.middleware.cors import CORSMiddleware
+
 from loguru import logger
 
 from src.configuration.firebase.firebase_config import FirebaseConfig
@@ -14,22 +14,10 @@ from src.controller import business_controller, menu_controller, bank_controller
     user_controller, client_controller, reservation_controller
 
 from src.exception.ThrowerExceptions import ThrowerExceptions
+from src.configuration.api.api_config import setup_app, add_middlewares
 
-api_local = FastAPI(
-    docs_url="/v1/docs",
-    title="MS-API-Local",
-    description="Encargado de toda la lógica de negocio de la aplicación, configuración y conexiones a APIs externas",
-    version="1.0.0"
-)
-
-origins = ["*"]
-
-api_local.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_methods=["*"],
-    allow_headers=["*"]
-)
+app = setup_app()
+app = add_middlewares(app)
 
 
 def get_field_error(error: tuple):
@@ -41,7 +29,7 @@ def get_field_error(error: tuple):
         return error[3]
 
 
-@api_local.exception_handler(RequestValidationError)
+@app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
     error_array = exc.errors()
     error_detail_list = []
@@ -61,7 +49,7 @@ async def validation_exception_handler(request, exc):
 _throwerExceptions = ThrowerExceptions()
 
 
-@api_local.middleware("http")
+@app.middleware("http")
 async def catch_exceptions_middleware(request: Request, call_next):
     try:
         return await call_next(request)
@@ -77,7 +65,7 @@ async def catch_exceptions_middleware(request: Request, call_next):
         return await _throwerExceptions.response_internal_exception()
 
 
-@api_local.exception_handler(CustomError)
+@app.exception_handler(CustomError)
 async def custom_exception_handler(request: Request, exc: CustomError):
     error_detail = {
         "URL": f"{request.url}",
@@ -93,13 +81,13 @@ async def custom_exception_handler(request: Request, exc: CustomError):
 firebase_config = FirebaseConfig()
 firebase_config.init_firebase()
 
-api_local.include_router(bank_controller.bank_controller)
-api_local.include_router(business_controller.business_controller)
-api_local.include_router(client_controller.client_controller)
-api_local.include_router(menu_controller.menu_controller)
-api_local.include_router(reservation_controller.reservation_controller)
-api_local.include_router(territory_controller.territory_controller)
-api_local.include_router(user_controller.user_controller)
+app.include_router(bank_controller.bank_controller)
+app.include_router(business_controller.business_controller)
+app.include_router(client_controller.client_controller)
+app.include_router(menu_controller.menu_controller)
+app.include_router(reservation_controller.reservation_controller)
+app.include_router(territory_controller.territory_controller)
+app.include_router(user_controller.user_controller)
 
 if __name__ == "__main__":
-    uvicorn.run("main:api_local", host="127.0.0.1", port=8001, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)
