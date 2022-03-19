@@ -10,17 +10,18 @@ from src.configuration.Settings import Settings
 
 
 class EmailService:
-    _PORT: int = Settings.PORT_EMAIL
-    _PASSWORD: str = Settings.PASSWORD_EMAIL
-    _SENDER_EMAIL: str = Settings.SENDER_EMAIL
-    _ENCODING: str = Settings.ENCODING_EMAIL
+    _HOST: str = Settings.EMAIL_HOST
+    _PORT: int = Settings.EMAIL_PORT
+    _PASSWORD: str = Settings.EMAIL_PASSWORD
+    _SENDER_EMAIL: str = Settings.EMAIL_USERNAME
+    _ENCODING: str = Settings.EMAIL_ENCODING
     _READ: str = 'r'
 
     def send_email(self, user: str, subject: str, receiver_email: str, data=None) -> None:
         logger.info('Subject: {}, receiver_email: {}, data: {}', subject, receiver_email, data)
 
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", self._PORT, context=context) as server:
+        with smtplib.SMTP_SSL(self._HOST, self._PORT, context=context) as server:
 
             template_name: str = self._get_template_name(user=user, subject=subject)
             template: Template = self._get_template(user=user, template_name=template_name)
