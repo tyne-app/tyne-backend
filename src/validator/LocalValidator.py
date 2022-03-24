@@ -124,6 +124,7 @@ class LocalValidator:
         if type(restaurant.state_id) != int:
             invalid_data.append(self.INVALID_DATA_STATE_ID_MESSAGE)
 
+
         if invalid_data:
             await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
                                                                  detail=invalid_data,
