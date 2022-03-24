@@ -128,6 +128,7 @@ class LocalValidator:
         if (restaurant.state_id) not in self.VALID_STATE_IDS:
             invalid_data.append(self.INVALID_STATE_ID_CITY)
 
+
         if invalid_data:
             await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
                                                                  detail=invalid_data,
