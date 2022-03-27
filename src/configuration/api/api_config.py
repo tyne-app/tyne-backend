@@ -22,10 +22,12 @@ def setup_app():
 
 def add_middlewares(app: FastAPI):
     origins = ["http://localhost:4200",
-               "https://tyne-app.herokuapp.com",
                "https://tyne-frontend-prod.herokuapp.com",
+               "https://tyne-frontend-dev.herokuapp.com",
                "https://tyne.cl",
-               "http://tyne.cl"]
+               "https://www.tyne.cl",
+               "http://tyne.cl",
+               "http://www.tyne.cl"]
 
     app.add_middleware(
         CORSMiddleware,
