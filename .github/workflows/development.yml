@@ -83,7 +83,7 @@ jobs:
           envkey_EMAIL_ENCODING: ${{ secrets.EMAIL_ENCODING }}
           envkey_ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
           file_name: .env
-          directory: app
+          directory: ../../app
           fail_on_empty: true
       - run: |
           ls -l
