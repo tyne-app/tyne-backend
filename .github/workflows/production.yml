@@ -3,7 +3,7 @@ name: Prod deploy Heroku
 on:
   push:
     branches:
-      - develop
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
