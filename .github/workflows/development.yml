@@ -35,6 +35,7 @@ jobs:
           envkey_EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           envkey_EMAIL_ENCODING: ${{ secrets.EMAIL_ENCODING }}
           envkey_ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          directory: /app
           file_name: .env
           fail_on_empty: true
   build:
