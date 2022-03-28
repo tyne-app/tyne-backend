@@ -14,5 +14,5 @@ jobs:
           dontautocreate: false
           usedocker: true
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: ${{ secrets.HEROKU_BACKEND_DEV_APP_NAME }}
+          heroku_app_name: ${{ secrets.HEROKU_BACKEND_PROD_APP_NAME }}
           heroku_email: ${{ secrets.HEROKU_EMAIL }}
