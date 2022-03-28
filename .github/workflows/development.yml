@@ -39,9 +39,9 @@ jobs:
           fail_on_empty: true
       - uses: actions/upload-artifact@v2
         with:
-          name: .env
-          path: app/.env
-      -run:
+          name: my-artifact
+          path: path/to/artifact/world.txt
+      - run:
         cat app/.env
   build:
     needs: [create-env-file]
