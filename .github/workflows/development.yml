@@ -78,7 +78,7 @@ jobs:
           file_name: .env
           fail_on_empty: true
       - run: |
-        ls -l
+          ls -l
       - uses: akhileshns/heroku-deploy@v3.12.12
         with:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
