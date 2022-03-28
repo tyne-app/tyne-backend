@@ -39,10 +39,10 @@ jobs:
           fail_on_empty: true
       - uses: actions/upload-artifact@v2
         with:
-          name: my-artifact
-          path: path/to/artifact/world.txt
+          name: env
+          path: .env
       - run:
-          cat app/.env
+          cat .env
   build:
     needs: [create-env-file]
     runs-on: ubuntu-latest
