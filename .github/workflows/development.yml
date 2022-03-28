@@ -42,7 +42,7 @@ jobs:
           name: my-artifact
           path: path/to/artifact/world.txt
       - run:
-        cat app/.env
+          cat app/.env
   build:
     needs: [create-env-file]
     runs-on: ubuntu-latest
