@@ -55,6 +55,9 @@ jobs:
           heroku_email: ${{ secrets.HEROKU_EMAIL }}
           dontautocreate: false
           usedocker: true
+      - uses: actions/download-artifact@v2
+        with:
+          name: env
       - run:
           cat .env
   discord-notification:
