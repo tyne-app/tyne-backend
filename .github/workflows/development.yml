@@ -60,6 +60,7 @@ jobs:
           name: env
       - run:
           cat .env
+          cat app/Procfile
   discord-notification:
     needs: [build]
     runs-on: ubuntu-latest
