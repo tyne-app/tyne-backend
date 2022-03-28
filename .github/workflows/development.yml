@@ -39,7 +39,6 @@ jobs:
           file_name: .env
           fail_on_empty: true
       - uses: akhileshns/heroku-deploy@v3.12.12
-      - name: Deploying to Heroku
         with:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_app_name: ${{ secrets.HEROKU_BACKEND_DEV_APP_NAME }}
@@ -53,7 +52,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: sarisia/actions-status-discord@v1
-      - name: Discord notification
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_BACKEND_DEV_PIPELINE }}
