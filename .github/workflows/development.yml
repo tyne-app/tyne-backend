@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Make envfile
-      - uses: SpicyPizza/create-envfile@v1.3
+        uses: SpicyPizza/create-envfile@v1.3
         with:
           envkey_ENVIRONMENT: "Development"
           envkey_DATABASE_USER: ${{ secrets.DATABASE_USER }}
