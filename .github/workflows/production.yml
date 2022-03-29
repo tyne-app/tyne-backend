@@ -1,13 +1,10 @@
 name: Prod deploy Heroku
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
-    types: [opened, reopened]
-    branches:
-      - develop
+    types: closed
+    branches: 
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
