@@ -17,7 +17,7 @@ jobs:
         uses: SpicyPizza/create-envfile@v1.3
         with:
           envkey_ENVIRONMENT: "Production"
-          envkey_DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          envkey_DATABASE_USER: ${{ secrets.DATABASE_PROD_USER }}
           envkey_DATABASE_PASSWORD: ${{ secrets.DATABASE_PROD_PASSWORD }}
           envkey_DATABASE_HOST: ${{ secrets.DATABASE_PROD_HOST }}
           envkey_DATABASE_PORT: ${{ secrets.DATABASE_PROD_PORT }}
