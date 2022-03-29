@@ -34,7 +34,7 @@ class ClientDao:
             .query(ClientEntity) \
             .select_from(ClientEntity) \
             .join(UserEntity, ClientEntity.id_user == UserEntity.id) \
-            .filter(UserEntity.email == email) \
+            .filter(UserEntity.email == email.str.lower()) \
             .first()
 
     def get_client_by_id(self, client_id: int, db: Session) -> ClientEntity:

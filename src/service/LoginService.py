@@ -12,6 +12,7 @@ class LoginService:
     _throwerExceptions_ = ThrowerExceptions()
 
     async def create_user_login(self, email, password, user_type: int, db):
+        email = email.str.lower()
         await self._user_validator_.validate_fields({"email": email, "password": password})
 
         user_exist = self._user_dao_.verify_email(email, db)
@@ -28,4 +29,4 @@ class LoginService:
         return user_created.id
 
     def delete_user_login(self, email, db):
-        self._user_dao_.delete_user_by_email(email, db)
+        self._user_dao_.delete_user_by_email(email.str.lower(), db)

@@ -22,7 +22,7 @@ class ClientRequest(BaseModel):
         logger.info("Creacion entidad usuario en client request")
 
         user_entity = UserEntity()
-        user_entity.email = self.email
+        user_entity.email = self.email.str.lower()
         # self.password = PasswordService.encrypt_password(self.password)
         user_entity.password = self.password
         user_entity.is_active = True
