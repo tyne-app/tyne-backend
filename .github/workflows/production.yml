@@ -9,21 +9,54 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Creating .env file
+        uses: SpicyPizza/create-envfile@v1.3
+        with:
+          envkey_ENVIRONMENT: "Production"
+          envkey_DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          envkey_DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          envkey_DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+          envkey_DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+          envkey_DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+          envkey_CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          envkey_CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          envkey_CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+          envkey_KHIPU_SECRET_ID: ${{ secrets.KHIPU_SECRET_ID }}
+          envkey_KHIPU_RECEIVER_ID: ${{ secrets.KHIPU_RECEIVER_ID }}
+          envkey_KHIPU_NOTIFY_URL: ${{ secrets.KHIPU_NOTIFY_URL }}
+          envkey_KHIPU_RETURN_URL: ${{ secrets.KHIPU_RETURN_URL }}
+          envkey_KHIPU_CANCEL_URL: ${{ secrets.KHIPU_CANCEL_URL }}
+          envkey_KHIPU_PICTURE_URL: ${{ secrets.KHIPU_PICTURE_URL }}
+          envkey_JWT_KEY: ${{ secrets.JWT_KEY }}
+          envkey_MAPBOX_API: ${{ secrets.MAPBOX_API }}
+          envkey_MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
+          envkey_EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
+          envkey_EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+          envkey_EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+          envkey_EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          envkey_EMAIL_ENCODING: ${{ secrets.EMAIL_ENCODING }}
+          envkey_ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          file_name: .env
+          fail_on_empty: true
       - uses: akhileshns/heroku-deploy@v3.12.12
+      - name: Deploying to Heroku
         with:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_app_name: ${{ secrets.HEROKU_BACKEND_PROD_APP_NAME }}
           heroku_email: ${{ secrets.HEROKU_EMAIL }}
           dontautocreate: false
           usedocker: true
+      - run: |
+          ls -l
   discord-notification:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: sarisia/actions-status-discord@v1
+      - name: Discord notification
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_BACKEND_PROD_PIPELINE }}
           username: GitHub Actions
-          title: "A new version was deployed in PRODUCTION"
+          title: "A new version was deployed in PROD"
           description: "Deployed in Heroku"
