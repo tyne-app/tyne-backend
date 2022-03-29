@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - develop
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,10 +18,10 @@ jobs:
         with:
           envkey_ENVIRONMENT: "Production"
           envkey_DATABASE_USER: ${{ secrets.DATABASE_USER }}
-          envkey_DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          envkey_DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
-          envkey_DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
-          envkey_DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+          envkey_DATABASE_PASSWORD: ${{ secrets.DATABASE_PROD_PASSWORD }}
+          envkey_DATABASE_HOST: ${{ secrets.DATABASE_PROD_HOST }}
+          envkey_DATABASE_PORT: ${{ secrets.DATABASE_PROD_PORT }}
+          envkey_DATABASE_NAME: ${{ secrets.DATABASE_PROD_NAME }}
           envkey_CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
           envkey_CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
           envkey_CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
