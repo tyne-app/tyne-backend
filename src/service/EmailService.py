@@ -78,6 +78,10 @@ class EmailService:
                     return 'local_no_confirmation.html'
                 case EmailSubject.REMINDER_TO_LOCAL:
                     return 'reminder.html'
+                case EmailSubject.CANCELLATION_BY_CLIENT:
+                    return 'cancellation_by_client.html'
+                case EmailSubject.CONFIRMATION_TO_LOCAL:
+                    return 'confirmation.html'
 
         if user is Constants.USER:
             return 'forgotten_password.html'

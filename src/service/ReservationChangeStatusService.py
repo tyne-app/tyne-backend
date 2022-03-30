@@ -27,6 +27,7 @@ from src.repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from src.repository.dao.ReservationProductDao import ReservationProductDao
 from src.repository.dao.BranchDao import BranchDao
 from src.repository.dao.ReservationDao import ReservationDao
+from src.repository.dao.ClientDao import ClientDao
 
 
 class ReservationChangeStatusService:
@@ -39,19 +40,34 @@ class ReservationChangeStatusService:
     _reservation_product_dao = ReservationProductDao()
     _branch_dao = BranchDao()
     _reservation_dao_ = ReservationDao()
+    _client_dao = ClientDao()
+    _NEXT_DAY: int = 1
+    _MINIMUM_VALUE: int = 1
 
-    def rejected_or_canceled_reservation_payment(self, reservation_id: int, reservation_status: int):
+    def rejected_reservation_payment(self, reservation_id: int, reservation_status: int):
         self._reservation_dao_.add_reservation_status(status=reservation_status,
                                                       reservation_id=reservation_id)
 
-        return SimpleResponse("Reserva actualizada correctamente a estado confirmado")
+        return SimpleResponse("Reserva actualizada correctamente a estado pago rechazado")
+
+    def canceled_reservation_payment(self, reservation: ReservationEntity, reservation_status: int, branch_email: str, db: Session):
+
+        data: dict = self._get_reservation_data_to_email(reservation=reservation, db=db)
+
+        self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.CANCELLATION_BY_CLIENT,
+                                       receiver_email=branch_email, data=data)
+
+        self._reservation_dao_.add_reservation_status(status=reservation_status,
+                                                      reservation_id=reservation.id)
+
+        return SimpleResponse("Reserva actualizada correctamente a estado cancelado")
 
     def successful_reservation_payment(self, reservation: ReservationEntity,
                                        reservation_updated: UpdateReservationRequest,
                                        client_email: str, branch_email: str, db: Session):
 
         payment = self._payment_dao_.get_payment(reservation_id=reservation_updated.reservation_id, db=db)
-
+        logger.info("payment: {}", payment)
         if payment:
             raise CustomError(name="Ya existe un pago asociado",
                               detail="Error",
@@ -88,15 +104,17 @@ class ReservationChangeStatusService:
         logger.info("response: {}", response.__dict__)
 
         data: dict = self._get_reservation_data_to_email(reservation=reservation, db=db)
+        data['reservation_id'] = reservation.id
 
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.SUCCESSFUL_PAYMENT,
-                                       receiver_email=client_email, data=data)
+                                       receiver_email=client_email)
 
         job_id: str = str(reservation_updated.reservation_id)
         kwargs: dict = {
             'job_id': job_id,
             'branch_email': branch_email,
-            'client_email': client_email
+            'client_email': client_email,
+            'data': data
         }
         logger.info("kwargs: {}", kwargs)
 
@@ -110,6 +128,10 @@ class ReservationChangeStatusService:
                                                                                 branch_id=reservation.branch_id, db=db)
 
         difference_as_seconds: int = round((nearest_branch_opening_datetime - request_datetime).total_seconds())
+        if difference_as_seconds < self._MINIMUM_VALUE:
+            logger.info("Request datetime is post opening hour")
+            difference_as_seconds = self._MINIMUM_VALUE
+
         logger.info("Difference as seconds: {}", difference_as_seconds)
 
         self._reservation_event_service.create_job(func=self._reservation_event_service.create_reservation_event,
@@ -170,7 +192,8 @@ class ReservationChangeStatusService:
         kwargs: dict = {
             'job_id': job_id,
             'branch_email': branch_email,
-            'client_email': client_email
+            'client_email': client_email,
+            'data': data
         }
         logger.info("kwargs: {}", kwargs)
 
@@ -186,16 +209,15 @@ class ReservationChangeStatusService:
 
         return SimpleResponse("Reserva actualizada correctamente a estado confirmado")
 
-    def serviced_reservation(self, reservation_id: int):
-        self._reservation_dao_.add_reservation_status(status=ReservationStatus.SERVICED, reservation_id=reservation_id)
-        return SimpleResponse("Reserva actualizada correctamente a estado servico")
-
     def _get_reservation_data_to_email(self, reservation: ReservationEntity, db: Session) -> dict:
         products: list = self._reservation_product_dao.get_al_products_by_reservation(reservation_id=reservation.id, db=db)
-        name: str = self._branch_dao.get_name(branch_id=reservation.branch_id, db=db)
+
+        branch_name: str = self._branch_dao.get_name(branch_id=reservation.branch_id, db=db)
+        client_name: str = self._client_dao.get_client_name(client_id=reservation.client_id, db=db)
 
         data: dict = {
-            'name': name,
+            'branch_name': branch_name,
+            'client_name': client_name,
             'date': reservation.reservation_date,
             'hour': reservation.hour,
             'total_amount': reservation.amount + reservation.tyne_commission,
@@ -208,10 +230,11 @@ class ReservationChangeStatusService:
 
     def get_available_datetime(self, request_datetime: datetime, branch_id: int, db: Session) -> datetime:
 
-        day: int = 1
+        day: int = self._NEXT_DAY
+        next_datetime = request_datetime
 
         while day <= ReservationConstant.WEEK_AS_DAYS:
-            next_datetime = request_datetime + timedelta(days=day)
+
             logger.info("next datetime: {}", next_datetime)
 
             next_day = next_datetime.isoweekday() - ReservationConstant.DAY_ADJUSTMENT
@@ -224,7 +247,8 @@ class ReservationChangeStatusService:
                 logger.info("nearest_branch_opening_datetime: {}", nearest_branch_opening_datetime)
                 return nearest_branch_opening_datetime
 
-            day += 1
+            day += self._NEXT_DAY
+            next_datetime = request_datetime + timedelta(days=day)
 
         raise CustomError(name="No existe día disponible",
                           detail="No existe día dentro de una semana para avisar a local",
