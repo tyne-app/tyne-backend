@@ -43,7 +43,7 @@ class UserService:
         tokenResponse: UserTokenResponse = None
         user: UserEntity = self._user_dao_.verify_email(loginRequest.email, db)
         user.password = self._password_service_.decrypt_password(user.password)
-
+        # TODO: Limppiar base de datos firebase para que no de error con login formulario.
         await self._tokenService_.verify_email_firebase(loginRequest.email)
 
         if user is not None:

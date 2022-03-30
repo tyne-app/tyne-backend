@@ -44,8 +44,8 @@ class ReservationEventService:
 
         logger.info("Reservation event has started. It will send an email to confirm/cancel by branch")
         logger.info("kwargs: {}", kwargs)
-        self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.REMINDER_TO_LOCAL,
-                                       receiver_email=kwargs.get('branch_email'))  # TODO: Este no es el correo. Debe ser uno de confirmar/cancelar
+        self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.CONFIRMATION_TO_LOCAL,
+                                       receiver_email=kwargs.get('branch_email'), data=kwargs.get('data'))  # TODO: Este no es el correo. Debe ser uno de confirmar/cancelar
 
         self._scheduler.add_job(func=self.cancel_reservation, kwargs=kwargs,
                                 id=kwargs.get('job_id'), misfire_grace_time=5, coalesce=True,
@@ -57,12 +57,15 @@ class ReservationEventService:
         logger.info("Cancellation reservation event has started")
         logger.info("kwargs: {}", kwargs)
 
+        data: dict = kwargs.get('data')
+
         self.delete_job(job_id=kwargs.get('job_id'))
 
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.LOCAL_NO_CONFIRMATION_TO_CLIENT,
-                                       receiver_email=kwargs.get('client_email'))
+                                       receiver_email=kwargs.get('client_email'), data=data)
+
         self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.LOCAL_NO_CONFIRMATION_TO_LOCAL,
-                                       receiver_email=kwargs.get('branch_email'))
+                                       receiver_email=kwargs.get('branch_email'), data=data)
 
         reservation_id: int = int(kwargs.get('job_id'))
 
@@ -71,10 +74,11 @@ class ReservationEventService:
 
     def reminder_email(self, **kwargs):
         logger.info("kwargs: {}", kwargs)
+        data: dict = kwargs.get('data')
 
         self.delete_job(job_id=kwargs.get('job_id'))
 
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.REMINDER_TO_CLIENT,
-                                       receiver_email=kwargs.get('client_email'))
+                                       receiver_email=kwargs.get('client_email'), data=data)
         self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.REMINDER_TO_LOCAL,
-                                       receiver_email=kwargs.get('branch_email'))
+                                       receiver_email=kwargs.get('branch_email'), data=data)

@@ -51,7 +51,10 @@ class Constants:
     TOKEN_NOT_EXIST = "Token no existe"
     TOKEN_NOT_EXIST_DETAIL = "Debe autenticarse para utilizar el servicio"
 
-    RESERVATION_DATETIME_ERROR = "Fecha y hora para reserva no válidas"
+    RESERVATION_DATE_INVALID_ERROR = "Fecha para reserva no válida"
+    RESERVATION_DATE_DESCRIPTION_ERROR = "Fecha debe ser día disponible dentro de una semana"
+    RESERVATION_TIME_INVALID_ERROR = "Hora para reserva no válida"
+    RESERVATION_TIME_DESCRIPTION_ERROR = "Hora de reserva debe tener diferencia de 2hrs mínimo dentro de horario de local"
     RESERVATION_GET_ERROR = "Error al obtener reservas"
     RESERVATION_NOT_FOUND_ERROR = "Reservas no encontradas"
 

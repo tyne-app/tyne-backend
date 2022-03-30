@@ -82,22 +82,20 @@ class ReservationService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Sucursal no disponible para el día requerido")
 
-        is_valid_time = self._is_valid_hour(opening_hour=branch_schedule_entity.opening_hour,
+        self._is_valid_hour(opening_hour=branch_schedule_entity.opening_hour,
                                             closing_hour=branch_schedule_entity.closing_hour,
                                             request_hour=new_reservation.hour)
-
-        logger.info("is_valid_time: {}", is_valid_time)
 
         difference_as_days: int = (new_reservation.date - request_reservation_date).days
         current_datetime: datetime = datetime.now(self._country_time_zone)  # TODO: Validar fecha reserva sea mayor a fecha de request
         logger.info("current_datetime: {}", current_datetime)
         logger.info("new reservation date: {}", new_reservation.date)
 
-        if not is_valid_time or difference_as_days > ReservationConstant.WEEK_AS_DAYS:
-            raise CustomError(name=Constants.RESERVATION_DATETIME_ERROR,
-                              detail=Constants.RESERVATION_DATETIME_ERROR,
+        if difference_as_days > ReservationConstant.WEEK_AS_DAYS:
+            raise CustomError(name=Constants.RESERVATION_DATE_INVALID_ERROR,
+                              detail=Constants.RESERVATION_DATE_DESCRIPTION_ERROR,
                               status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="Fecha y/o hora de reserva no válida")
+                              cause="Fecha de reserva no válida")
 
         products = self._product_dao_.get_products_by_ids(products_id=new_reservation.get_products_ids(),
                                                           branch_id=new_reservation.branch_id, db=db)
@@ -126,7 +124,7 @@ class ReservationService:
             raise CustomError(name=Constants.BUY_INVALID_ERROR,
                               detail=Constants.BUY_INVALID_ERROR,
                               status_code=status.HTTP_400_BAD_REQUEST,
-                              cause=f"La compra debe ser mayor a {ReservationConstant.MIN_AMOUNT}")
+                              cause=f"La compra debe ser mínimo de {ReservationConstant.MIN_AMOUNT}")
 
         fifteen_percent: int = round(amount * ReservationConstant.TYNE_COMMISSION)
         logger.info("15% amount: {}", fifteen_percent)
@@ -175,27 +173,35 @@ class ReservationService:
 
         return response
 
-    def _is_valid_hour(self, opening_hour: str, closing_hour: str, request_hour: str) -> bool:  # TODO: Refactorizar
+    def _is_valid_hour(self, opening_hour: str, closing_hour: str, request_hour: str) -> None:
+
         opening_hour_datetime = datetime.strptime(opening_hour, "%H:%M")
         closing_hour_datetime = datetime.strptime(closing_hour, "%H:%M")
+        request_hour_datetime = datetime.strptime(request_hour, "%H:%M")
+        logger.info("opening_hour_datetime: {}", opening_hour_datetime)
+        logger.info("closing_hour_datetime: {}", closing_hour_datetime)
+        logger.info("request_hour_datetime: {}", request_hour_datetime)
 
-        if request_hour < opening_hour:
-            difference_opening_seconds = opening_hour_datetime - datetime.strptime(request_hour, "%H:%M")
-        else:
-            difference_opening_seconds = datetime.strptime(request_hour, "%H:%M") - opening_hour_datetime
+        difference_opening_seconds = request_hour_datetime - opening_hour_datetime
 
         difference_opening_hour = difference_opening_seconds.total_seconds() / ReservationConstant.HOUR_AS_SECONDS
         logger.info("difference_opening_hour: {}", difference_opening_hour)
 
-        if request_hour < closing_hour:
-            difference_closing_seconds = closing_hour_datetime - datetime.strptime(request_hour, "%H:%M")
-        else:
-            difference_closing_seconds = datetime.strptime(request_hour, "%H:%M") - closing_hour_datetime
+        difference_closing_seconds = closing_hour_datetime - request_hour_datetime
 
         difference_closing_hour = difference_closing_seconds.total_seconds() / ReservationConstant.HOUR_AS_SECONDS
         logger.info("difference_closing_hour: {}", difference_closing_hour)
 
-        return difference_opening_hour >= ReservationConstant.TYNE_LIMIT_HOUR and difference_closing_hour >= ReservationConstant.TYNE_LIMIT_HOUR
+        is_valid: bool = difference_opening_hour >= ReservationConstant.TYNE_LIMIT_HOUR and\
+                         difference_closing_hour >= ReservationConstant.TYNE_LIMIT_HOUR
+
+        logger.info("is_valid: {}", is_valid)
+
+        if not is_valid:
+            raise CustomError(name=Constants.RESERVATION_TIME_INVALID_ERROR,
+                              detail=Constants.RESERVATION_TIME_DESCRIPTION_ERROR,
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause="Hora de reserva debe tener diferencia de 2hrs mínimo dentro de horario de local")
 
     def _create_reservation_product(self, product: ProductEntity, quantity: int) -> ReservationProductEntity:  #TODO: Se podría moder metodo a otro lado
         reservation_product = ReservationProductEntity()
@@ -271,7 +277,7 @@ class ReservationService:
 
     async def update_reservation(self, reservation_updated: UpdateReservationRequest,
                                  db: Session):
-
+        # TODO: Revisar correos template de elias, hay que hacerlos dinamicos algunos.
         logger.info("reservation_updated: {}", reservation_updated.__dict__)
         reservation_updated.validate_fields()
 
@@ -299,13 +305,21 @@ class ReservationService:
                  ReservationStatus.ERROR | ReservationStatus.NO_CONFIRMED:
                 self._raise_reservation_status_error()
 
-            case ReservationStatus.CANCELED_PAYMENT | ReservationStatus.REJECTED_PAYMENT:
+            case ReservationStatus.REJECTED_PAYMENT:
+                if last_reservation_status != ReservationStatus.IN_PROCESS:
+                    self._raise_reservation_status_error()
+
+                return self._reservation_change_status_service \
+                    .rejected_reservation_payment(reservation_id=reservation_updated.reservation_id,
+                                                  reservation_status=last_reservation_status)
+
+            case ReservationStatus.CANCELED_PAYMENT:
                 if last_reservation_status != ReservationStatus.IN_PROCESS:
                     self._raise_reservation_status_error()
 
                 return self._reservation_change_status_service\
-                    .rejected_or_canceled_reservation_payment(reservation_id=reservation_updated.reservation_id,
-                                                              reservation_status=last_reservation_status)
+                    .canceled_reservation_payment(reservation=reservation, reservation_status=last_reservation_status,
+                                                  branch_email=branch_email, db=db)
 
             case ReservationStatus.SUCCESSFUL_PAYMENT:
                 if last_reservation_status != ReservationStatus.IN_PROCESS:
@@ -318,7 +332,7 @@ class ReservationService:
             case ReservationStatus.REJECTED_BY_LOCAL:
                 if last_reservation_status != ReservationStatus.SUCCESSFUL_PAYMENT:
                     self._raise_reservation_status_error()
-
+                # TODO: Obtener razón del por qué se rechaza
                 return self._reservation_change_status_service\
                     .rejected_reservation_by_local(reservation=reservation, client_email=client_email)
 
@@ -329,13 +343,6 @@ class ReservationService:
                 return self._reservation_change_status_service\
                     .confirmed_reservation(reservation=reservation, client_email=client_email,
                                            branch_email=branch_email, db=db)
-
-            case ReservationStatus.SERVICED:
-                if last_reservation_status != ReservationStatus.CONFIRMED:
-                    self._raise_reservation_status_error()
-
-                return self._reservation_change_status_service\
-                    .serviced_reservation(reservation_id=reservation_updated.reservation_id)
 
             case _:
                 self._raise_reservation_status_error()
