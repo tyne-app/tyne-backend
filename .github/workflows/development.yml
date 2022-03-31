@@ -2,12 +2,9 @@ name: Dev deploy Heroku
 
 on:
   pull_request:
-    types:
-      - opened
+    types: opened
     branches:
       - develop
-  push:
-    branches: poc-branch-name
 jobs:
   check-branch-name:
     runs-on: ubuntu-latest
@@ -69,7 +66,7 @@ jobs:
           usedocker: true
       - run: |
           ls -l
- discord-notification:
+  discord-notification:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
