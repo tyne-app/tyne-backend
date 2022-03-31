@@ -18,9 +18,8 @@ jobs:
           if [[ ${{ github.ref_name }} =~ ^TYNE-[0-9]+/[a-zA-Z]+/[a-zA-Z]+$ ]]; then
             echo cumple con el patron
           else
-
+            exit 1
           fi
-          exit 1
 #  build:
 #    runs-on: ubuntu-latest
 #    steps:
