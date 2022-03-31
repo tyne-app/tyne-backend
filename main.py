@@ -11,7 +11,7 @@ from loguru import logger
 from src.configuration.firebase.firebase_config import FirebaseConfig
 from src.exception.exceptions import CustomError
 from src.controller import business_controller, menu_controller, bank_controller, territory_controller, \
-    user_controller, client_controller, reservation_controller
+    user_controller, client_controller, reservation_controller, health_controller
 
 from src.exception.ThrowerExceptions import ThrowerExceptions
 from src.configuration.api.api_config import setup_app, add_middlewares
@@ -81,6 +81,7 @@ async def custom_exception_handler(request: Request, exc: CustomError):
 firebase_config = FirebaseConfig()
 firebase_config.init_firebase()
 
+app.include_router(health_controller.health_controller)
 app.include_router(bank_controller.bank_controller)
 app.include_router(business_controller.business_controller)
 app.include_router(client_controller.client_controller)
