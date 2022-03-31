@@ -7,7 +7,7 @@ on:
   #     - develop
   push:
     branches:
-      -TYNE-000/poc/branch-name-on-pr-restriction
+      - TYNE-000/poc/branch-name-on-pr-restriction
 jobs:
   check-branch-name:
     runs-on: ubuntu-latest
