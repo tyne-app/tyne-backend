@@ -10,7 +10,7 @@ on:
     branches: poc-branch-name
 jobs:
   check-branch-name:
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
     steps:
       - name: Check Tag
         run: |
