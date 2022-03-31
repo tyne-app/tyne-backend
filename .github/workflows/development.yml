@@ -1,10 +1,13 @@
 name: Dev deploy Heroku
 
 on:
-  pull_request:
-    types: [opened, reopened, synchronize]
+  # pull_request:
+  #   types: [opened, reopened, synchronize]
+  #   branches:
+  #     - develop
+  push:
     branches:
-      - develop
+      -TYNE-000/poc/branch-name-on-pr-restriction
 jobs:
   check-branch-name:
     runs-on: ubuntu-latest
