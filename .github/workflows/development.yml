@@ -19,7 +19,7 @@ jobs:
             echo "Please check your branch name, create a new branch in your machine, then"
             echo "push the new branch."
             echo "Correct branch names examples:"
-            echo "TYNE-{number}-/{feature|fix|test|bug|poc}/message-about-the-branch-topic"
+            echo "TYNE-{number}/{feature|fix|test|bug|poc}/message-about-the-branch-topic"
             echo "TYNE-598/feature/new-client-api"
             exit 1
           fi
