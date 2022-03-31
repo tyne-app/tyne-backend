@@ -10,9 +10,9 @@ on:
     branches: poc-branch-name
 jobs:
   check-branch-name:
-    # runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
-      - name: Check Tag
+      - name: Check branch name
         run: |
           echo "${{ github.ref_name }}"
           if [[ ${{ github.ref_name }} =~ ^TYNE-[0-9]+/(feature|fix|test|bug|poc)+/[a-zA-Z]+$ ]]; then
