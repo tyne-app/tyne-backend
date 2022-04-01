@@ -36,7 +36,7 @@ jobs:
         run: |
           echo "${{ github.head_ref }}"
           
-          if [[ "${{ github.head_ref }}" =~ ^TYNE-[0-9]+[/](feature|fix|test|bug|poc)+[/][a-zA-Z]+$ ]]; then
+          if [[ ${{ github.head_ref }} =~ ^TYNE-[0-9]+[/](feature|fix|test|bug|poc)+[/][a-zA-Z]+$ ]]; then
             echo "Your branch matches with the pattern successfully."
           else
             echo "Your branch doesn't match with the pattern TYNE-[0-9]+[/](feature|fix|test|bug|poc)+[/][a-zA-Z]+"
