@@ -1,13 +1,10 @@
 name: Dev deploy Heroku
 
 on:
-  # pull_request:
-  #   types: [opened, reopened, synchronize]
-  #   branches:
-  #     - develop
-  push:
+  pull_request:
+    types: [opened, reopened, synchronize]
     branches:
-      - TYNE-000/poc/branch-name-on-pr-restriction
+      - develop
 jobs:
   check-branch-name:
     runs-on: ubuntu-latest
@@ -15,9 +12,8 @@ jobs:
       - name: Check branch name
         run: |
           echo "${{ github.head_ref }}"
-          echo "${{ github.ref_name }}"
           
-          if [[ ${{ github.ref_name }} =~ ^TYNE-[0-9]+/(feature|fix|test|bug|poc)+/[a-zA-Z]+$ ]]; then
+          if [[ ${{ github.head_ref }} =~ ^TYNE-[0-9]+/(feature|fix|test|bug|poc)+/[a-zA-Z]+$ ]]; then
             echo "Your branch matches with the pattern successfully."
           else
             echo "Your branch doesn't match with the pattern TYNE-[0-9]+/(feature|fix|test|bug|poc)+/[a-zA-Z]+"
