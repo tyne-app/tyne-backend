@@ -19,7 +19,7 @@ _jwt_service_ = JwtService()
 
 
 @user_controller.get(
-    '/activate/{token}',
+    '/activation/{token}',
     status_code=status.HTTP_200_OK
 )
 async def activate_user(token: str, db: Session = Depends(database.get_data_base)):
