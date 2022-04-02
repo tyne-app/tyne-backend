@@ -18,16 +18,23 @@ _service_ = UserService()
 _jwt_service_ = JwtService()
 
 
+@user_controller.get(
+    '/activate/{token}',
+    status_code=status.HTTP_200_OK
+)
+async def activate_user(token: str, db: Session = Depends(database.get_data_base)):
+    return _service_.activate_user(token=token, db=db)
+
+
 @user_controller.post(
     '/login',
     status_code=status.HTTP_200_OK
 )
 async def login(response: Response,
                 request: Request,
-                loginRequest: LoginUserRequest,
+                login_request: LoginUserRequest,
                 db: Session = Depends(database.get_data_base)):
-    token = await _service_.login_user(loginRequest=loginRequest, ip=request.client.host, db=db)
-
+    token = await _service_.login_user(login_request=login_request, ip=request.client.host, db=db)
     if token is None:
         response.status_code = status.HTTP_204_NO_CONTENT
 
@@ -40,9 +47,9 @@ async def login(response: Response,
 )
 async def social_login(response: Response,
                        request: Request,
-                       loginRequest: LoginSocialRequest,
+                       login_request: LoginSocialRequest,
                        db: Session = Depends(database.get_data_base)):
-    token = await _service_.social_login_user(loginRequest=loginRequest, ip=request.client.host, db=db)
+    token = await _service_.social_login_user(login_request=login_request, ip=request.client.host, db=db)
     if token is None:
         response.status_code = status.HTTP_204_NO_CONTENT
     return token
