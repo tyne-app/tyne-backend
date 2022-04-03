@@ -57,3 +57,5 @@ docs/_build/
 /venv
 /.idea
 .env
+/.vscode
+firebase_credentials.json

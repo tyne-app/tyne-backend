@@ -7,7 +7,7 @@ from loguru import logger
 
 from src.configuration.Settings import Settings
 from src.dto.internal.Token import Token
-from src.dto.internal.TokenFirebase import TokenFirebase
+from src.dto.internal.TokenProfileActivation import TokenProfileActivation
 from src.dto.response.UserTokenResponse import UserTokenResponse
 from src.exception.ThrowerExceptions import ThrowerExceptions
 from src.exception.exceptions import CustomError
@@ -15,7 +15,6 @@ from src.util.Constants import Constants
 
 
 class JwtService:
-    _settings_ = Settings()
     _throwerExceptions = ThrowerExceptions()
 
     ALGORITHM = "HS256"
@@ -37,7 +36,7 @@ class JwtService:
                 "iat": datetime.now(tz=timezone.utc),
                 "exp": datetime.now(tz=timezone.utc) + timedelta(days=1000)
             },
-            str(self._settings_.JWT_KEY),
+            str(Settings.JWT_KEY),
             algorithm="HS256")
 
         tokenResponse = UserTokenResponse()
@@ -45,13 +44,13 @@ class JwtService:
         return tokenResponse
 
     async def decode_token_firebase(self, token: str):
-        decoded_token = auth.verify_id_token(token)  # TODO: Verificar qué error da
-        token_firebase = TokenFirebase()
-        token_firebase.name = decoded_token['name']
-        token_firebase.picture = decoded_token['picture']
-        token_firebase.aud = decoded_token['aud']
-        token_firebase.user_id = decoded_token['user_id']
-        return token_firebase
+        logger.info("decode_token_firebase")
+        try:
+            auth.verify_id_token(token)
+        except Exception as e:
+            raise CustomError(name="Token login social inválido",
+                              detail="Token login social inválido",
+                              status_code=status.HTTP_401_UNAUTHORIZED)
 
     async def verify_and_get_token_data(self, request):
         try:
@@ -62,7 +61,7 @@ class JwtService:
                                                                      cause=Constants.TOKEN_NOT_EXIST_DETAIL)
             token_header = request.headers['authorization']
 
-            decoded_token = jwt.decode(jwt=token_header, key=str(self._settings_.JWT_KEY), algorithms=self.ALGORITHM)
+            decoded_token = jwt.decode(jwt=token_header, key=str(Settings.JWT_KEY), algorithms=self.ALGORITHM)
             if not decoded_token:
                 await self._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_VERIFY_ERROR,
                                                                      detail=Constants.TOKEN_VERIFY_ERROR,
@@ -108,3 +107,35 @@ class JwtService:
                 raise CustomError(name=Constants.USER_EXIST_FIREBASE,
                                   detail=Constants.USER_EXIST_FIREBASE,
                                   status_code=status.HTTP_401_UNAUTHORIZED)
+
+    def get_token_profile_activation(self, email: str, rol: int, name: str, last_name: str):
+        logger.info("get_token_profile_activation")
+
+        return jwt.encode(
+            {
+                "email": email,
+                "rol": rol,
+                "name": name,
+                "last_name": last_name,
+                "iss": "https://www.tyneapp.cl",
+                "iat": datetime.now(tz=timezone.utc),
+                "exp": datetime.now(tz=timezone.utc) + timedelta(days=1)
+            },
+            str(Settings.JWT_KEY),
+            algorithm="HS256")
+
+    def decode_token_profile_activation(self, token: str):
+        logger.info("decode_token_profile_activation")
+
+        decoded_token = jwt.decode(token, str(Settings.JWT_KEY), algorithms=self.ALGORITHM)
+
+        if not decoded_token:
+            raise CustomError(name=Constants.TOKEN_VERIFY_ERROR,
+                              detail=Constants.TOKEN_VERIFY_ERROR,
+                              status_code=status.HTTP_401_UNAUTHORIZED,
+                              cause="decoded_token is None")
+
+        return TokenProfileActivation(decoded_token['email'],
+                                      int(decoded_token['rol']),
+                                      decoded_token['name'],
+                                      decoded_token['last_name'])
