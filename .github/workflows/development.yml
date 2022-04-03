@@ -63,8 +63,7 @@ jobs:
           file_name: .env
           fail_on_empty: true
       - name: create firebase_credentials.json
-      - uses: jsdaniell/create-json@1.1.2
-        id: create-json
+        uses: jsdaniell/create-json@1.1.2
         with:
           name: "firebase_credentials.json"
           json: ${{ secrets.DEV_FIREBASE_CREDENTIALS_JSON }}
