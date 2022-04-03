@@ -43,3 +43,7 @@ class Settings:
     # Others
     ENCRYPTION_KEY = base64.b64decode(bytes(os.getenv("ENCRYPTION_KEY"), "utf-8")) # Sino importada como str
     JWT_KEY = os.getenv("JWT_KEY")
+    
+    # Firebase
+    FIREBASE_API_KEY = os.getenv("FIREBASE_API_KEY")
+    FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID")

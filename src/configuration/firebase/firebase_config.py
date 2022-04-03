@@ -1,8 +1,9 @@
 import firebase_admin
 import os
-
+from src.configuration.Settings import Settings
 
 class FirebaseConfig:
+    _settings_ = Settings()
 
     def init_firebase(self):
         if len(firebase_admin._apps) == 0:
@@ -10,6 +11,6 @@ class FirebaseConfig:
                 os.path.abspath("./src/configuration/firebase/firebase_credentials.json"))
 
             firebase_admin.initialize_app(cred_obj, {
-                'projectId': "tyne-app",
-                'apiKey': "AIzaSyDym-wsAA7O0Z7RkI32A1Og1s8LaJNa5s0"
+                'projectId': self._settings_.FIREBASE_PROJECT_ID,
+                'apiKey': self._settings_.FIREBASE_API_KEY
             })
