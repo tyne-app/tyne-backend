@@ -67,7 +67,6 @@ jobs:
         with:
           name: "firebase_credentials.json"
           json: ${{ secrets.DEV_FIREBASE_CREDENTIALS_JSON }}
-          dir: 'src/configurations/firebase/'
       - uses: akhileshns/heroku-deploy@v3.12.12
         with:
           heroku_api_key: ${{ secrets.DEV_HEROKU_API_KEY }}
