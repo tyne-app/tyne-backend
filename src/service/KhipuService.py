@@ -10,10 +10,9 @@ from src.exception.exceptions import CustomError
 
 
 class KhipuService:
-    _settings_ = Settings()
 
     def create_link(self, amount: int, payer_email: str, transaction_id: str):
-        api = Khipupy(receiver_id=self._settings_.KHIPU_RECEIVER_ID, secret=self._settings_.KHIPU_SECRET_ID)
+        api = Khipupy(receiver_id=Settings.KHIPU_RECEIVER_ID, secret=Settings.KHIPU_SECRET_ID)
 
         # d = (datetime.now() + timedelta(minutes=30)).replace(microsecond=0).timestamp()
 
@@ -25,10 +24,10 @@ class KhipuService:
             'bank_id': '',
             'transaction_id': transaction_id,
             'custom': '',
-            # 'notify_url': 'http://localhost:4200/estado-pago/exitoso',#self._settings_.KHIPU_NOTIFY_URL,
-            'return_url': 'https://tyne-app.herokuapp.com/estado-pago/exitoso', #self._settings_.KHIPU_RETURN_URL,
-            'cancel_url': 'https://tyne-app.herokuapp.com/estado-pago/cancelado',#self._settings_.KHIPU_CANCEL_URL,
-            'picture_url': self._settings_.KHIPU_PICTURE_URL,
+            # 'notify_url': 'http://localhost:4200/estado-pago/exitoso',#Settings.KHIPU_NOTIFY_URL,
+            'return_url': 'https://tyne-app.herokuapp.com/estado-pago/exitoso', #Settings.KHIPU_RETURN_URL,
+            'cancel_url': 'https://tyne-app.herokuapp.com/estado-pago/cancelado',#Settings.KHIPU_CANCEL_URL,
+            'picture_url': Settings.KHIPU_PICTURE_URL,
             'currency': 'CLP',
             'notify_api_version': '1.3'
         })
@@ -43,7 +42,7 @@ class KhipuService:
     def verify_payment(self, payment_id: str):
         try:
             for x in range(3):  # TODO: Analizar más esta lógica para refactorizarla
-                khipu_client = KhipuClient(receiver_id=self._settings_.KHIPU_RECEIVER_ID, secret=self._settings_.KHIPU_SECRET_ID)
+                khipu_client = KhipuClient(receiver_id=Settings.KHIPU_RECEIVER_ID, secret=Settings.KHIPU_SECRET_ID)
                 payment = khipu_client.payments.get_id(id=payment_id)
 
                 logger.info("payment: {}", payment.__dict__)
