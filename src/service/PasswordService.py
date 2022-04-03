@@ -8,8 +8,7 @@ import base64
 
 class PasswordService:
 
-    _settings_ = Settings()
-    key = _settings_.ENCRYPTION_KEY
+    key = Settings.ENCRYPTION_KEY
 
     def generate_password(self):
         characters = string.ascii_letters + string.digits

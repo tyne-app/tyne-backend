@@ -15,7 +15,6 @@ from src.util.Constants import Constants
 
 
 class JwtService:
-    _settings_ = Settings()
     _throwerExceptions = ThrowerExceptions()
 
     ALGORITHM = "HS256"
@@ -37,7 +36,7 @@ class JwtService:
                 "iat": datetime.now(tz=timezone.utc),
                 "exp": datetime.now(tz=timezone.utc) + timedelta(days=1000)
             },
-            str(self._settings_.JWT_KEY),
+            str(Settings.JWT_KEY),
             algorithm="HS256")
 
         tokenResponse = UserTokenResponse()
@@ -62,7 +61,7 @@ class JwtService:
                                                                      cause=Constants.TOKEN_NOT_EXIST_DETAIL)
             token_header = request.headers['authorization']
 
-            decoded_token = jwt.decode(jwt=token_header, key=str(self._settings_.JWT_KEY), algorithms=self.ALGORITHM)
+            decoded_token = jwt.decode(jwt=token_header, key=str(Settings.JWT_KEY), algorithms=self.ALGORITHM)
             if not decoded_token:
                 await self._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_VERIFY_ERROR,
                                                                      detail=Constants.TOKEN_VERIFY_ERROR,
@@ -122,13 +121,13 @@ class JwtService:
                 "iat": datetime.now(tz=timezone.utc),
                 "exp": datetime.now(tz=timezone.utc) + timedelta(days=1)
             },
-            str(self._settings_.JWT_KEY),
+            str(Settings.JWT_KEY),
             algorithm="HS256")
 
     def decode_token_profile_activation(self, token: str):
         logger.info("decode_token_profile_activation")
 
-        decoded_token = jwt.decode(token, str(self._settings_.JWT_KEY), algorithms=self.ALGORITHM)
+        decoded_token = jwt.decode(token, str(Settings.JWT_KEY), algorithms=self.ALGORITHM)
 
         if not decoded_token:
             raise CustomError(name=Constants.TOKEN_VERIFY_ERROR,

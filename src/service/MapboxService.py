@@ -13,14 +13,13 @@ class MapBoxService:
     BASE_COUNTRY = "Chile"
     KEY_WORD_PLACE = "place"
     KEY_WORD_COUNTRY = "country"
-    settings = Settings()
     _throwerExceptions = ThrowerExceptions()
 
     async def get_latitude_longitude(self, address: str, state_name: str, type_geocoding: str):
         async with AsyncClient() as client:
             try:
-                mapbox_api = self.settings.MAPBOX_API
-                mapbox_access_token = self.settings.MAPBOX_ACCESS_TOKEN
+                mapbox_api = Settings.MAPBOX_API
+                mapbox_access_token = Settings.MAPBOX_ACCESS_TOKEN
                 full_address = address
                 logger.info("mapbox_appi: {}, mapbox_access_token: {}, full_addres: {}", full_address, mapbox_api,
                             mapbox_access_token)
