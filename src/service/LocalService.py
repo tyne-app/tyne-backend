@@ -7,10 +7,12 @@ from src.repository.dao.LocalDao import LocalDAO
 from src.repository.dao.StateDao import StateDao
 from src.repository.dao.BusinessDao import BusinessDao
 from src.service.MapboxService import MapBoxService
-from src.util.EmailSubject import EmailSubject
-from src.validator.LocalValidator import LocalValidator
+from src.service.JwtService import JwtService
 from src.service.EmailService import EmailService
+from src.util.EmailSubject import EmailSubject
 from src.util.Constants import Constants
+from src.validator.LocalValidator import LocalValidator
+from src.dto.response.SimpleResponse import SimpleResponse
 
 
 class LocalService:
@@ -39,6 +41,7 @@ class LocalService:
     _email_service = EmailService()
     _local_dao = LocalDAO()
     _state_dao_ = StateDao()
+    _token_service = JwtService()
 
     async def create_new_account(self, new_account: NewAccount, db: Session):
         local_validator = LocalValidator()
@@ -66,7 +69,7 @@ class LocalService:
 
         restaurant = new_account.restaurant
         state = self._state_dao_.get_state_by_id(id_state=restaurant.state_id, db=db)
-        restaurant_geocoding = await self.geocoding(street=restaurant.street, street_number=restaurant.street_number,
+        await self.geocoding(street=restaurant.street, street_number=restaurant.street_number,
                                                     state_name=state.name,
                                                     type_geocoding=self.TYPE_VALIDATION_GEOCODING_RESTAURANT)
 
@@ -91,7 +94,13 @@ class LocalService:
                                    branch_image_entity=branch_image_entity,
                                    db=db)
 
-        self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.LOCAL_WELCOME, receiver_email=manager.email)
+        activation_token: str = self._token_service.get_token_profile_activation(email=user_entity.email,
+                                                                      rol=user_entity.id_user_type,
+                                                                      name=manager_entity.name,
+                                                                      last_name=manager_entity.last_name)
+
+        self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.LOCAL_WELCOME,
+                                       receiver_email=manager.email, data=activation_token)
 
         return self._business_mapper_request.to_branch_create_response(content=self.MSG_CREATE_ACCOUNT_SUCCESSFULLY)
 
@@ -109,6 +118,7 @@ class LocalService:
         local_validator = LocalValidator()
         business_dao = BusinessDao()
         await local_validator.validate_new_branch(new_branch=new_branch)
+
         branch = new_branch.branch
 
         state = self._state_dao_.get_state_by_id(id_state=branch.state_id, db=db)
@@ -142,4 +152,12 @@ class LocalService:
 
         logger.info('new_branch_status: {}', new_branch_status)
 
-        return True
+        activation_token: str = self._token_service.get_token_profile_activation(email=user_entity.email,
+                                                                                 rol=user_entity.id_user_type,
+                                                                                 name=manager_entity.name,
+                                                                                 last_name=manager_entity.last_name)
+
+        self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.LOCAL_WELCOME,
+                                       receiver_email=manager.email, data=activation_token)
+
+        return SimpleResponse("Nueva sucursal creada con éxito")

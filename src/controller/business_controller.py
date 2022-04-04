@@ -66,10 +66,7 @@ async def add_branch(request: Request, response: Response,
                      new_branch: NewBranch,
                      db: Session = Depends(get_data_base)):
     token_payload = await _jwt_service.verify_and_get_token_data(request)
-    await _local_service.add_new_branch(branch_id=token_payload.id_branch_client, new_branch=new_branch, db=db)
-
-    response.status_code = status.HTTP_201_CREATED
-    return
+    return await _local_service.add_new_branch(branch_id=token_payload.id_branch_client, new_branch=new_branch, db=db)
 
 
 @business_controller.get(

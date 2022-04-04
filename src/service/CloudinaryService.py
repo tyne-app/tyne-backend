@@ -10,19 +10,18 @@ from src.exception.ThrowerExceptions import ThrowerExceptions
 
 
 class CloudinaryService:
-    _settings_ = Settings()
     _throwerExceptions = ThrowerExceptions()
 
     cloudinary.config(
-        cloud_name=_settings_.CLOUDINARY_CLOUD_NAME,
-        api_key=_settings_.CLOUDINARY_API_KEY,
-        api_secret=_settings_.CLOUDINARY_API_SECRET,
+        cloud_name=Settings.CLOUDINARY_CLOUD_NAME,
+        api_key=Settings.CLOUDINARY_API_KEY,
+        api_secret=Settings.CLOUDINARY_API_SECRET,
         secure=True
     )
 
     async def upload_image(self, file: UploadFile, user_id: int):
         try:
-            folder = self._settings_.ENVIRONMENT + "/users/" + str(user_id)
+            folder = Settings.ENVIRONMENT + "/users/" + str(user_id)
             response = cloudinary.uploader.upload_image(file, transformation=[{'width':400, 'height':400, 'gravity':"face", 'crop':"fill"}], folder=folder)
             return response
         except cloudinary.exceptions.Error as exception:

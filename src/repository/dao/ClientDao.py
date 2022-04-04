@@ -57,3 +57,8 @@ class ClientDao:
         db.add(client_req.to_entity(id_login_created))
         db.commit()
         return True
+
+    def get_client_name(self, client_id: int, db: Session) -> str:
+        name = db.query(ClientEntity.name).filter(ClientEntity.id == client_id).first()
+        logger.info("Client name: {}", name)
+        return name[0]

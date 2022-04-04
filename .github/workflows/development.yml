@@ -2,11 +2,35 @@ name: Dev deploy Heroku
 
 on:
   pull_request:
-    types: opened
+    types: [opened, reopened, synchronize]
     branches:
       - develop
 jobs:
+  check-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: regex-match
+        with:
+          text: ${{ github.head_ref }}
+          regex: '^TYNE-[0-9]+[/](feature|fix|test|bug|poc)+[/][a-zA-Z]+'
+      - uses: actions-ecosystem/action-add-labels@v1
+      - run: |
+          echo ${{ steps.regex-match.outputs.match}}
+          if ${{ steps.regex-match.outputs.match != '' }}; then
+            echo "Your branch matches with the pattern successfully."
+          else
+            echo "Your branch doesn't match with the pattern TYNE-[0-9]+[/](feature|fix|test|bug|poc)+[/][a-zA-Z]+"
+            echo "Please check your branch name, create a new branch in your machine, then"
+            echo "push the new branch."
+            echo "Correct branch names examples:"
+            echo "TYNE-{number}/{feature|fix|test|bug|poc}/message-about-the-branch-topic"
+            echo "TYNE-598/feature/new-client-api"
+            exit 1
+          fi
   build:
+    needs: [check-branch-name]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -14,36 +38,37 @@ jobs:
         uses: SpicyPizza/create-envfile@v1.3
         with:
           envkey_ENVIRONMENT: "Development"
-          envkey_DATABASE_USER: ${{ secrets.DATABASE_USER }}
-          envkey_DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          envkey_DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
-          envkey_DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
-          envkey_DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
-          envkey_CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
-          envkey_CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-          envkey_CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-          envkey_KHIPU_SECRET_ID: ${{ secrets.KHIPU_SECRET_ID }}
-          envkey_KHIPU_RECEIVER_ID: ${{ secrets.KHIPU_RECEIVER_ID }}
-          envkey_KHIPU_NOTIFY_URL: ${{ secrets.KHIPU_NOTIFY_URL }}
-          envkey_KHIPU_RETURN_URL: ${{ secrets.KHIPU_RETURN_URL }}
-          envkey_KHIPU_CANCEL_URL: ${{ secrets.KHIPU_CANCEL_URL }}
-          envkey_KHIPU_PICTURE_URL: ${{ secrets.KHIPU_PICTURE_URL }}
-          envkey_JWT_KEY: ${{ secrets.JWT_KEY }}
-          envkey_MAPBOX_API: ${{ secrets.MAPBOX_API }}
-          envkey_MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
-          envkey_EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
-          envkey_EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
-          envkey_EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
-          envkey_EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-          envkey_EMAIL_ENCODING: ${{ secrets.EMAIL_ENCODING }}
-          envkey_ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          envkey_CLOUDINARY_API_KEY: ${{ secrets._CLOUDINARY_API_KEY }}
+          envkey_CLOUDINARY_API_SECRET: ${{ secrets._CLOUDINARY_API_SECRET }}
+          envkey_CLOUDINARY_CLOUD_NAME: ${{ secrets._CLOUDINARY_CLOUD_NAME }}
+          envkey_DATABASE_HOST: ${{ secrets.DEV_DATABASE_HOST }}
+          envkey_DATABASE_NAME: ${{ secrets.DEV_DATABASE_NAME }}
+          envkey_DATABASE_PASSWORD: ${{ secrets.DEV_DATABASE_PASSWORD }}
+          envkey_DATABASE_PORT: ${{ secrets.DEV_DATABASE_PORT }}
+          envkey_DATABASE_USER: ${{ secrets.DEV_DATABASE_USER }}
+          envkey_EMAIL_HOST: ${{ secrets._EMAIL_HOST }}
+          envkey_EMAIL_PORT: ${{ secrets._EMAIL_PORT }}
+          envkey_EMAIL_USERNAME: ${{ secrets._EMAIL_USERNAME }}
+          envkey_EMAIL_PASSWORD: ${{ secrets._EMAIL_PASSWORD }}
+          envkey_EMAIL_ENCODING: ${{ secrets._EMAIL_ENCODING }}
+          envkey_ENCRYPTION_KEY: ${{ secrets.DEV_ENCRYPTION_KEY }}
+          envkey_FIREBASE_API_KEY: ${{ secrets.DEV_FIREBASE_API_KEY }}
+          envkey_FIREBASE_PROJECT_ID: ${{ secrets.DEV_FIREBASE_PROJECT_ID }}
+          envkey_JWT_KEY: ${{ secrets.DEV_JWT_KEY }}
+          envkey_MAPBOX_ACCESS_TOKEN: ${{ secrets._MAPBOX_ACCESS_TOKEN }}
+          envkey_MAPBOX_API: ${{ secrets._MAPBOX_API }}
           file_name: .env
           fail_on_empty: true
+      - name: create firebase_credentials.json
+        uses: jsdaniell/create-json@1.1.2
+        with:
+          name: "firebase_credentials.json"
+          json: ${{ secrets.DEV_FIREBASE_CREDENTIALS_JSON }}
       - uses: akhileshns/heroku-deploy@v3.12.12
         with:
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: ${{ secrets.HEROKU_BACKEND_DEV_APP_NAME }}
-          heroku_email: ${{ secrets.HEROKU_EMAIL }}
+          heroku_api_key: ${{ secrets.DEV_HEROKU_API_KEY }}
+          heroku_app_name: ${{ secrets.DEV_HEROKU_BACKEND_APP_NAME }}
+          heroku_email: ${{ secrets.DEV_HEROKU_EMAIL }}
           dontautocreate: false
           usedocker: true
       - run: |
@@ -55,7 +80,7 @@ jobs:
       - uses: sarisia/actions-status-discord@v1
         if: always()
         with:
-          webhook: ${{ secrets.DISCORD_BACKEND_DEV_PIPELINE }}
+          webhook: ${{ secrets.DEV_DISCORD_BACKEND_PIPELINE }}
           username: GitHub Actions
           title: "A new version was deployed in DEV/QA"
           description: "Deployed in Heroku"
