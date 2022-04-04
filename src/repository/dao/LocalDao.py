@@ -164,5 +164,5 @@ class LocalDAO:
             .select_from(BranchEntity) \
             .join(ManagerEntity, BranchEntity.manager_id == ManagerEntity.id) \
             .join(UserEntity, ManagerEntity.id_user == UserEntity.id) \
-            .filter(UserEntity.email == email.str.lower()) \
+            .filter(UserEntity.email == email.lower()) \
             .first()
