@@ -40,9 +40,9 @@ class UserService:
         logger.info('login_user')
 
         login_request.validate_fields()
-        await self._token_service.verify_email_firebase(login_request.email)
+        await self._token_service.verify_email_firebase(login_request.email.lower())
 
-        user: UserEntity = self._get_user(email=login_request.email, password=login_request.password, db=db)
+        user: UserEntity = self._get_user(email=login_request.email.lower(), password=login_request.password, db=db)
 
         return self._create_token_by_user(user=user, ip=ip, db=db)
 
