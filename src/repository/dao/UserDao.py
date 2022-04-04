@@ -18,7 +18,7 @@ class UserDao:
 
     def verify_email(self, email: str, db: Session):  # TODO: Es necesario esto?
         return db.query(UserEntity) \
-            .filter(UserEntity.email == email.str.lower()) \
+            .filter(UserEntity.email == email) \
             .first()
 
     def update_profile_image(self, user_id: int, url_image: str, image_id: str, db: Session):
