@@ -26,7 +26,7 @@ class UserDao:
 
     def verify_email(self, email: str, db: Session):  # TODO: Es necesario esto?
         return db.query(UserEntity) \
-            .filter(UserEntity.email == email) \
+            .filter(UserEntity.email == email.lower()) \
             .first()
 
     def update_profile_image(self, user_id: int, url_image: str, image_id: str, db: Session):
@@ -45,7 +45,7 @@ class UserDao:
 
     def create_user(self, email: str, password: str, user_type: int, db: Session):
         user_entity = UserEntity()
-        user_entity.email = email
+        user_entity.email = email.lower()
         user_entity.password = password
         user_entity.created_date = datetime.now()
         user_entity.is_active = True
@@ -60,7 +60,7 @@ class UserDao:
     def delete_user_by_email(self, email: str, db: Session):
         db \
             .query(UserEntity) \
-            .filter(UserEntity.email == email) \
+            .filter(UserEntity.email == email.lower()) \
             .delete()
 
     def delete_user_by_id(self, user_id: str, db: Session):
@@ -82,7 +82,8 @@ class UserDao:
         return None
 
     def send_email_forgotten_password(self, email: str, db: Session) -> bool:
-        return db.query(exists().where(UserEntity.email == email)).scalar()
+        email = email.lower()
+        return db.query(exists().where(UserEntity.email == email.lower())).scalar()
 
     def get_email_by_branch(self, branch_id: int, db: Session) -> str:
         branch_email: Row = db.query(UserEntity.email) \
