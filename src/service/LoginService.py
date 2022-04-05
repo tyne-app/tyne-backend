@@ -12,6 +12,7 @@ class LoginService: # TODO: No tiene uso, verificar si se incorporará en el fut
     _throwerExceptions_ = ThrowerExceptions()
 
     async def create_user_login(self, email, password, user_type: int, db):
+        email = email.lower()
         await self._user_validator_.validate_fields({"email": email, "password": password})
 
         user_exist = self._user_dao_.verify_email(email, db)
@@ -27,5 +28,6 @@ class LoginService: # TODO: No tiene uso, verificar si se incorporará en el fut
                                                                   status_code=status.HTTP_400_BAD_REQUEST)
         return user_created.id
 
+
     def delete_user_login(self, email, db):  # TODO: No es borrado físico, solamente lógico dejando estado cuenta en False
-        self._user_dao_.delete_user_by_email(email, db)
+        self._user_dao_.delete_user_by_email(email.lower(), db)
