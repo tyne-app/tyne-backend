@@ -6,8 +6,8 @@ on:
     branches: 
       - main
 jobs:
-  if_merged:
     build:
+    if_merged:
       if: github.event.pull_request.merged == true
       runs-on: ubuntu-latest
       steps:
