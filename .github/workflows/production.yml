@@ -7,50 +7,50 @@ on:
       - main
 jobs:
     build:
-    if_merged:
-      if: github.event.pull_request.merged == true
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v2
-        - name: Creating .env file
-          uses: SpicyPizza/create-envfile@v1.3
-          with:
-            envkey_ENVIRONMENT: "Production"
-            envkey_CLOUDINARY_API_KEY: ${{ secrets._CLOUDINARY_API_KEY }}
-            envkey_CLOUDINARY_API_SECRET: ${{ secrets._CLOUDINARY_API_SECRET }}
-            envkey_CLOUDINARY_CLOUD_NAME: ${{ secrets._CLOUDINARY_CLOUD_NAME }}
-            envkey_DATABASE_HOST: ${{ secrets.PROD_DATABASE_HOST }}
-            envkey_DATABASE_NAME: ${{ secrets.PROD_DATABASE_NAME }}
-            envkey_DATABASE_PASSWORD: ${{ secrets.PROD_DATABASE_PASSWORD }}
-            envkey_DATABASE_PORT: ${{ secrets.PROD_DATABASE_PORT }}
-            envkey_DATABASE_USER: ${{ secrets.PROD_DATABASE_USER }}
-            envkey_EMAIL_HOST: ${{ secrets._EMAIL_HOST }}
-            envkey_EMAIL_PORT: ${{ secrets._EMAIL_PORT }}
-            envkey_EMAIL_USERNAME: ${{ secrets._EMAIL_USERNAME }}
-            envkey_EMAIL_PASSWORD: ${{ secrets._EMAIL_PASSWORD }}
-            envkey_EMAIL_ENCODING: ${{ secrets._EMAIL_ENCODING }}
-            envkey_ENCRYPTION_KEY: ${{ secrets.PROD_ENCRYPTION_KEY }}
-            envkey_FIREBASE_API_KEY: ${{ secrets.PROD_FIREBASE_API_KEY }}
-            envkey_FIREBASE_PROJECT_ID: ${{ secrets.PROD_FIREBASE_PROJECT_ID }}
-            envkey_JWT_KEY: ${{ secrets.PROD_JWT_KEY }}
-            envkey_MAPBOX_ACCESS_TOKEN: ${{ secrets._MAPBOX_ACCESS_TOKEN }}
-            envkey_MAPBOX_API: ${{ secrets._MAPBOX_API }}
-            file_name: .env
-            fail_on_empty: true
-        - name: create firebase_credentials.json
-          uses: jsdaniell/create-json@1.1.2
-          with:
-            name: "firebase_credentials.json"
-            json: ${{ secrets.PROD_FIREBASE_CREDENTIALS_JSON }}
-        - uses: akhileshns/heroku-deploy@v3.12.12
-          with:
-            heroku_api_key: ${{ secrets.PROD_HEROKU_API_KEY }}
-            heroku_app_name: ${{ secrets.PROD_HEROKU_BACKEND_APP_NAME }}
-            heroku_email: ${{ secrets.PROD_HEROKU_EMAIL }}
-            dontautocreate: false
-            usedocker: true
-        - run: |
-            ls -l
+      if_merged:
+        if: github.event.pull_request.merged == true
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v2
+          - name: Creating .env file
+            uses: SpicyPizza/create-envfile@v1.3
+            with:
+              envkey_ENVIRONMENT: "Production"
+              envkey_CLOUDINARY_API_KEY: ${{ secrets._CLOUDINARY_API_KEY }}
+              envkey_CLOUDINARY_API_SECRET: ${{ secrets._CLOUDINARY_API_SECRET }}
+              envkey_CLOUDINARY_CLOUD_NAME: ${{ secrets._CLOUDINARY_CLOUD_NAME }}
+              envkey_DATABASE_HOST: ${{ secrets.PROD_DATABASE_HOST }}
+              envkey_DATABASE_NAME: ${{ secrets.PROD_DATABASE_NAME }}
+              envkey_DATABASE_PASSWORD: ${{ secrets.PROD_DATABASE_PASSWORD }}
+              envkey_DATABASE_PORT: ${{ secrets.PROD_DATABASE_PORT }}
+              envkey_DATABASE_USER: ${{ secrets.PROD_DATABASE_USER }}
+              envkey_EMAIL_HOST: ${{ secrets._EMAIL_HOST }}
+              envkey_EMAIL_PORT: ${{ secrets._EMAIL_PORT }}
+              envkey_EMAIL_USERNAME: ${{ secrets._EMAIL_USERNAME }}
+              envkey_EMAIL_PASSWORD: ${{ secrets._EMAIL_PASSWORD }}
+              envkey_EMAIL_ENCODING: ${{ secrets._EMAIL_ENCODING }}
+              envkey_ENCRYPTION_KEY: ${{ secrets.PROD_ENCRYPTION_KEY }}
+              envkey_FIREBASE_API_KEY: ${{ secrets.PROD_FIREBASE_API_KEY }}
+              envkey_FIREBASE_PROJECT_ID: ${{ secrets.PROD_FIREBASE_PROJECT_ID }}
+              envkey_JWT_KEY: ${{ secrets.PROD_JWT_KEY }}
+              envkey_MAPBOX_ACCESS_TOKEN: ${{ secrets._MAPBOX_ACCESS_TOKEN }}
+              envkey_MAPBOX_API: ${{ secrets._MAPBOX_API }}
+              file_name: .env
+              fail_on_empty: true
+          - name: create firebase_credentials.json
+            uses: jsdaniell/create-json@1.1.2
+            with:
+              name: "firebase_credentials.json"
+              json: ${{ secrets.PROD_FIREBASE_CREDENTIALS_JSON }}
+          - uses: akhileshns/heroku-deploy@v3.12.12
+            with:
+              heroku_api_key: ${{ secrets.PROD_HEROKU_API_KEY }}
+              heroku_app_name: ${{ secrets.PROD_HEROKU_BACKEND_APP_NAME }}
+              heroku_email: ${{ secrets.PROD_HEROKU_EMAIL }}
+              dontautocreate: false
+              usedocker: true
+          - run: |
+              ls -l
   discord-notification:
     needs: [build]
     runs-on: ubuntu-latest
