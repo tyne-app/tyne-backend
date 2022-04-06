@@ -60,3 +60,4 @@ docs/_build/
 
 /.vscode
 firebase_credentials.json
+test.py
