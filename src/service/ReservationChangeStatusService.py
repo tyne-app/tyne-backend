@@ -17,7 +17,6 @@ from src.dto.response.SimpleResponse import SimpleResponse
 from src.util.TypeCoinConstant import TypeCoinConstant
 from src.dto.response.UpdateReservationResponse import UpdateReservationResponse
 from src.util.ReservationStatus import ReservationStatus
-from src.service.KhipuService import KhipuService
 from src.repository.entity.ReservationEntity import ReservationEntity
 from src.service.ReservationEventService import ReservationEventService
 from src.repository.dao.UserDao import UserDao
@@ -33,7 +32,6 @@ from src.repository.dao.ClientDao import ClientDao
 class ReservationChangeStatusService:
     _payment_dao_ = PaymentDao()
     _email_service = EmailService()
-    _khipu_service = KhipuService()
     _country_time_zone = timezone('Chile/Continental')
     _reservation_event_service = ReservationEventService()
     _use_dao = UserDao()

@@ -24,7 +24,6 @@ from src.repository.entity.ReservationProductEntity import ReservationProductEnt
 from src.repository.entity.ProductEntity import ProductEntity
 from src.repository.dao.ReservationProductDao import ReservationProductDao
 from src.repository.dao.UserDao import UserDao
-from src.service.KhipuService import KhipuService
 from src.service.EmailService import EmailService
 from src.util.TypeCoinConstant import TypeCoinConstant
 from src.util.Constants import Constants
@@ -37,7 +36,6 @@ from src.service.ReservationChangeStatusService import ReservationChangeStatusSe
 
 class ReservationService:
     _client_dao_ = ClientDao()
-    _khipu_service = KhipuService()
     _product_dao_ = ProductDao()
     _reservation_dao_ = ReservationDao()
     _payment_dao_ = PaymentDao()
