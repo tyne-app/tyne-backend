@@ -66,7 +66,7 @@ class Constants:
     PRODUCT_NOT_EXIST = "No existen productos"
     CLIENT_UNAUTHORIZED = "Cliente no autorizado"
     BUY_INVALID_ERROR = "Compra no válida"
-    KHIPU_GET_ERROR = "Error obtener datos khipu"
+    MP_GET_ERROR: str = "Error obtener datos mercado pago"
 
     INVALID_DATA_ERROR = "Datos inválidos"
 

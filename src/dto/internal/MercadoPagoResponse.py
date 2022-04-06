@@ -1,4 +1,4 @@
-class KhipuResponse:
+class MercadoPagoResponse:
     payment_id: str
     url: str
     status: int
