@@ -21,116 +21,102 @@ from src.exception.ThrowerExceptions import ThrowerExceptions
 from src.service.EmailService import EmailService
 from src.util.EmailSubject import EmailSubject
 from src.service.PasswordService import PasswordService
+from src.dto.response.SimpleResponse import SimpleResponse
+from src.exception.exceptions import CustomError
+from src.dto.internal.TokenFirebase import TokenFirebase
 
 
 class UserService:
     _cloudinary_service_ = CloudinaryService()
     _user_dao_ = UserDao()
-    _tokenService_ = JwtService()
+    _token_service = JwtService()
     _clientDao_ = ClientDao()
     _localDao_ = LocalDAO()
     _throwerExceptions = ThrowerExceptions()
     _email_service = EmailService()
     _password_service_ = PasswordService()
 
-    async def login_user(self, loginRequest: LoginUserRequest, ip: str, db: Session):
+    async def login_user(self, login_request: LoginUserRequest, ip: str, db: Session):
+        logger.info('login_user')
 
-        id_branch_client = None
-        name = None
-        last_name = None
-        await loginRequest.validate_fields()
+        login_request.validate_fields()
+        await self._token_service.verify_email_firebase(login_request.email.lower())
 
-        tokenResponse: UserTokenResponse = None
-        user: UserEntity = self._user_dao_.verify_email(loginRequest.email, db)
-        user.password = self._password_service_.decrypt_password(user.password)
-        # TODO: Limppiar base de datos firebase para que no de error con login formulario.
-        await self._tokenService_.verify_email_firebase(loginRequest.email)
+        user: UserEntity = self._get_user(email=login_request.email.lower(), password=login_request.password, db=db)
 
-        if user is not None:
-            if user.is_active is not True:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_UNAUTHORIZED,
-                                                                     detail=Constants.TOKEN_NOT_EXIST_DETAIL,
-                                                                     status_code=status.HTTP_401_UNAUTHORIZED)
+        return self._create_token_by_user(user=user, ip=ip, db=db)
 
-            if user.password != loginRequest.password:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.PASSWORD_INVALID_ERROR,
-                                                                     detail=Constants.PASSWORD_INVALID_ERROR,
-                                                                     status_code=status.HTTP_401_UNAUTHORIZED)
+    async def social_login_user(self, login_request: LoginSocialRequest, ip: str, db: Session) -> UserTokenResponse:
+        logger.info("social_login_user")
 
-            if user.id_user_type == UserType.MANAGER:
-                branch: BranchEntity = self._localDao_.find_branch_by_email_user_manager(email=loginRequest.email,
-                                                                                         db=db)
-                if branch is not None:
-                    id_branch_client = branch.id
-                    name = branch.manager.name
-                    last_name = branch.manager.last_name
-            else:
-                client: ClientEntity = self._clientDao_.find_client_by_email_user(email=loginRequest.email, db=db)
-                if client is not None:
-                    id_branch_client = client.id
-                    name = client.name
-                    last_name = client.last_name
-                pass
+        login_request.validate_fields()
 
-            if id_branch_client is None:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_NOT_FOUND_ERROR_DETAIL,
-                                                                     detail=Constants.CLIENT_NOT_FOUND_ERROR_DETAIL,
-                                                                     status_code=status.HTTP_204_NO_CONTENT)
+        await self._token_service.decode_token_firebase(login_request.token)
 
-            tokenResponse = self._tokenService_.get_token(id_user=user.id, id_branch_client=id_branch_client,
-                                                          rol=user.id_user_type, ip=ip, name=name, last_name=last_name)
+        user: UserEntity = self._get_user(email=login_request.email, db=db)
 
-        return tokenResponse
+        return self._create_token_by_user(user=user, ip=ip, db=db)
 
-    async def social_login_user(self, loginRequest: LoginSocialRequest, ip: str, db: Session):
+    def _get_user(self, email: str, db: Session, password=None) -> UserEntity:
+        logger.info("_get_user")
 
-        id_branch_client = None
-        name = None
-        last_name = None
-        await loginRequest.validate_fields()
+        user: UserEntity = self._user_dao_.user_login(email=email, db=db)
 
-        # try to verify the token and decode it
-        token_firebase = await self._tokenService_.decode_token_firebase(loginRequest.token)
+        if not user:
+            raise CustomError(name="Credenciales incorrectas",
+                              detail="Credenciales incorrectas",
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause="Credenciales incorrectas")
 
-        tokenResponse: UserTokenResponse = None
-        user: UserEntity = self._user_dao_.verify_email(loginRequest.email, db)
+        if not user.is_active:
+            raise CustomError(name=Constants.CLIENT_UNAUTHORIZED,
+                              detail=Constants.TOKEN_NOT_EXIST_DETAIL,
+                              status_code=status.HTTP_401_UNAUTHORIZED,
+                              cause="El usuario no está activado")
 
-        if user is not None:
+        if password:
+            logger.info('Password exist')
+            decrypted_password = self._password_service_.decrypt_password(user.password)
 
-            # if token_firebase.email != loginRequest.email:
-            #    await self._throwerExceptions.throw_custom_exception(name=Constants.LOGIN_ERROR,
-            #                                                         detail=Constants.LOGIN_ERROR,
-            #                                                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            if decrypted_password != password:
+                raise CustomError(name="Credenciales incorrectas",
+                                  detail="Credenciales incorrectas",
+                                  status_code=status.HTTP_401_UNAUTHORIZED,
+                                  cause="El usuario no está activado")
 
-            if user.is_active is not True:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_UNAUTHORIZED,
-                                                                     detail=Constants.CLIENT_UNAUTHORIZED,
-                                                                     status_code=status.HTTP_401_UNAUTHORIZED)
+        logger.info('User available')
+        return user
 
-            if user.id_user_type == UserType.MANAGER:
-                branch: BranchEntity = self._localDao_.find_branch_by_email_user_manager(email=loginRequest.email,
-                                                                                         db=db)
-                if branch is not None:
-                    id_branch_client = branch.id
-                    name = branch.manager.name
-                    last_name = branch.manager.last_name
-            else:
-                client: ClientEntity = self._clientDao_.find_client_by_email_user(email=loginRequest.email, db=db)
-                if client is not None:
-                    id_branch_client = client.id
-                    name = client.name
-                    last_name = client.last_name
-                pass
+    def _create_token_by_user(self, user: UserEntity, ip: str, db: Session) -> UserTokenResponse:
+        logger.info("_create_token_by_user")
 
-            if id_branch_client is None:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.CLIENT_NOT_EXIST,
-                                                                     detail=Constants.CLIENT_NOT_EXIST,
-                                                                     status_code=status.HTTP_204_NO_CONTENT)
+        if user.id_user_type == UserType.MANAGER:
+            logger.info("Is manager")
+            branch: BranchEntity = self._localDao_.find_branch_by_email_user_manager(email=user.email, db=db)
 
-            tokenResponse = self._tokenService_.get_token(id_user=user.id, id_branch_client=id_branch_client,
-                                                          rol=user.id_user_type, ip=ip, name=name, last_name=last_name)
+            return self._create_token(id_user=user.id, id_branch_client=branch.id, rol=user.id_user_type, ip=ip,
+                                      name=branch.manager.name, last_name=branch.manager.last_name)
 
-        return tokenResponse
+        if user.id_user_type == UserType.CLIENT:
+            logger.info("Is client")
+            client: ClientEntity = self._clientDao_.find_client_by_email_user(email=user.email, db=db)
+
+            return self._create_token(id_user=user.id, id_branch_client=client.id, rol=user.id_user_type, ip=ip,
+                                      name=client.name, last_name=client.last_name)
+
+        raise CustomError(name="Tipo de usuario no existente en el sistema",
+                          detail="Tipo de usuario no existente en el sistema",
+                          status_code=status.HTTP_401_UNAUTHORIZED,
+                          cause="Tipo de usuario no existe")
+
+    def _create_token(self, id_user: int, id_branch_client: int, rol: int,
+                      ip: str, name: str, last_name: str) -> UserTokenResponse:
+        logger.info("_create_token")
+
+        return self._token_service.get_token(id_user=id_user,
+                                             id_branch_client=id_branch_client,
+                                             rol=rol, ip=ip, name=name,
+                                             last_name=last_name)
 
     async def change_profile_image(self, user_id: int, file: UploadFile, db: Session):
 
@@ -186,3 +172,17 @@ class UserService:
         self._email_service.send_email(user=Constants.USER,
                                        subject=EmailSubject.FORGOTTEN_PASSWORD,
                                        receiver_email=email)
+
+    def activate_user(self, token: str, db: Session):
+        logger.info("token: {}", token)
+        token_profile_activation = self._token_service.decode_token_profile_activation(token=token)
+
+        if token_profile_activation.rol == UserType.CLIENT:
+            logger.info("Is client")
+            self._user_dao_.activate_client_user(token_profile_activation=token_profile_activation, db=db)
+
+        if token_profile_activation.rol == UserType.MANAGER:
+            logger.info("Is manager")
+            self._user_dao_.activate_manager_user(token_profile_activation=token_profile_activation, db=db)
+
+        return SimpleResponse("Cuenta activada correctamente")

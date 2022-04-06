@@ -34,9 +34,9 @@ class ClientSocialRegistrationRequest(BaseModel):
         entity = UserEntity()
         entity.created_date = datetime.now()
         entity.password = password
-        entity.is_active = True
+        entity.is_active = False
         entity.id_user_type = UserType.CLIENT
-        entity.email = self.email
+        entity.email = self.email.lower()
         entity.image_url = image_url
         return entity
 
