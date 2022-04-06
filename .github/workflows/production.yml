@@ -34,6 +34,10 @@ jobs:
           envkey_JWT_KEY: ${{ secrets.PROD_JWT_KEY }}
           envkey_MAPBOX_ACCESS_TOKEN: ${{ secrets._MAPBOX_ACCESS_TOKEN }}
           envkey_MAPBOX_API: ${{ secrets._MAPBOX_API }}
+          envkey_MP_PUBLIC_KEY: ${{ secrets.PROD_MP_PUBLIC_KEY }}
+          envkey_MP_ACCESS_TOKEN: ${{ secrets.PROD_MP_ACCESS_TOKEN }}
+          envkey_MP_SUCCESS_URL: ${{ secrets.PROD_MP_SUCCESS_URL }}
+          envkey_MP_REJECTED_URL: ${{ secrets.PROD_MP_REJECTED_URL }}
           file_name: .env
           fail_on_empty: true
       - name: create firebase_credentials.json
