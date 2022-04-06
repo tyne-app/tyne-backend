@@ -17,6 +17,7 @@ from src.dto.response.SimpleResponse import SimpleResponse
 from src.util.TypeCoinConstant import TypeCoinConstant
 from src.dto.response.UpdateReservationResponse import UpdateReservationResponse
 from src.util.ReservationStatus import ReservationStatus
+from src.service.MercadoPagoService import MercadoPagoService
 from src.repository.entity.ReservationEntity import ReservationEntity
 from src.service.ReservationEventService import ReservationEventService
 from src.repository.dao.UserDao import UserDao
@@ -27,11 +28,13 @@ from src.repository.dao.ReservationProductDao import ReservationProductDao
 from src.repository.dao.BranchDao import BranchDao
 from src.repository.dao.ReservationDao import ReservationDao
 from src.repository.dao.ClientDao import ClientDao
+from src.configuration.Settings import Settings
 
 
 class ReservationChangeStatusService:
     _payment_dao_ = PaymentDao()
     _email_service = EmailService()
+    _mercado_pago_service = MercadoPagoService()
     _country_time_zone = timezone('Chile/Continental')
     _reservation_event_service = ReservationEventService()
     _use_dao = UserDao()
@@ -39,6 +42,7 @@ class ReservationChangeStatusService:
     _branch_dao = BranchDao()
     _reservation_dao_ = ReservationDao()
     _client_dao = ClientDao()
+    _settings_ = Settings()
     _NEXT_DAY: int = 1
     _MINIMUM_VALUE: int = 1
 
@@ -78,15 +82,15 @@ class ReservationChangeStatusService:
         self._validate_request_date(request_date=request_datetime.date(),
                                     reservation_date=reservation.reservation_date)
 
-        payment_khipu = self._khipu_service.verify_payment(reservation_updated.payment_id)
-        logger.info("payment_khipu: {}", payment_khipu)
+        payment_mp = self._mercado_pago_service.verify_payment(reservation_updated.payment_number)
+        logger.info("payment_mercadopago: {}", payment_mp)
 
         payment = PaymentEntity()
         payment.date = datetime.now(self._country_time_zone)
-        payment.method = "Khipu"
-        payment.amount = payment_khipu.amount
+        payment.method = "Mercado Pago"
+        payment.amount = payment_mp.get("transaction_amount")
         payment.type_coin_id = TypeCoinConstant.CLP
-        payment.receipt_url = payment_khipu.receipt_url
+        payment.receipt_url = "https://api.mercadopago.com/v1/payments/" + reservation_updated.payment_number + "?access_token=" + self._settings_.MP_ACCESS_TOKEN
         payment.reservation_id = reservation_updated.reservation_id
 
         payment_response = self._payment_dao_.create_payment(payment=payment, db=db)

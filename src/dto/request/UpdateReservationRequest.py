@@ -7,6 +7,7 @@ from src.exception.exceptions import CustomError
 
 class UpdateReservationRequest(BaseModel):
     payment_id: str
+    payment_number: str
     status: int
     reservation_id: int
 

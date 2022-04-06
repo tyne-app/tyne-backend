@@ -38,3 +38,10 @@ class Settings:
     # Mapbox
     MAPBOX_API = os.getenv("MAPBOX_API")
     MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN")
+
+    # Mercado Pago
+    MP_PUBLIC_KEY = os.getenv("MP_PUBLIC_KEY")
+    MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
+    MP_SUCCESS_URL = os.getenv("MP_SUCCESS_URL")
+    MP_REJECTED_URL = os.getenv("MP_REJECTED_URL")
+    MP_CANCEL_URL = os.getenv("MP_CANCEL_URL")
