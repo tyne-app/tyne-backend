@@ -21,13 +21,12 @@ class Settings:
     CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
     CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 
-    # Khipu
-    KHIPU_SECRET_ID = os.getenv("KHIPU_SECRET_ID")
-    KHIPU_RECEIVER_ID = os.getenv("KHIPU_RECEIVER_ID")
-    KHIPU_NOTIFY_URL = os.getenv("KHIPU_NOTIFY_URL")
-    KHIPU_RETURN_URL = os.getenv("KHIPU_RETURN_URL")
-    KHIPU_CANCEL_URL = os.getenv("KHIPU_CANCEL_URL")
-    KHIPU_PICTURE_URL = os.getenv("KHIPU_PICTURE_URL")
+    # Mercado Pago
+    MP_PUBLIC_KEY = os.getenv("MP_PUBLIC_KEY")
+    MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
+    MP_SUCCESS_URL = os.getenv("MP_SUCCESS_URL")
+    MP_REJECTED_URL = os.getenv("MP_REJECTED_URL")
+    MP_CANCEL_URL = os.getenv("MP_CANCEL_URL")
 
     # Mapbox
     MAPBOX_API = os.getenv("MAPBOX_API")

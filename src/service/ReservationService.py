@@ -24,7 +24,7 @@ from src.repository.entity.ReservationProductEntity import ReservationProductEnt
 from src.repository.entity.ProductEntity import ProductEntity
 from src.repository.dao.ReservationProductDao import ReservationProductDao
 from src.repository.dao.UserDao import UserDao
-from src.service.KhipuService import KhipuService
+from src.service.MercadoPagoService import MercadoPagoService
 from src.service.EmailService import EmailService
 from src.util.TypeCoinConstant import TypeCoinConstant
 from src.util.Constants import Constants
@@ -37,7 +37,7 @@ from src.service.ReservationChangeStatusService import ReservationChangeStatusSe
 
 class ReservationService:
     _client_dao_ = ClientDao()
-    _khipu_service = KhipuService()
+    _mercado_pago_service = MercadoPagoService()
     _product_dao_ = ProductDao()
     _reservation_dao_ = ReservationDao()
     _payment_dao_ = PaymentDao()
@@ -144,21 +144,22 @@ class ReservationService:
         self._reservation_dao_.add_reservation_status(status=ReservationStatus.STARTED,
                                                       reservation_id=reservation_id)
 
-        response_khipu = self._khipu_service.create_link(amount=total_amount, payer_email=client.user.email,
-                                                         transaction_id=reservation_entity.transaction_id)
-        logger.info("response_khipu: {}", response_khipu.__dict__)
+        response_mercado_pago = self._mercado_pago_service.create_link(amount=total_amount,
+                                                                       payer_email=client.user.email,
+                                                                       transaction_id=reservation_entity.transaction_id)
+        logger.info("response_mercado_pago: {}", response_mercado_pago)
 
-        if response_khipu.status != status.HTTP_201_CREATED:
+        if response_mercado_pago.status != status.HTTP_201_CREATED:
             self._reservation_dao_.add_reservation_status(status=ReservationStatus.ERROR,
                                                           reservation_id=reservation_id)
 
-            raise CustomError(name=Constants.KHIPU_GET_ERROR,
-                              detail=Constants.KHIPU_GET_ERROR,
+            raise CustomError(name=Constants.MP_GET_ERROR,
+                              detail=Constants.MP_GET_ERROR,
                               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                              cause="Error obtener datos khipu")
+                              cause="Error obtener datos mercado pago")
 
         self._reservation_dao_.update_payment_id_reservation(reservation_id=reservation_id,
-                                                             payment_id=response_khipu.payment_id,
+                                                             payment_id=response_mercado_pago.payment_id,
                                                              db=db)
         logger.info("Se actualiza id de pago")
 
@@ -166,9 +167,9 @@ class ReservationService:
                                                       reservation_id=reservation_id)
 
         response = ReservationResponse()
-        response.url_payment = response_khipu.url
+        response.url_payment = response_mercado_pago.url
         response.reservation_id = reservation_id
-        response.payment_id = response_khipu.payment_id
+        response.payment_id = response_mercado_pago.payment_id
         logger.info("reservation response: {}", response.__dict__)
 
         return response
