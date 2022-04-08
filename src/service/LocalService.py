@@ -13,6 +13,7 @@ from src.util.EmailSubject import EmailSubject
 from src.util.Constants import Constants
 from src.validator.LocalValidator import LocalValidator
 from src.dto.response.SimpleResponse import SimpleResponse
+from src.service.PasswordService import PasswordService
 
 
 class LocalService:
@@ -42,6 +43,7 @@ class LocalService:
     _local_dao = LocalDAO()
     _state_dao_ = StateDao()
     _token_service = JwtService()
+    _password_service = PasswordService()
 
     async def create_new_account(self, new_account: NewAccount, db: Session):
         local_validator = LocalValidator()
@@ -55,6 +57,7 @@ class LocalService:
                                                 type_geocoding=self.TYPE_VALIDATION_GEOCODING_BRANCH)
 
         manager = new_account.manager
+        manager.password = self._password_service.encrypt_password(password=manager.password)
 
         user = {'email': manager.email, 'password': manager.password}
         await business_dao.verify_manager(manager, db)
