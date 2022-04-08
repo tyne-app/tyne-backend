@@ -57,7 +57,7 @@ class ReservationService:
 
         client: ClientEntity = self._client_dao_.get_client_by_id(client_id=client_id, db=db)
 
-        reservation_count: int = self._reservation_dao_.\
+        reservation_count: int = self._reservation_dao_. \
             get_reservation_count_by_date(branch_id=new_reservation.branch_id,
                                           date_reservation=new_reservation.date, db=db)
         logger.info("reservation_count: {}", reservation_count)
@@ -83,11 +83,12 @@ class ReservationService:
                               cause="Sucursal no disponible para el día requerido")
 
         self._is_valid_hour(opening_hour=branch_schedule_entity.opening_hour,
-                                            closing_hour=branch_schedule_entity.closing_hour,
-                                            request_hour=new_reservation.hour)
+                            closing_hour=branch_schedule_entity.closing_hour,
+                            request_hour=new_reservation.hour)
 
         difference_as_days: int = (new_reservation.date - request_reservation_date).days
-        current_datetime: datetime = datetime.now(self._country_time_zone)  # TODO: Validar fecha reserva sea mayor a fecha de request
+        current_datetime: datetime = datetime.now(
+            self._country_time_zone)  # TODO: Validar fecha reserva sea mayor a fecha de request
         logger.info("current_datetime: {}", current_datetime)
         logger.info("new reservation date: {}", new_reservation.date)
 
@@ -120,11 +121,11 @@ class ReservationService:
 
         logger.info("amount: {}", amount)
 
-        if amount < ReservationConstant.MIN_AMOUNT:
-            raise CustomError(name=Constants.BUY_INVALID_ERROR,
-                              detail=Constants.BUY_INVALID_ERROR,
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause=f"La compra debe ser mínimo de {ReservationConstant.MIN_AMOUNT}")
+        # if amount < ReservationConstant.MIN_AMOUNT:
+        #    raise CustomError(name=Constants.BUY_INVALID_ERROR,
+        #                      detail=Constants.BUY_INVALID_ERROR,
+        #                      status_code=status.HTTP_400_BAD_REQUEST,
+        #                      cause=f"La compra debe ser mínimo de {ReservationConstant.MIN_AMOUNT}")
 
         fifteen_percent: int = round(amount * ReservationConstant.TYNE_COMMISSION)
         logger.info("15% amount: {}", fifteen_percent)
@@ -193,7 +194,7 @@ class ReservationService:
         difference_closing_hour = difference_closing_seconds.total_seconds() / ReservationConstant.HOUR_AS_SECONDS
         logger.info("difference_closing_hour: {}", difference_closing_hour)
 
-        is_valid: bool = difference_opening_hour >= ReservationConstant.TYNE_LIMIT_HOUR and\
+        is_valid: bool = difference_opening_hour >= ReservationConstant.TYNE_LIMIT_HOUR and \
                          difference_closing_hour >= ReservationConstant.TYNE_LIMIT_HOUR
 
         logger.info("is_valid: {}", is_valid)
@@ -204,7 +205,8 @@ class ReservationService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Hora de reserva debe tener diferencia de 2hrs mínimo dentro de horario de local")
 
-    def _create_reservation_product(self, product: ProductEntity, quantity: int) -> ReservationProductEntity:  #TODO: Se podría moder metodo a otro lado
+    def _create_reservation_product(self, product: ProductEntity,
+                                    quantity: int) -> ReservationProductEntity:  # TODO: Se podría moder metodo a otro lado
         reservation_product = ReservationProductEntity()
         reservation_product.name_product = product.name
         reservation_product.category_product = product.category.name
@@ -214,7 +216,8 @@ class ReservationService:
         return reservation_product
 
     def _create_reservation_entity(self, new_reservation: NewReservationRequest,
-                                   client_id: int, amount: int, fifteen_percent: int) -> ReservationEntity: #TODO: Se podría moder metodo a otro lado
+                                   client_id: int, amount: int,
+                                   fifteen_percent: int) -> ReservationEntity:  # TODO: Se podría moder metodo a otro lado
         reservation_entity: ReservationEntity = ReservationEntity()
         reservation_entity.reservation_date = new_reservation.date
         reservation_entity.preference = new_reservation.preference
@@ -292,7 +295,8 @@ class ReservationService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Reserva no existe")
 
-        last_reservation_status: int = self._reservation_dao_.get_last_reservation_status(reservation_id=reservation.id, db=db)
+        last_reservation_status: int = self._reservation_dao_.get_last_reservation_status(reservation_id=reservation.id,
+                                                                                          db=db)
         logger.info("last_reservation_status: {}", last_reservation_status)
 
         client_email: str = self._use_dao.get_email_by_cient(client_id=reservation.client_id, db=db)
@@ -302,7 +306,7 @@ class ReservationService:
         logger.info("branch_email: {}", branch_email)
 
         match reservation_updated.status:
-            case ReservationStatus.STARTED | ReservationStatus.IN_PROCESS |\
+            case ReservationStatus.STARTED | ReservationStatus.IN_PROCESS | \
                  ReservationStatus.ERROR | ReservationStatus.NO_CONFIRMED:
                 self._raise_reservation_status_error()
 
@@ -318,7 +322,7 @@ class ReservationService:
                 if last_reservation_status != ReservationStatus.IN_PROCESS:
                     self._raise_reservation_status_error()
 
-                return self._reservation_change_status_service\
+                return self._reservation_change_status_service \
                     .canceled_reservation_payment(reservation=reservation, reservation_status=last_reservation_status,
                                                   branch_email=branch_email, db=db)
 
@@ -326,7 +330,7 @@ class ReservationService:
                 if last_reservation_status != ReservationStatus.IN_PROCESS:
                     self._raise_reservation_status_error()
 
-                return self._reservation_change_status_service\
+                return self._reservation_change_status_service \
                     .successful_reservation_payment(reservation=reservation, reservation_updated=reservation_updated,
                                                     client_email=client_email, branch_email=branch_email, db=db)
 
@@ -334,14 +338,14 @@ class ReservationService:
                 if last_reservation_status != ReservationStatus.SUCCESSFUL_PAYMENT:
                     self._raise_reservation_status_error()
                 # TODO: Obtener razón del por qué se rechaza
-                return self._reservation_change_status_service\
+                return self._reservation_change_status_service \
                     .rejected_reservation_by_local(reservation=reservation, client_email=client_email)
 
             case ReservationStatus.CONFIRMED:
                 if last_reservation_status != ReservationStatus.SUCCESSFUL_PAYMENT:
                     self._raise_reservation_status_error()
 
-                return self._reservation_change_status_service\
+                return self._reservation_change_status_service \
                     .confirmed_reservation(reservation=reservation, client_email=client_email,
                                            branch_email=branch_email, db=db)
 
