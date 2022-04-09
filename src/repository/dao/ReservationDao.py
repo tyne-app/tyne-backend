@@ -23,7 +23,6 @@ from src.util.ReservationStatus import ReservationStatus
 
 
 class ReservationDao:
-
     _country_time_zone = timezone('Chile/Continental')
 
     def create_reservation(self, reservation: ReservationEntity, products: list[ReservationProductEntity],
@@ -209,6 +208,7 @@ class ReservationDao:
             .join(BranchImageEntity, BranchImageEntity.branch_id == BranchEntity.id) \
             .filter(ReservationEntity.client_id == client_id) \
             .filter(BranchImageEntity.is_main_image) \
+            .order_by(ReservationEntity.id.desc()) \
             .all()
 
     def get_reservation(self, reservation_id: int, payment_id: str, db: Session) -> ReservationEntity:
@@ -227,10 +227,10 @@ class ReservationDao:
 
     def get_last_reservation_status(self, reservation_id: int, db: Session) -> ReservationChangeStatusEntity:
 
-        last_reservation_status = db.query(ReservationChangeStatusEntity.status_id)\
+        last_reservation_status = db.query(ReservationChangeStatusEntity.status_id) \
             .select_from(ReservationChangeStatusEntity) \
-            .join(ReservationEntity, ReservationEntity.id == ReservationChangeStatusEntity.reservation_id)\
-            .filter(ReservationEntity.id == reservation_id)\
+            .join(ReservationEntity, ReservationEntity.id == ReservationChangeStatusEntity.reservation_id) \
+            .filter(ReservationEntity.id == reservation_id) \
             .order_by(ReservationChangeStatusEntity.datetime.desc()).first()
 
         if not last_reservation_status:
