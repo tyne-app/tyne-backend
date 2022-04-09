@@ -37,15 +37,17 @@ class MercadoPagoService:
         preference_response = api.preference().create(preference_data)
         logger.info("result preference_response Mercado Pago: {}", preference_response)
 
-        # response = MercadoPagoResponse(payment_id=preference_response["response"].get("id"),
-        #                               url=preference_response["response"].get("init_point"),
-        #                               status=preference_response["status"])
-
         logger.info("result response Mercado Pago: {}", preference_response["response"])
 
-        response = MercadoPagoResponse(payment_id=preference_response["response"].get("id"),
-                                       url=preference_response["response"].get("sandbox_init_point"),
-                                       status=preference_response["status"])
+        if self._settings_.ENVIRONMENT == "Development":
+            response = MercadoPagoResponse(payment_id=preference_response["response"].get("id"),
+                                           url=preference_response["response"].get("sandbox_init_point"),
+                                           status=preference_response["status"])
+        else:
+            response = MercadoPagoResponse(payment_id=preference_response["response"].get("id"),
+                                           url=preference_response["response"].get("init_point"),
+                                           status=preference_response["status"])
+
         return response
 
     def verify_payment(self, payment_id: str):
