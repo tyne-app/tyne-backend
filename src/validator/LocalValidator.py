@@ -18,12 +18,14 @@ class LocalValidator:
     PHONE_REGEX = re.compile(r"\+569[0-9]{8}")
     ADDRESS_REGEX = re.compile(r"[A-Za-z\s\.0-9#áéíóúÁÉÍÓÚ]+")
     EMAIL_REGEX = re.compile(r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.?[A-Za-z]+")
+    PASSWORD_REGEX = re.compile(r"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[A-Za-z\d$@$!%*?&].{7,} ")
     VALID_STATE_ID = range(83, 134)
     INVALID_DATA_MESSAGE = "Formato no válido"
     INVALID_DATA_PHONE_MESSAGE = "Formato de teléfono {0} no válido"
     INVALID_DATA_NAME_MESSAGE = "Formato del nombre {0} no válido"
     INVALID_DATA_LAST_NAME_MESSAGE = "Formato del apellido {0} no válido"
     INVALID_DATA_EMAIL_MESSAGE = "Formato de correo {0} no válido"
+    INVALID_DATA_PASSWORD_MESSAGE = "Formato de contraseña {0} no válido"
     INVALID_DATA_IDENTIFIER_MESSAGE = "Formato de identificacón {0} no válido"
     INVALID_DATA_SOCIAL_REASON_MESSAGE = "Formato de la razón social no válido"
     INVALID_DATA_COMMERCIAL_ACTIVITY_MESSAGE = "Formato del giro de local no válido"
@@ -80,6 +82,8 @@ class LocalValidator:
             invalid_data.append((self.INVALID_DATA_PHONE_MESSAGE.replace("{0}", self.MANAGER)))
         if not re.fullmatch(self.EMAIL_REGEX, manager.email):
             invalid_data.append(self.INVALID_DATA_EMAIL_MESSAGE.replace("{0}", self.MANAGER))
+        if not re.fullmatch(self.PASSWORD_REGEX, manager.password):
+            invalid_data.append(self.INVALID_DATA_PASSWORD_MESSAGE.replace("{0}", self.MANAGER))
         if invalid_data:
             await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
                                                                  detail=invalid_data,
@@ -127,7 +131,6 @@ class LocalValidator:
             invalid_data.append(self.INVALID_DATA_STATE_ID_MESSAGE)
         if (restaurant.state_id) not in self.VALID_STATE_ID:
             invalid_data.append(self.INVALID_STATE_ID_CITY)
-
 
         if invalid_data:
             await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
