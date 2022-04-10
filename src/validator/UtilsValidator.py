@@ -6,7 +6,7 @@ class UtilsValidator:
     NUMBER_REGEX = re.compile(r"[0-9]+")
     PHONE_REGEX = re.compile(r"\+569[0-9]{8}")
     EMAIL_REGEX = re.compile(r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.?[A-Za-z]+")
-    PASSWORD_REGEX = re.compile("  /(?=.[a-z])(?=.[A-Z])(?=.[0-9])[A-Za-z\d$@$!%?&].{8,}/ ")
+    PASSWORD_REGEX = re.compile(r"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[A-Za-z\d$@$!%*?&].{7,}")
     INVALID_DATA_MESSAGE = "Formato no válido"
     INVALID_DATA_PHONE = "Formato de teléfono no válido"
     INVALID_DATA_EMAIL = "Formato de correo no válido"
