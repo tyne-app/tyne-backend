@@ -16,9 +16,9 @@ class LoginUserRequest(BaseModel):
         if not validator.is_email_valid(self.email):
             raise CustomError(name=Constants.INVALID_DATA_ERROR,
                               detail=Constants.EMAIL_INVALID_ERROR,
-                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                              status_code=status.HTTP_400_BAD_REQUEST)
 
         if not self.password:
             raise CustomError(name=Constants.INVALID_DATA_ERROR,
                               detail=Constants.PASSWORD_EMPTY_ERROR,
-                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                              status_code=status.HTTP_400_BAD_REQUEST)

@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from loguru import logger
 from sqlalchemy.orm import Session
 from starlette import status
+
+from src.configuration.Settings import Settings
 from src.dto.request.LocalReservationsRequest import LocalReservationRequest
 from src.dto.request.NewReservationRequest import NewReservationRequest
 from src.dto.request.UpdateReservationRequest import UpdateReservationRequest
@@ -121,11 +123,12 @@ class ReservationService:
 
         logger.info("amount: {}", amount)
 
-        # if amount < ReservationConstant.MIN_AMOUNT:
-        #    raise CustomError(name=Constants.BUY_INVALID_ERROR,
-        #                      detail=Constants.BUY_INVALID_ERROR,
-        #                      status_code=status.HTTP_400_BAD_REQUEST,
-        #                      cause=f"La compra debe ser mínimo de {ReservationConstant.MIN_AMOUNT}")
+        if Settings.ENVIRONMENT == "Production":
+            if amount < ReservationConstant.MIN_AMOUNT:
+                raise CustomError(name=Constants.BUY_INVALID_ERROR,
+                                  detail=Constants.BUY_INVALID_ERROR,
+                                  status_code=status.HTTP_400_BAD_REQUEST,
+                                  cause=f"La compra debe ser mínimo de {ReservationConstant.MIN_AMOUNT}")
 
         fifteen_percent: int = round(amount * ReservationConstant.TYNE_COMMISSION)
         logger.info("15% amount: {}", fifteen_percent)
