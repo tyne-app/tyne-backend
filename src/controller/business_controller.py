@@ -9,9 +9,13 @@ from src.configuration.openapi.search_openapi import SearchAllBranchOpenAPI
 from src.dto.request.business_request_dto import NewAccount
 from src.dto.request.business_request_dto import NewBranch
 from src.dto.request.business_request_dto import SearchParameter
+from src.exception.ThrowerExceptions import ThrowerExceptions
 from src.service.JwtService import JwtService
 from src.service.LocalService import LocalService
 from src.service.SearchService import SearchService
+from src.util.Constants import Constants
+from src.util.UserType import UserType
+from loguru import logger
 
 business_controller = APIRouter(
     prefix="/v1/business",
@@ -22,6 +26,7 @@ _localService = LocalService()
 _jwt_service = JwtService()
 _local_service = LocalService()
 _search_service = SearchService()
+_throwerExceptions = ThrowerExceptions()
 
 
 async def search_parameters_params(
@@ -51,6 +56,12 @@ async def register_account(new_account: NewAccount, db: Session = Depends(get_da
 @business_controller.get('', status_code=status.HTTP_200_OK)
 async def read_account(request: Request, response: Response, db: Session = Depends(get_data_base)):
     token_payload = await _jwt_service.verify_and_get_token_data(request)
+
+    if token_payload.id_user != UserType.MANAGER:
+        logger.error("User type is client, the request is UNAUTHORIZED")
+        await _throwerExceptions.throw_custom_exception(name=Constants.TOKEN_INVALID_ERROR,
+                                                        detail=Constants.TOKEN_INVALID_ERROR,
+                                                        status_code=status.HTTP_401_UNAUTHORIZED)
 
     branch_profile = await _local_service.get_account_profile(branch_id=token_payload.id_branch_client, db=db)
 

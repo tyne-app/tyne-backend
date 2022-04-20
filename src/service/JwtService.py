@@ -31,10 +31,9 @@ class JwtService:
                 "rol": rol,
                 "name": name,
                 "last_name": last_name,
-                "ip": ip,  # TODO: Hay que encriptar la ip más adelante
-                "iss": "https://www.tyneapp.cl",
+                "iss": "https://tyne.cl",
                 "iat": datetime.now(tz=timezone.utc),
-                "exp": datetime.now(tz=timezone.utc) + timedelta(days=1000)
+                "exp": datetime.now(tz=timezone.utc) + timedelta(minutes=30)
             },
             str(Settings.JWT_KEY),
             algorithm="HS256")
@@ -55,43 +54,24 @@ class JwtService:
     async def verify_and_get_token_data(self, request):
         try:
             if 'authorization' not in request.headers:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_NOT_EXIST,
-                                                                     detail=Constants.TOKEN_NOT_EXIST_DETAIL,
-                                                                     status_code=status.HTTP_401_UNAUTHORIZED,
-                                                                     cause=Constants.TOKEN_NOT_EXIST_DETAIL)
+                raise Exception(Constants.TOKEN_NOT_EXIST)
+
             token_header = request.headers['authorization']
 
             decoded_token = jwt.decode(jwt=token_header, key=str(Settings.JWT_KEY), algorithms=self.ALGORITHM)
             if not decoded_token:
-                await self._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_VERIFY_ERROR,
-                                                                     detail=Constants.TOKEN_VERIFY_ERROR,
-                                                                     status_code=status.HTTP_401_UNAUTHORIZED,
-                                                                     cause="decoded_token is None")
+                raise Exception(Constants.TOKEN_VERIFY_ERROR)
 
             token = Token(int(decoded_token['id_user']), int(decoded_token['id_branch_client']))
             return token
+        except Exception as error:
+            token = request.headers['authorization']
+            logger.info("token: {}", token)
+            logger.error("error: {}", error)
 
-        except (jwt.ExpiredSignatureError, Exception) as error:
-            # TODO: Deuda tecnica, refactorizar.
-            if type(error) is CustomError:
-                raise error
-
-            logger.info("error: {}", error)
-            logger.info("error.args: {}", error.args)
-
-            message_error = error.args[0]
-            content_detail = message_error
-
-            if self.EXPIRED_KEY_WORD in message_error:
-                content_detail = Constants.SIGNATURE_EXPIRED_MSG
-
-            if self.ALGORITHM_KEY_WORD in message_error:
-                content_detail = Constants.ALGORITHM_MSG
-
-            await self._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_DECODE_ERROR,
-                                                                 detail=Constants.TOKEN_DECODE_ERROR,
-                                                                 status_code=status.HTTP_400_BAD_REQUEST,
-                                                                 cause=content_detail)
+            await self._throwerExceptions.throw_custom_exception(name=Constants.TOKEN_INVALID_ERROR,
+                                                                 detail=Constants.TOKEN_INVALID_ERROR,
+                                                                 status_code=status.HTTP_401_UNAUTHORIZED)
 
     async def verify_email_firebase(self, email: str):
         is_valid = False
