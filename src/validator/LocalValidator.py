@@ -6,6 +6,7 @@ from loguru import logger
 from src.dto.request.business_request_dto import NewAccount, Branch, Restaurant, LegalRepresentative, Manager, \
     BranchBank, \
     NewBranch
+from src.exception.exceptions import CustomError
 from src.util.Constants import Constants
 from src.exception.ThrowerExceptions import ThrowerExceptions
 
@@ -18,7 +19,7 @@ class LocalValidator:
     PHONE_REGEX = re.compile(r"\+569[0-9]{8}")
     ADDRESS_REGEX = re.compile(r"[A-Za-z\s\.0-9#áéíóúÁÉÍÓÚ]+")
     EMAIL_REGEX = re.compile(r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.?[A-Za-z]+")
-    PASSWORD_REGEX = re.compile(r"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[A-Za-z\d$@$!%*?&].{7,} ")
+    PASSWORD_REGEX = re.compile(r"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[A-Za-z\d$@$!%*?&].{7,}")
     VALID_STATE_ID = range(83, 134)
     INVALID_DATA_MESSAGE = "Formato no válido"
     INVALID_DATA_PHONE_MESSAGE = "Formato de teléfono {0} no válido"
@@ -85,9 +86,9 @@ class LocalValidator:
         if not re.fullmatch(self.PASSWORD_REGEX, manager.password):
             invalid_data.append(self.INVALID_DATA_PASSWORD_MESSAGE.replace("{0}", self.MANAGER))
         if invalid_data:
-            await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
-                                                                 detail=invalid_data,
-                                                                 status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(name=Constants.INVALID_DATA_ERROR,
+                              detail=invalid_data,
+                              status_code=status.HTTP_400_BAD_REQUEST)
         return invalid_data
 
     async def validate_legal_representative(self, legal_representative: LegalRepresentative):

@@ -46,7 +46,8 @@ class JwtService:
     async def decode_token_firebase(self, token: str):
         logger.info("decode_token_firebase")
         try:
-            auth.verify_id_token(token)
+            return auth.verify_id_token(token)
+
         except Exception as e:
             raise CustomError(name="Token login social inválido",
                               detail="Token login social inválido",

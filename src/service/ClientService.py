@@ -1,3 +1,5 @@
+from builtins import print
+
 from sqlalchemy.orm import Session
 from loguru import logger
 from src.dto.request.ClientRequest import ClientRequest
@@ -66,8 +68,10 @@ class ClientService:
 
         token = await self._token_service.decode_token_firebase(client_request.token)
         logger.info("Se decodifica token")
-        password_service: PasswordService() = PasswordService()
-        user_entity = client_request.to_user_entity(image_url=token.picture,
+
+        password_service = PasswordService()
+
+        user_entity = client_request.to_user_entity(image_url=token.get("picture"),
                                                     password=password_service.generate_password())
         client_entity = client_request.to_client_entity()
         self._client_dao_.create_account(user_entity=user_entity, client_entity=client_entity, db=db)
