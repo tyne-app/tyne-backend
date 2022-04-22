@@ -97,7 +97,7 @@ class JwtService:
                 "rol": rol,
                 "name": name,
                 "last_name": last_name,
-                "iss": "https://www.tyneapp.cl",
+                "iss": "https://www.tyne.cl",
                 "iat": datetime.now(tz=timezone.utc),
                 "exp": datetime.now(tz=timezone.utc) + timedelta(days=1)
             },
