@@ -7,5 +7,5 @@ health_controller = APIRouter(
 
 
 @health_controller.get('/', status_code=status.HTTP_200_OK)
-async def get_client_reservations():
+async def health():
     return SimpleResponse("This app is healthy")
