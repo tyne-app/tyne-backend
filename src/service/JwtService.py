@@ -63,7 +63,7 @@ class JwtService:
             if not decoded_token:
                 raise Exception(Constants.TOKEN_VERIFY_ERROR)
 
-            token = Token(int(decoded_token['id_user']), int(decoded_token['id_branch_client']))
+            token = Token(int(decoded_token['id_user']), int(decoded_token['id_branch_client']), int(decoded_token['rol']))
             return token
         except Exception as error:
             token = request.headers['authorization']
