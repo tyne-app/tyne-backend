@@ -10,7 +10,6 @@ class RestaurantEntity(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     identifier = Column(String(100))
-    name = Column(String(100))
     created_date = Column(TIMESTAMP)
     social_reason = Column(String(200))
     commercial_activity = Column(String(100))

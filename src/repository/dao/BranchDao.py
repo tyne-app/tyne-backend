@@ -40,7 +40,7 @@ class BranchDao:
             StateEntity.id.label(name='state_id'),
             BranchEntity.street.label(name="street"),
             BranchEntity.street_number.label(name="street_number"),
-            RestaurantEntity.name.label(name='restaurant_name'),
+            BranchEntity.name.label(name='branch_name'),
             RestaurantEntity.description.label('restaurant_description'),
             func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id).label(name='rating'),
             func.avg(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='avg_price'),
@@ -64,7 +64,7 @@ class BranchDao:
 
         if search_parameters['name']:
             name = search_parameters['name'].lower()
-            all_branches = all_branches.filter(func.lower(RestaurantEntity.name).like("%" + name + "%"))
+            all_branches = all_branches.filter(func.lower(BranchEntity.name).like("%" + name + "%"))
 
         if search_parameters['date_reservation']:
             date_reservation = search_parameters['date_reservation']
@@ -95,7 +95,7 @@ class BranchDao:
                     all_branches = all_branches.order_by(
                         (func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id)).asc())
                 elif search_parameters['sort_by'] == 2:
-                    all_branches = all_branches.order_by(RestaurantEntity.name.asc())
+                    all_branches = all_branches.order_by(BranchEntity.name.asc())
                 elif search_parameters['sort_by'] == 3:
                     all_branches = all_branches.order_by(
                         (func.max(ProductEntity.amount).over(partition_by=BranchEntity.id)).asc())
@@ -142,7 +142,7 @@ class BranchDao:
             BranchEntity.street_number,
             BranchEntity.accept_pet,
             RestaurantEntity.id.label(name='restaurant_id'),
-            RestaurantEntity.name,
+            BranchEntity.name,
             RestaurantEntity.description,
             StateEntity.name.label(name='state_name')) \
             .select_from(BranchEntity) \
@@ -186,7 +186,7 @@ class BranchDao:
         branches = db.query(
             distinct(BranchEntity.id),
             BranchEntity.id.label(name='branch_id'),
-            RestaurantEntity.name.label(name='restaurant_name'),
+            BranchEntity.name.label(name='branch_name'),
             StateEntity.name.label(name='state_name'),
             BranchEntity.street,
             BranchEntity.street_number) \
@@ -223,9 +223,7 @@ class BranchDao:
             .filter(BranchScheduleEntity.day == day).first()
 
     def get_name(self, branch_id: int, db: Session) -> str:
-        name = db.query(RestaurantEntity.name).select_from(RestaurantEntity)\
-            .join(BranchEntity, BranchEntity.restaurant_id == RestaurantEntity.id)\
+        name = db.query(BranchEntity.name).select_from(BranchEntity)\
             .filter(BranchEntity.id == branch_id).first()
-
         logger.info('name: {}', name)
         return name[0]

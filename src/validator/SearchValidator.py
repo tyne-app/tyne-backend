@@ -4,7 +4,7 @@ from fastapi import status
 from loguru import logger
 
 from src.util.Constants import Constants
-from src.exception.ThrowerExceptions import ThrowerExceptions
+from src.exception.exceptions import CustomError
 
 
 class SearchValidator:
@@ -14,9 +14,8 @@ class SearchValidator:
     DATE_RESERVATION_REGEX = re.compile(r"2[0-9]{3}/[0-9]{2}/[0-9]{2}")
     # TODO: Poner constantes para validar date_reservation por año  mes y día
     INVALID_DATA_MESSAGE = "Valor no válido"  # TODO: Podría ser general, en ingles y toda validacion en un solo archivo?
-    _throwerExceptions = ThrowerExceptions()
 
-    async def validate_search_parameters(self, search_parameters: dict):
+    def validate_search_parameters(self, search_parameters: dict):
         logger.info('search_parameters:{}', search_parameters)
 
         data_checked = {}
@@ -38,7 +37,7 @@ class SearchValidator:
 
         if data_checked:
             logger.error("data_checked: {}", data_checked)
-            await self._throwerExceptions.throw_custom_exception(name=Constants.FIELDS_VALIDATOR_ERROR,
-                                                                 detail=data_checked,
-                                                                 status_code=status.HTTP_400_BAD_REQUEST,
-                                                                 cause=data_checked)
+            raise CustomError(name=Constants.FIELDS_VALIDATOR_ERROR,
+                              detail=data_checked,
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause=data_checked)

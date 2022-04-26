@@ -4,7 +4,7 @@ class BranchResponse:
     state_id: int
     street: str
     street_number: str
-    restaurant_name: str
+    branch_name: str
     restaurant_description: str
     rating: int
     avg_price: int
@@ -24,11 +24,11 @@ class BranchResponse:
                 branch_response.rating = branch.rating
 
             branch_response.branch_id = branch.branch_id
+            branch_response.branch_name = branch.branch_name
             branch_response.state_name = branch.state_name
             branch_response.state_id = branch.state_id
             branch_response.street = branch.street
             branch_response.street_number = branch.street_number
-            branch_response.restaurant_name = branch.restaurant_name
             branch_response.restaurant_description = branch.restaurant_description
             branch_response.url_image = branch.url_image
 
