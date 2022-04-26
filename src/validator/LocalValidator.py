@@ -7,12 +7,10 @@ from src.dto.request.business_request_dto import NewAccount, Branch, Restaurant,
     BranchBank, \
     NewBranch
 from src.util.Constants import Constants
-from src.exception.ThrowerExceptions import ThrowerExceptions
+from src.exception.exceptions import CustomError
 
 
 class LocalValidator:
-    _throwerExceptions = ThrowerExceptions()
-
     NUMBER_AND_WORD_REGEX = re.compile(r"[A-Za-z0-9\sáéíóúÁÉÍÓÚñ]+")
     NUMBER_REGEX = re.compile(r"[0-9]+")
     PHONE_REGEX = re.compile(r"\+569[0-9]{8}")
@@ -41,37 +39,37 @@ class LocalValidator:
     RESTAURANT = "de la casa matriz"
     BRANCH = "del local"
 
-    async def validate_new_account(self, new_account: NewAccount):
+    def validate_new_account(self, new_account: NewAccount):
         data_checked = []
-        manager_checked = await self.validate_manager(manager=new_account.manager)
+        manager_checked = self.validate_manager(manager=new_account.manager)
         if bool(manager_checked):
             data_checked.append(manager_checked)
 
-        legal_representative_checked = await self.validate_legal_representative(
+        legal_representative_checked = self.validate_legal_representative(
             legal_representative=new_account.legal_representative)
         if bool(legal_representative_checked):
             data_checked.append(legal_representative_checked)
 
-        restaurant_checked = await self.validate_restaurant(restaurant=new_account.restaurant)
+        restaurant_checked = self.validate_restaurant(restaurant=new_account.restaurant)
         if bool(restaurant_checked):
             data_checked.append(restaurant_checked)
 
-        branch_checked = await self.validate_branch(branch=new_account.branch)
+        branch_checked = self.validate_branch(branch=new_account.branch)
         if bool(branch_checked):
             data_checked.append(branch_checked)
 
-        branch_bank_checked = await self.validate_branch_bank(branch_bank=new_account.branch_bank)
+        branch_bank_checked = self.validate_branch_bank(branch_bank=new_account.branch_bank)
         if bool(branch_bank_checked):
             data_checked.append(branch_bank_checked)
 
         if data_checked:
             logger.error("data_checked: {}", data_checked)
-            await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
-                                                                 detail=data_checked,
-                                                                 status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(name=Constants.INVALID_DATA_ERROR,
+                              detail=data_checked,
+                              status_code=status.HTTP_400_BAD_REQUEST)
         return data_checked
 
-    async def validate_manager(self, manager: Manager):
+    def validate_manager(self, manager: Manager):
         logger.info('manager: {}', manager)
         invalid_data = []
         if not re.fullmatch(self.NUMBER_AND_WORD_REGEX, manager.name):
@@ -85,12 +83,12 @@ class LocalValidator:
         if not re.fullmatch(self.PASSWORD_REGEX, manager.password):
             invalid_data.append(self.INVALID_DATA_PASSWORD_MESSAGE.replace("{0}", self.MANAGER))
         if invalid_data:
-            await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
-                                                                 detail=invalid_data,
-                                                                 status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(name=Constants.INVALID_DATA_ERROR,
+                              detail=invalid_data,
+                              status_code=status.HTTP_400_BAD_REQUEST)
         return invalid_data
 
-    async def validate_legal_representative(self, legal_representative: LegalRepresentative):
+    def validate_legal_representative(self, legal_representative: LegalRepresentative):
         logger.info('legal_representative: {}', legal_representative)
 
         invalid_data = []
@@ -106,13 +104,13 @@ class LocalValidator:
             invalid_data.append(self.INVALID_DATA_PHONE_MESSAGE.replace("{0}", self.LEGAL_REPRESENTATIVE))
 
         if invalid_data:
-            await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
-                                                                 detail=invalid_data,
-                                                                 status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(name=Constants.INVALID_DATA_ERROR,
+                              detail=invalid_data,
+                              status_code=status.HTTP_400_BAD_REQUEST)
 
         return invalid_data
 
-    async def validate_restaurant(self, restaurant: Restaurant):
+    def validate_restaurant(self, restaurant: Restaurant):
         logger.info('restaurant: {}', restaurant)
         invalid_data = []
         if not re.fullmatch(self.NUMBER_AND_WORD_REGEX, restaurant.social_reason):
@@ -133,13 +131,13 @@ class LocalValidator:
             invalid_data.append(self.INVALID_STATE_ID_CITY)
 
         if invalid_data:
-            await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
-                                                                 detail=invalid_data,
-                                                                 status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(name=Constants.INVALID_DATA_ERROR,
+                              detail=invalid_data,
+                              status_code=status.HTTP_400_BAD_REQUEST)
 
         return invalid_data
 
-    async def validate_branch(self, branch: Branch):
+    def validate_branch(self, branch: Branch):
         logger.info('branch: {}', branch)
 
         invalid_data = []
@@ -155,12 +153,12 @@ class LocalValidator:
             invalid_data.append(self.INVALID_DATA_ACCEPT_PET_MESSAGE)
 
         if invalid_data:
-            await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
-                                                                 detail=invalid_data,
-                                                                 status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(name=Constants.INVALID_DATA_ERROR,
+                              detail=invalid_data,
+                              status_code=status.HTTP_400_BAD_REQUEST)
         return invalid_data
 
-    async def validate_branch_bank(self, branch_bank: BranchBank):
+    def validate_branch_bank(self, branch_bank: BranchBank):
         logger.info('branch_bank: {}', branch_bank)
 
         invalid_data = []
@@ -176,12 +174,12 @@ class LocalValidator:
             invalid_data.append(self.INVALID_DATA_MESSAGE)
 
         if invalid_data:
-            await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
-                                                                 detail=invalid_data,
-                                                                 status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(name=Constants.INVALID_DATA_ERROR,
+                              detail=invalid_data,
+                              status_code=status.HTTP_400_BAD_REQUEST)
         return invalid_data
 
-    async def validate_second_branch(self, new_branch: NewBranch):
+    def validate_second_branch(self, new_branch: NewBranch):
         logger.info('new_branch: {}', NewBranch)
 
         invalid_data = []
@@ -195,34 +193,34 @@ class LocalValidator:
             invalid_data.append(self.INVALID_DATA_MESSAGE)
 
         if invalid_data:
-            await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
-                                                                 detail=invalid_data,
-                                                                 status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(name=Constants.INVALID_DATA_ERROR,
+                              detail=invalid_data,
+                              status_code=status.HTTP_400_BAD_REQUEST)
         return invalid_data
 
-    async def validate_new_branch(self, new_branch: NewBranch):
+    def validate_new_branch(self, new_branch: NewBranch):
         logger.info('new_branch: {}', new_branch)
         data_checked = []
 
-        manager_checked = await self.validate_manager(manager=new_branch.manager)
+        manager_checked = self.validate_manager(manager=new_branch.manager)
         if bool(manager_checked):
             data_checked.append(manager_checked)
 
-        branch_checked = await self.validate_second_branch(new_branch=new_branch)
+        branch_checked = self.validate_second_branch(new_branch=new_branch)
         if bool(branch_checked):
             data_checked.append(branch_checked)
-        branch_bank_checked = await self.validate_branch_bank(branch_bank=new_branch.branch_bank)
+        branch_bank_checked = self.validate_branch_bank(branch_bank=new_branch.branch_bank)
 
         if bool(branch_bank_checked):
             data_checked.append(branch_bank_checked)
 
         if data_checked:
-            await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
-                                                                 detail=data_checked,
-                                                                 status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(name=Constants.INVALID_DATA_ERROR,
+                              detail=data_checked,
+                              status_code=status.HTTP_400_BAD_REQUEST)
         return data_checked
 
     async def raise_custom_error(self, message):
-        await self._throwerExceptions.throw_custom_exception(name=Constants.INVALID_DATA_ERROR,
-                                                             detail=message,
-                                                             status_code=status.HTTP_400_BAD_REQUEST)
+        raise CustomError(name=Constants.INVALID_DATA_ERROR,
+                          detail=message,
+                          status_code=status.HTTP_400_BAD_REQUEST)

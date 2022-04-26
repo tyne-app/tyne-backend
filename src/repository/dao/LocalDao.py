@@ -67,7 +67,7 @@ class LocalDAO:
         branch_entity = db \
             .query(BranchEntity.id, BranchEntity.manager_id, BranchEntity.accept_pet,
                    BranchEntity.state_id, BranchEntity.street, BranchEntity.street_number,
-                   RestaurantEntity.name, RestaurantEntity.commercial_activity,
+                   BranchEntity.name, RestaurantEntity.commercial_activity,
                    RestaurantEntity.phone,
                    RestaurantEntity.description) \
             .select_from(BranchEntity).join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \

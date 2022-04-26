@@ -49,7 +49,7 @@ class LocalService:
         local_validator = LocalValidator()
         business_dao = BusinessDao()
 
-        await local_validator.validate_new_account(new_account=new_account)
+        local_validator.validate_new_account(new_account=new_account)
         branch = new_account.branch
         state = self._state_dao_.get_state_by_id(id_state=branch.state_id, db=db)
         branch_geocoding = await self.geocoding(street=branch.street, street_number=branch.street_number,
