@@ -166,6 +166,7 @@ class ReservationDao:
                                             ClientEntity.name,
                                             ClientEntity.last_name,
                                             ReservationEntity.people,
+                                            ReservationEntity.preference,
                                             BranchEntity.street,
                                             BranchEntity.street_number,
                                             StateEntity.name.label("state"),

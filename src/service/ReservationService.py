@@ -126,9 +126,9 @@ class ReservationService:
         if Settings.ENVIRONMENT == "Production":
             if amount < ReservationConstant.MIN_AMOUNT:
                 raise CustomError(name=Constants.BUY_INVALID_ERROR,
-                                  detail=Constants.BUY_INVALID_ERROR,
+                                  detail=f"La compra debe ser mínimo de ${ReservationConstant.MIN_AMOUNT}",
                                   status_code=status.HTTP_400_BAD_REQUEST,
-                                  cause=f"La compra debe ser mínimo de {ReservationConstant.MIN_AMOUNT}")
+                                  cause=Constants.BUY_INVALID_ERROR)
 
         fifteen_percent: int = round(amount * ReservationConstant.TYNE_COMMISSION)
         logger.info("15% amount: {}", fifteen_percent)
@@ -294,7 +294,7 @@ class ReservationService:
 
         if not reservation:
             raise CustomError(name="Reserva no existe",
-                              detail="Error",
+                              detail="Reserva no existe",
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Reserva no existe")
 

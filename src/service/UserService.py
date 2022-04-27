@@ -70,7 +70,7 @@ class UserService:
 
         if not user.is_active:
             raise CustomError(name=Constants.CLIENT_UNAUTHORIZED,
-                              detail=Constants.TOKEN_NOT_EXIST_DETAIL,
+                              detail="El usuario no está activado",
                               status_code=status.HTTP_401_UNAUTHORIZED,
                               cause="El usuario no está activado")
 
