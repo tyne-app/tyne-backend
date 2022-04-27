@@ -21,7 +21,6 @@ class UserDao:
     def user_login(self, email: str, db: Session) -> UserEntity:
         return db.query(UserEntity) \
             .filter(UserEntity.email == email) \
-            .filter(UserEntity.is_active) \
             .first()
 
     def verify_email(self, email: str, db: Session):  # TODO: Es necesario esto?

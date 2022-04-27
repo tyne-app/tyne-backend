@@ -57,7 +57,7 @@ async def register_account(new_account: NewAccount, db: Session = Depends(get_da
 async def read_account(request: Request, response: Response, db: Session = Depends(get_data_base)):
     token_payload = await _jwt_service.verify_and_get_token_data(request)
 
-    if token_payload.id_user != UserType.MANAGER:
+    if token_payload.rol != UserType.MANAGER:
         logger.error("User type is client, the request is UNAUTHORIZED")
         await _throwerExceptions.throw_custom_exception(name=Constants.TOKEN_INVALID_ERROR,
                                                         detail=Constants.TOKEN_INVALID_ERROR,
