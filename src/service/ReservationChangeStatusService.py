@@ -205,7 +205,7 @@ class ReservationChangeStatusService:
         self._reservation_event_service.create_job(func=self._reservation_event_service.reminder_email,
                                                    difference_as_seconds=difference_as_seconds, kwargs=kwargs)
 
-        self._email_service.send_email(user=Constants.USER, subject=EmailSubject.CONFIRMATION_TO_CLIENT,
+        self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CONFIRMATION_TO_CLIENT,
                                        receiver_email=client_email, data=data)
 
         self._reservation_dao_.add_reservation_status(status=ReservationStatus.CONFIRMED, reservation_id=reservation.id)

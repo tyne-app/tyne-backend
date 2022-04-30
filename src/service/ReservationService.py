@@ -338,11 +338,12 @@ class ReservationService:
                                                     client_email=client_email, branch_email=branch_email, db=db)
 
             case ReservationStatus.REJECTED_BY_LOCAL:
-                if last_reservation_status != ReservationStatus.SUCCESSFUL_PAYMENT:
-                    self._raise_reservation_status_error()
                 # TODO: Obtener razón del por qué se rechaza
-                return self._reservation_change_status_service \
-                    .rejected_reservation_by_local(reservation=reservation, client_email=client_email)
+                if last_reservation_status == ReservationStatus.CONFIRMED or last_reservation_status == ReservationStatus.SUCCESSFUL_PAYMENT:
+                    return self._reservation_change_status_service \
+                        .rejected_reservation_by_local(reservation=reservation, client_email=client_email)
+                else:
+                    self._raise_reservation_status_error()
 
             case ReservationStatus.CONFIRMED:
                 if last_reservation_status != ReservationStatus.SUCCESSFUL_PAYMENT:

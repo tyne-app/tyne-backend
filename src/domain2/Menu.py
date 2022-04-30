@@ -29,7 +29,7 @@ class Menu:
         self.branch_id = branch.id
 
     def set_name(self, branch: BranchEntity):
-        self.nombre_local = branch.restaurant.name
+        self.nombre_local = branch.name
 
     def set_sections_and_rango_precio(self, products):
         price_set = list()
