@@ -52,7 +52,8 @@ class ReservationChangeStatusService:
 
         return SimpleResponse("Reserva actualizada correctamente a estado pago rechazado")
 
-    def canceled_reservation_payment(self, reservation: ReservationEntity, reservation_status: int, branch_email: str, db: Session):
+    def canceled_reservation_payment(self, reservation: ReservationEntity, reservation_status: int, branch_email: str,
+                                     db: Session):
 
         data: dict = self._get_reservation_data_to_email(reservation=reservation, db=db)
 
@@ -204,7 +205,7 @@ class ReservationChangeStatusService:
         self._reservation_event_service.create_job(func=self._reservation_event_service.reminder_email,
                                                    difference_as_seconds=difference_as_seconds, kwargs=kwargs)
 
-        self._email_service.send_email(user=Constants.USER, subject=EmailSubject.CONFIRMATION_TO_CLIENT,
+        self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CONFIRMATION_TO_CLIENT,
                                        receiver_email=client_email, data=data)
 
         self._reservation_dao_.add_reservation_status(status=ReservationStatus.CONFIRMED, reservation_id=reservation.id)
@@ -212,7 +213,8 @@ class ReservationChangeStatusService:
         return SimpleResponse("Reserva actualizada correctamente a estado confirmado")
 
     def _get_reservation_data_to_email(self, reservation: ReservationEntity, db: Session) -> dict:
-        products: list = self._reservation_product_dao.get_al_products_by_reservation(reservation_id=reservation.id, db=db)
+        products: list = self._reservation_product_dao.get_al_products_by_reservation(reservation_id=reservation.id,
+                                                                                      db=db)
 
         branch_name: str = self._branch_dao.get_name(branch_id=reservation.branch_id, db=db)
         client_name: str = self._client_dao.get_client_name(client_id=reservation.client_id, db=db)
@@ -224,7 +226,7 @@ class ReservationChangeStatusService:
             'hour': reservation.hour,
             'total_amount': reservation.amount + reservation.tyne_commission,
             'products': products
-            }
+        }
 
         logger.info("data: {}", data)
 
@@ -243,8 +245,8 @@ class ReservationChangeStatusService:
             branch_schedule: BranchScheduleEntity = self._branch_dao.get_day_schedule(branch_id=branch_id,
                                                                                       day=next_day, db=db)
             if branch_schedule:
-                nearest_branch_opening_datetime: datetime = datetime\
-                    .strptime(str(next_datetime.date()) + ' ' + str(branch_schedule.opening_hour), '%Y-%m-%d %H:%M')\
+                nearest_branch_opening_datetime: datetime = datetime \
+                    .strptime(str(next_datetime.date()) + ' ' + str(branch_schedule.opening_hour), '%Y-%m-%d %H:%M') \
                     .astimezone(self._country_time_zone)
                 logger.info("nearest_branch_opening_datetime: {}", nearest_branch_opening_datetime)
                 return nearest_branch_opening_datetime

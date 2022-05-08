@@ -36,7 +36,7 @@ class ReservationEventService:
         except JobLookupError as e:
             logger.error("Job reservation event not found: {}", e)
             raise CustomError(name="No existe reserva en estado activo",
-                              detail="Error",
+                              detail="No hay reserva para actualizar su estado",
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="No hay reserva para actualizar su estado")
 

@@ -45,7 +45,8 @@ class JwtService:
     async def decode_token_firebase(self, token: str):
         logger.info("decode_token_firebase")
         try:
-            auth.verify_id_token(token)
+            return auth.verify_id_token(token)
+
         except Exception as e:
             raise CustomError(name="Token login social inválido",
                               detail="Token login social inválido",
@@ -62,7 +63,7 @@ class JwtService:
             if not decoded_token:
                 raise Exception(Constants.TOKEN_VERIFY_ERROR)
 
-            token = Token(int(decoded_token['id_user']), int(decoded_token['id_branch_client']))
+            token = Token(int(decoded_token['id_user']), int(decoded_token['id_branch_client']), int(decoded_token['rol']))
             return token
         except Exception as error:
             token = request.headers['authorization']
@@ -97,7 +98,7 @@ class JwtService:
                 "rol": rol,
                 "name": name,
                 "last_name": last_name,
-                "iss": "https://www.tyneapp.cl",
+                "iss": "https://www.tyne.cl",
                 "iat": datetime.now(tz=timezone.utc),
                 "exp": datetime.now(tz=timezone.utc) + timedelta(days=1)
             },

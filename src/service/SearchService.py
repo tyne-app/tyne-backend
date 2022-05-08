@@ -27,7 +27,7 @@ class SearchService:
             values=parameters)  # TODO: Formato datetime validar con otra función y no con REGEX
         # TODO: Refactorizar todo el flujo de datos
         logger.info("search_parameters: {}", search_parameters)
-        await self.search_validator.validate_search_parameters(search_parameters=search_parameters)
+        self.search_validator.validate_search_parameters(search_parameters=search_parameters)
 
         if search_parameters['date_reservation']:
             search_parameters['date_reservation'] = search_parameters['date_reservation'].replace("/", "-")

@@ -24,6 +24,7 @@ class ReservationDetailResponse:
     total_price: int
     name: str
     last_name: str
+    preference: str
     reservation_detail: list[ReservationDetail]
 
     def reservation_detail(self, reservationDetail: list):
@@ -54,6 +55,7 @@ class ReservationDetailResponse:
                 reservations_detail_response.reservation_week_day = reservation_detail.reservation_date.strftime("%A")
                 reservations_detail_response.hour = reservation_detail.hour
                 reservations_detail_response.payment_id = reservation_detail.payment_id
+                reservations_detail_response.preference = reservation_detail.preference
 
             reservation_detail_list.append(reservation_detail_obj)
         reservations_detail_response.total_price = total_price
