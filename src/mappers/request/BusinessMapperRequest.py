@@ -50,6 +50,7 @@ class BusinessMapperRequest:
         user_dict['id_user_type'] = id_user_type
         user_entity = UserEntity(**user_dict)
         user_entity.is_active = False
+        user_entity.is_social = False
         return user_entity
 
     def to_branch_image_entity(self, default_main_image: str):

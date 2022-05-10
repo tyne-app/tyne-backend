@@ -74,7 +74,7 @@ class JwtService:
                                                                  detail=Constants.TOKEN_INVALID_ERROR,
                                                                  status_code=status.HTTP_401_UNAUTHORIZED)
 
-    async def verify_email_firebase(self, email: str):
+    async def verify_email_firebase(self, email: str):  # TODO: No se ocupa ahora, eliminar si pruebas login salen bien.
         is_valid = False
         try:
             auth.get_user_by_email(email)
