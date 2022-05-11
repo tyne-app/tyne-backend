@@ -20,15 +20,20 @@ class ProductDao:
         products: list
         product: ProductEntity
 
+        # NO BORRAR, EN CASO DE QUERER BORRAR COMENTARLO CON DAVID
+        db.query(ProductEntity) \
+            .filter(ProductEntity.branch_id == branch_id) \
+            .delete()
+
         for products_list in sections_list_entity:
 
             products_to_insert: list = []
 
             for product in products_list:
-                product_exists = db.query(ProductEntity.id)\
-                    .filter(ProductEntity.name == product.name)\
-                    .filter(ProductEntity.category_id == product.category_id)\
-                    .filter(ProductEntity.branch_id == branch_id)\
+                product_exists = db.query(ProductEntity.id) \
+                    .filter(ProductEntity.name == product.name) \
+                    .filter(ProductEntity.category_id == product.category_id) \
+                    .filter(ProductEntity.branch_id == branch_id) \
                     .first()
 
                 if not product_exists:
