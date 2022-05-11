@@ -93,6 +93,7 @@ class ReservationChangeStatusService:
         payment.type_coin_id = TypeCoinConstant.CLP
         payment.receipt_url = "https://api.mercadopago.com/v1/payments/" + reservation_updated.payment_number + "?access_token=" + self._settings_.MP_ACCESS_TOKEN
         payment.reservation_id = reservation_updated.reservation_id
+        payment.payment_mp_id = reservation_updated.payment_number
 
         payment_response = self._payment_dao_.create_payment(payment=payment, db=db)
 
