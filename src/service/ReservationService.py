@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from starlette import status
 
 from src.configuration.Settings import Settings
+from src.dto.request.ClientCancelReservationRequest import ClientCancelReservationRequest
 from src.dto.request.LocalReservationsRequest import LocalReservationRequest
 from src.dto.request.NewReservationRequest import NewReservationRequest
 from src.dto.request.UpdateReservationRequest import UpdateReservationRequest
@@ -278,9 +279,23 @@ class ReservationService:
 
         return reservation_detail.reservation_detail(reservations)
 
-    async def get_reservations(self, client_id: int, db: Session) -> list:
+    async def get_pending_reservations(self, client_id: int, db: Session) -> list:
         reservations = self._reservation_dao_.get_reservations(client_id, db)
-        return reservations
+
+        first_done = False
+        reservation_id = 0
+        pending_reservation = []
+        for x in reservations:
+            if reservation_id != x.id:
+                first_done = False
+
+            if not first_done:
+                if x.status_id == 4:
+                    pending_reservation.append(x)
+
+            reservation_id = x.id
+            first_done = True
+        return pending_reservation
 
     async def update_reservation(self, reservation_updated: UpdateReservationRequest,
                                  db: Session):
@@ -355,6 +370,19 @@ class ReservationService:
 
             case _:
                 self._raise_reservation_status_error()
+
+    async def client_cancel_reservation(self, cancelation: ClientCancelReservationRequest, id_client: int, db: Session):
+        reservation: ReservationEntity = self._reservation_dao_.get_reservation_by_client(cancelation.reservation_id,
+                                                                                          id_client,
+                                                                                          db)
+        if not reservation:
+            raise CustomError(name="Reserva no existe",
+                              detail="Reserva no existe",
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause="Reserva no existe")
+
+        self._reservation_dao_.add_reservation_status(ReservationStatus.CLIENT_REJECT_RESERVATION, cancelation.reservation_id)
+
 
     def _raise_reservation_status_error(self):
         raise CustomError(name="Error con estado de reserva",
