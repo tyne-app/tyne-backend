@@ -4,6 +4,8 @@ from src.configuration.database import database
 from src.dto.request.ClientCancelReservationRequest import ClientCancelReservationRequest
 from src.dto.request.ClientRequest import ClientRequest
 from src.dto.request.ClientSocialRegistrationRequest import ClientSocialRegistrationRequest
+from src.dto.response.SimpleResponse import SimpleResponse
+from src.exception.exceptions import CustomError
 from src.service.ClientService import ClientService
 from src.service.JwtService import JwtService
 from src.service.ReservationService import ReservationService
@@ -68,5 +70,12 @@ async def cancel_reservation(request: Request,
                              cancelation: ClientCancelReservationRequest,
                              db: Session = Depends(get_data_base)):
     token = await _jwt_service_.verify_and_get_token_data(request=request)
+
+    if token.rol != 2:
+        raise CustomError(name="Operación no permitida",
+                          detail="Operación no permitida",
+                          status_code=status.HTTP_401_UNAUTHORIZED)
+
     db_session.set(db)
-    return await _reservation_service_.client_cancel_reservation(cancelation, token.id_branch_client, db=db)
+    await _reservation_service_.client_cancel_reservation(cancelation, token.id_branch_client, db=db)
+    return SimpleResponse("Reserva cancelada exitosamente")

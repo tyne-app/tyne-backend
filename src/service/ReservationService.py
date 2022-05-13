@@ -290,7 +290,7 @@ class ReservationService:
                 first_done = False
 
             if not first_done:
-                if x.status_id == 4:
+                if x.status_id == ReservationStatus.SUCCESSFUL_PAYMENT or x.status_id == ReservationStatus.CONFIRMED:
                     pending_reservation.append(x)
 
             reservation_id = x.id
@@ -381,8 +381,22 @@ class ReservationService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Reserva no existe")
 
-        self._reservation_dao_.add_reservation_status(ReservationStatus.CLIENT_REJECT_RESERVATION, cancelation.reservation_id)
+        last_reservation_status = self._reservation_dao_.get_last_reservation_status(cancelation.reservation_id, db)
 
+        if last_reservation_status == ReservationStatus.SUCCESSFUL_PAYMENT \
+                or last_reservation_status == ReservationStatus.CONFIRMED:
+            self._reservation_dao_.add_reservation_status(ReservationStatus.CLIENT_REJECT_RESERVATION,
+                                                          cancelation.reservation_id)
+        else:
+            raise CustomError(name="No es posible cancelar la reserva",
+                              detail="No es posible cancelar la reserva",
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause="No es posible cancelar la reserva")
+
+        # TODO: Implementar reembolso de mercado pago y además validar que no se haya hecho
+        # TODO: una cancelación desde mercado pago con el mismo payment id
+
+        return True
 
     def _raise_reservation_status_error(self):
         raise CustomError(name="Error con estado de reserva",
