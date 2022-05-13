@@ -8,3 +8,4 @@ class ReservationStatus:
     REJECTED_BY_LOCAL = 7
     CONFIRMED = 8
     NO_CONFIRMED = 10
+    CLIENT_REJECT_RESERVATION = 11
