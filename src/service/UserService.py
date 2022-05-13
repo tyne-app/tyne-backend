@@ -40,9 +40,9 @@ class UserService:
         logger.info('login_user')
 
         login_request.validate_fields()
-        await self._token_service.verify_email_firebase(login_request.email.lower())
 
-        user: UserEntity = self._get_user(email=login_request.email.lower(), password=login_request.password, db=db)
+        user: UserEntity = self._get_user(email=login_request.email.lower(), is_social=False,
+                                          password=login_request.password, db=db)
 
         return self._create_token_by_user(user=user, ip=ip, db=db)
 
@@ -53,11 +53,11 @@ class UserService:
 
         await self._token_service.decode_token_firebase(login_request.token)
 
-        user: UserEntity = self._get_user(email=login_request.email, db=db)
+        user: UserEntity = self._get_user(email=login_request.email, db=db, is_social=True)
 
         return self._create_token_by_user(user=user, ip=ip, db=db)
 
-    def _get_user(self, email: str, db: Session, password=None) -> UserEntity:
+    def _get_user(self, email: str, db: Session, is_social: bool, password=None) -> UserEntity:
         logger.info("_get_user")
 
         user: UserEntity = self._user_dao_.user_login(email=email, db=db)
@@ -73,6 +73,12 @@ class UserService:
                               detail="El usuario no está activado",
                               status_code=status.HTTP_401_UNAUTHORIZED,
                               cause="El usuario no está activado")
+
+        if user.is_social != is_social:
+            raise CustomError(name=Constants.CLIENT_UNAUTHORIZED,
+                              detail="No existe usuario por este medio de autenticación",
+                              status_code=status.HTTP_401_UNAUTHORIZED,
+                              cause="No existe usuario por este medio")
 
         if password:
             logger.info('Password exist')

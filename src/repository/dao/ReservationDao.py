@@ -202,13 +202,16 @@ class ReservationDao:
                    BranchEntity.street.label("branch_street_address"),
                    BranchEntity.street_number.label("branch_street_number"),
                    BranchImageEntity.url_image,
-                   PaymentEntity.date.label("payment_datetime")) \
+                   PaymentEntity.date.label("payment_datetime"),
+                   ReservationChangeStatusEntity.status_id) \
             .join(BranchEntity, BranchEntity.id == ReservationEntity.branch_id) \
             .join(PaymentEntity, PaymentEntity.reservation_id == ReservationEntity.id) \
             .join(BranchImageEntity, BranchImageEntity.branch_id == BranchEntity.id) \
+            .join(ReservationChangeStatusEntity, ReservationChangeStatusEntity.reservation_id == ReservationEntity.id) \
             .filter(ReservationEntity.client_id == client_id) \
             .filter(BranchImageEntity.is_main_image) \
-            .order_by(ReservationEntity.id.desc()) \
+            .order_by(ReservationEntity.reservation_date.desc()) \
+            .order_by(ReservationChangeStatusEntity.datetime.desc()) \
             .all()
 
     def get_reservation(self, reservation_id: int, payment_id: str, db: Session) -> ReservationEntity:
@@ -239,3 +242,10 @@ class ReservationDao:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Estado de reserva no no existente para la reserva actual")
         return last_reservation_status[0]
+
+    def get_reservation_by_client(self, reservation_id: int, client_id: int, db: Session):
+        return db \
+            .query(ReservationEntity)\
+            .filter(ReservationEntity.id == reservation_id) \
+            .filter(ReservationEntity.client_id == client_id) \
+            .first()

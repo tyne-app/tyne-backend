@@ -12,6 +12,7 @@ class UserEntity(Base):
     created_date = Column(TIMESTAMP)
     password = Column(String(255))
     is_active = Column(Boolean)
+    is_social = Column(Boolean)
     id_user_type = Column(Integer)  # TODO:  Aunque no se ocupa Foreign Key, por ORM se valida igual el valor de este atributo
     email = Column(String(100))
     image_url = Column(String(500))
