@@ -1,4 +1,6 @@
 import uuid
+from zoneinfo import ZoneInfo
+
 import pytz
 import locale
 from datetime import datetime, timedelta
@@ -385,16 +387,33 @@ class ReservationService:
 
         if last_reservation_status == ReservationStatus.SUCCESSFUL_PAYMENT \
                 or last_reservation_status == ReservationStatus.CONFIRMED:
+
+            reservation_datetime = datetime.combine(reservation.reservation_date,
+                                                    datetime.min.strptime(reservation.hour, '%H:%M').time())
+            reservation_datetime = reservation_datetime.replace(tzinfo=ZoneInfo('Chile/Continental'))
+
+            logger.info("reservation datetime: " + str(reservation_datetime))
+            logger.info("datetime now........: " + str(datetime.now(self._country_time_zone)))
+
+            minutes_diff = (reservation_datetime - datetime.now(self._country_time_zone)).total_seconds() / 60
+            logger.info("minutes diff........: " + str(minutes_diff))
+
+            if minutes_diff < 120:
+                raise CustomError(name="Solo se puede cancelar la reserva como máximo 2 horas antes de la hora comprometida.",
+                                  detail="Ya no es posible cancelar la reserva",
+                                  status_code=status.HTTP_400_BAD_REQUEST,
+                                  cause="Ya no es posible cancelar la reserva")
+
             self._reservation_dao_.add_reservation_status(ReservationStatus.CLIENT_REJECT_RESERVATION,
                                                           cancelation.reservation_id)
+
+            # TODO: Implementar reembolso de mercado pago y además validar que no se haya hecho
+            # TODO: una cancelación desde mercado pago con el mismo payment id
         else:
-            raise CustomError(name="No es posible cancelar la reserva",
+            raise CustomError(name="No es posible cancelar la reserva.",
                               detail="No es posible cancelar la reserva",
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="No es posible cancelar la reserva")
-
-        # TODO: Implementar reembolso de mercado pago y además validar que no se haya hecho
-        # TODO: una cancelación desde mercado pago con el mismo payment id
 
         return True
 
