@@ -388,7 +388,11 @@ class ReservationService:
 
             reservation_datetime = datetime.combine(reservation.reservation_date,
                                                     datetime.min.strptime(reservation.hour, '%H:%M').time())
+            logger.info("reservation datetime: " + str(reservation_datetime))
+            logger.info("datetime now: " + str(datetime.now()))
+
             minutes_diff = (reservation_datetime - datetime.now()).total_seconds() / 60
+            logger.info("minutes diff: " + str(minutes_diff))
 
             if minutes_diff < 120:
                 raise CustomError(name="Solo se puede cancelar la reserva como máximo 2 horas antes de la hora comprometida.",
