@@ -16,3 +16,4 @@ class EmailSubject:
     REMINDER_TO_LOCAL = "Recuerda que hoy tienes una reserva en tu local"
     CONFIRMATION_TO_LOCAL = "Confirma tu reserva en Tyne"
     FORGOTTEN_PASSWORD = "Restablecer contraseña"
+    REFUND_CANCELLATION_TO_BRANCH = "Un cliente ha cancelado una reserva"

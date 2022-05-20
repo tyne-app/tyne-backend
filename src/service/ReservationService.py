@@ -46,7 +46,7 @@ class ReservationService:
     _product_dao_ = ProductDao()
     _reservation_dao_ = ReservationDao()
     _payment_dao_ = PaymentDao()
-    _use_dao = UserDao()
+    _user_dao_ = UserDao()
     _reservation_product_dao = ReservationProductDao()
     _email_service = EmailService()
     _branch_dao = BranchDao()
@@ -320,10 +320,10 @@ class ReservationService:
         logger.info("last_reservation_status: {}", last_reservation_status)
         logger.info("reservation_updated: {}", reservation_updated)
 
-        client_email: str = self._use_dao.get_email_by_cient(client_id=reservation.client_id, db=db)
+        client_email: str = self._user_dao_.get_email_by_cient(client_id=reservation.client_id, db=db)
         logger.info("client_email: {}", client_email)
 
-        branch_email: str = self._use_dao.get_email_by_branch(branch_id=reservation.branch_id, db=db)
+        branch_email: str = self._user_dao_.get_email_by_branch(branch_id=reservation.branch_id, db=db)
         logger.info("branch_email: {}", branch_email)
 
         match reservation_updated.status:
@@ -405,11 +405,28 @@ class ReservationService:
                     status_code=status.HTTP_400_BAD_REQUEST,
                     cause="Ya no es posible cancelar la reserva")
 
+            payment = self._payment_dao_.get_payment(reservation_id=cancelation.reservation_id, db=db)
+            self._mercado_pago_service.refund_payment(payment.payment_mp_id)
+
             self._reservation_dao_.add_reservation_status(ReservationStatus.CLIENT_REJECT_RESERVATION,
                                                           cancelation.reservation_id)
 
-            # TODO: Implementar reembolso de mercado pago y además validar que no se haya hecho
-            # TODO: una cancelación desde mercado pago con el mismo payment id
+            job_id: str = str(cancelation.reservation_id)
+            logger.info("job_id: {}", job_id)
+            self._reservation_event_service.delete_job(job_id=job_id)
+
+            # send email to client
+            data: dict = self._reservation_change_status_service.get_reservation_data_to_email(reservation, db=db)
+            client_email = self._user_dao_.get_email_by_cient(client_id=reservation.client_id, db=db)
+            self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.REFUND_CANCELLATION,
+                                           receiver_email=client_email, data=data)
+
+            # send email to branch manager
+            branch_email = self._user_dao_.get_email_by_branch(branch_id=reservation.branch_id, db=db)
+            data_email_to_branch: dict = self._reservation_change_status_service.get_reservation_data_to_email(
+                reservation=reservation, db=db)
+            self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.REFUND_CANCELLATION_TO_BRANCH,
+                                           receiver_email=branch_email, data=data_email_to_branch)
         else:
             raise CustomError(name="No es posible cancelar la reserva.",
                               detail="No es posible cancelar la reserva",

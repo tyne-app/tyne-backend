@@ -104,5 +104,5 @@ class MercadoPagoService:
         else:
             raise CustomError(name="Error al generar reembolso",
                               detail="Error al generar reembolso",
-                              status_code=status.HTTP_400_BAD_REQUEST,
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                               cause="Error al generar reembolso")

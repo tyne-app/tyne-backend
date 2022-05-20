@@ -69,6 +69,8 @@ class EmailService:
                     return 'confirmation.html'
                 case EmailSubject.REMINDER_TO_CLIENT:
                     return 'reminder.html'
+                case EmailSubject.REFUND_CANCELLATION:
+                    return 'refund_cancellation.html'
 
         if user is Constants.BRANCH:
             match subject:
@@ -82,6 +84,8 @@ class EmailService:
                     return 'cancellation_by_client.html'
                 case EmailSubject.CONFIRMATION_TO_LOCAL:
                     return 'confirmation.html'
+                case EmailSubject.REFUND_CANCELLATION_TO_BRANCH:
+                    return 'refund_by_client.html'
 
         if user is Constants.USER:
             return 'forgotten_password.html'
