@@ -364,9 +364,6 @@ class ReservationService:
                     self._raise_reservation_status_error()
 
             case ReservationStatus.CONFIRMED:
-                print("AAA",reservation_updated.status)
-                print("AAA", last_reservation_status)
-                print("AAA", ReservationStatus.SUCCESSFUL_PAYMENT)
                 if last_reservation_status != ReservationStatus.SUCCESSFUL_PAYMENT:
                     self._raise_reservation_status_error()
 
