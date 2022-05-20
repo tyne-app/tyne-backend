@@ -71,3 +71,38 @@ class MercadoPagoService:
             raise CustomError(name="Pago no encontrado",
                               detail="El pago no fue encontrado",
                               status_code=status.HTTP_400_BAD_REQUEST)
+
+    def refund_payment(self, id_pay_mp: str):
+        api = mercadopago.SDK(self._settings_.MP_ACCESS_TOKEN)
+        refund_response = api.refund().create(id_pay_mp)
+        logger.info("result refund_response Mercado Pago: {}", refund_response)
+        if refund_response.get("status") == 201:
+            match refund_response["response"].get("status"):
+                case "approved":
+                    return refund_response["response"]
+                case "in_process":
+                    raise CustomError(name="Reembolso en proceso",
+                                      detail="El reembolso está siendo revisado",
+                                      status_code=status.HTTP_400_BAD_REQUEST,
+                                      cause="El reembolso está siendo revisado")
+                case "rejected":
+                    raise CustomError(name="Reembolso rechazado",
+                                      detail="El reembolso fue rechazado",
+                                      status_code=status.HTTP_400_BAD_REQUEST,
+                                      cause="El reembolso fue rechazado")
+                case "cancelled":
+                    raise CustomError(
+                        name="Reembolso cancelado o tiempo expirado.",
+                        detail="El reembolso fue cancelado por una de las partes o porque el tiempo ha expirado.",
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        cause="El reembolso fue cancelado por una de las partes o porque el tiempo ha expirado.")
+                case "authorized":
+                    raise CustomError(name="Reembolso autorizado pero no reembolsado.",
+                                      detail="El reembolso ha sido autorizado pero aún no fue capturado.",
+                                      status_code=status.HTTP_400_BAD_REQUEST,
+                                      cause="El reembolso ha sido autorizado pero aún no fue capturado.")
+        else:
+            raise CustomError(name="Error al generar reembolso",
+                              detail="Error al generar reembolso",
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause="Error al generar reembolso")

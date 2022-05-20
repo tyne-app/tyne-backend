@@ -245,7 +245,7 @@ class ReservationDao:
 
     def get_reservation_by_client(self, reservation_id: int, client_id: int, db: Session):
         return db \
-            .query(ReservationEntity)\
+            .query(ReservationEntity) \
             .filter(ReservationEntity.id == reservation_id) \
             .filter(ReservationEntity.client_id == client_id) \
             .first()

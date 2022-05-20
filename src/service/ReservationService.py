@@ -318,6 +318,7 @@ class ReservationService:
         last_reservation_status: int = self._reservation_dao_.get_last_reservation_status(reservation_id=reservation.id,
                                                                                           db=db)
         logger.info("last_reservation_status: {}", last_reservation_status)
+        logger.info("reservation_updated: {}", reservation_updated)
 
         client_email: str = self._use_dao.get_email_by_cient(client_id=reservation.client_id, db=db)
         logger.info("client_email: {}", client_email)
@@ -358,7 +359,7 @@ class ReservationService:
                 # TODO: Obtener razón del por qué se rechaza
                 if last_reservation_status == ReservationStatus.CONFIRMED or last_reservation_status == ReservationStatus.SUCCESSFUL_PAYMENT:
                     return self._reservation_change_status_service \
-                        .rejected_reservation_by_local(reservation=reservation, client_email=client_email)
+                        .rejected_reservation_by_local(reservation=reservation, client_email=client_email, db=db)
                 else:
                     self._raise_reservation_status_error()
 
@@ -369,7 +370,6 @@ class ReservationService:
                 return self._reservation_change_status_service \
                     .confirmed_reservation(reservation=reservation, client_email=client_email,
                                            branch_email=branch_email, db=db)
-
             case _:
                 self._raise_reservation_status_error()
 
@@ -399,10 +399,11 @@ class ReservationService:
             logger.info("minutes diff........: " + str(minutes_diff))
 
             if minutes_diff < 120:
-                raise CustomError(name="Solo se puede cancelar la reserva como máximo 2 horas antes de la hora comprometida.",
-                                  detail="Ya no es posible cancelar la reserva",
-                                  status_code=status.HTTP_400_BAD_REQUEST,
-                                  cause="Ya no es posible cancelar la reserva")
+                raise CustomError(
+                    name="Solo se puede cancelar la reserva como máximo 2 horas antes de la hora comprometida.",
+                    detail="Ya no es posible cancelar la reserva",
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    cause="Ya no es posible cancelar la reserva")
 
             self._reservation_dao_.add_reservation_status(ReservationStatus.CLIENT_REJECT_RESERVATION,
                                                           cancelation.reservation_id)
