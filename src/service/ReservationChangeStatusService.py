@@ -142,7 +142,7 @@ class ReservationChangeStatusService:
                                                    difference_as_seconds=difference_as_seconds, kwargs=kwargs)
         return response
 
-    def rejected_reservation_by_local(self, reservation: ReservationEntity, client_email: str):
+    def rejected_reservation_by_local(self, reservation: ReservationEntity, client_email: str, db: Session):
         # TODO: Las cancelaciones de rembolso sin rembolso, etc, se maneja por backend según el datetime de la cancelacion
         # TODO: Falta obtener la razón del por qué se rechaza.
         request_datetime: datetime = datetime.now(self._country_time_zone)
@@ -153,6 +153,10 @@ class ReservationChangeStatusService:
 
         job_id: str = str(reservation.id)
         logger.info("job_id: {}", job_id)
+
+        payment = self._payment_dao_.get_payment(reservation_id=reservation.id, db=db)
+
+        self._mercado_pago_service.refund_payment(payment.payment_mp_id)
 
         self._reservation_event_service.delete_job(job_id=job_id)
 
@@ -172,7 +176,6 @@ class ReservationChangeStatusService:
 
         self._validate_request_date(request_date=request_datetime.date(),
                                     reservation_date=reservation.reservation_date)
-
         job_id: str = str(reservation.id)
         self._reservation_event_service.delete_job(job_id=job_id)
 
