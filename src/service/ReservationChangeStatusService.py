@@ -55,7 +55,7 @@ class ReservationChangeStatusService:
     def canceled_reservation_payment(self, reservation: ReservationEntity, reservation_status: int, branch_email: str,
                                      db: Session):
 
-        data: dict = self._get_reservation_data_to_email(reservation=reservation, db=db)
+        data: dict = self.get_reservation_data_to_email(reservation=reservation, db=db)
 
         self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.CANCELLATION_BY_CLIENT,
                                        receiver_email=branch_email, data=data)
@@ -107,7 +107,7 @@ class ReservationChangeStatusService:
         response.receipt_url = payment_response.receipt_url
         logger.info("response: {}", response.__dict__)
 
-        data: dict = self._get_reservation_data_to_email(reservation=reservation, db=db)
+        data: dict = self.get_reservation_data_to_email(reservation=reservation, db=db)
         data['reservation_id'] = reservation.id
 
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.SUCCESSFUL_PAYMENT,
@@ -179,7 +179,7 @@ class ReservationChangeStatusService:
         job_id: str = str(reservation.id)
         self._reservation_event_service.delete_job(job_id=job_id)
 
-        data: dict = self._get_reservation_data_to_email(reservation=reservation, db=db)
+        data: dict = self.get_reservation_data_to_email(reservation=reservation, db=db)
         logger.info("Data to email: {}", data)
 
         if request_datetime.date() == reservation.reservation_date:
@@ -216,7 +216,7 @@ class ReservationChangeStatusService:
 
         return SimpleResponse("Reserva actualizada correctamente a estado confirmado")
 
-    def _get_reservation_data_to_email(self, reservation: ReservationEntity, db: Session) -> dict:
+    def get_reservation_data_to_email(self, reservation: ReservationEntity, db: Session) -> dict:
         products: list = self._reservation_product_dao.get_al_products_by_reservation(reservation_id=reservation.id,
                                                                                       db=db)
 
@@ -229,7 +229,8 @@ class ReservationChangeStatusService:
             'date': reservation.reservation_date,
             'hour': reservation.hour,
             'total_amount': reservation.amount + reservation.tyne_commission,
-            'products': products
+            'products': products,
+            'reservation_id': reservation.id
         }
 
         logger.info("data: {}", data)
