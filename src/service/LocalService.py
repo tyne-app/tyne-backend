@@ -1,11 +1,15 @@
 from loguru import logger
 from sqlalchemy.orm import Session
+
+from src.dto.request.NewBranchScheduleDto import NewBranchScheduleDto
 from src.dto.request.business_request_dto import NewAccount
 from src.dto.request.business_request_dto import NewBranch
 from src.mappers.request.BusinessMapperRequest import BusinessMapperRequest
+from src.repository.dao.BranchDao import BranchDao
 from src.repository.dao.LocalDao import LocalDAO
 from src.repository.dao.StateDao import StateDao
 from src.repository.dao.BusinessDao import BusinessDao
+from src.repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from src.service.MapboxService import MapBoxService
 from src.service.JwtService import JwtService
 from src.service.EmailService import EmailService
@@ -44,6 +48,7 @@ class LocalService:
     _state_dao_ = StateDao()
     _token_service = JwtService()
     _password_service = PasswordService()
+    _branch_dao_ = BranchDao()
 
     async def create_new_account(self, new_account: NewAccount, db: Session):
         local_validator = LocalValidator()
@@ -164,3 +169,18 @@ class LocalService:
                                        receiver_email=manager.email, data=activation_token)
 
         return SimpleResponse("Nueva sucursal creada con éxito")
+
+    async def update_branch_schedule(self, schedule: NewBranchScheduleDto, db: Session):
+        branch_schedules: list[BranchScheduleEntity] = list()
+
+        for x in schedule.schedule:
+            entity = BranchScheduleEntity()
+            entity.branch_id = schedule.branch_id
+            entity.active = x.active
+            entity.day = x.day
+            entity.opening_hour = x.opening_hour
+            entity.closing_hour = x.closing_hour
+            branch_schedules.append(entity)
+
+        self._branch_dao_.update_schedule(branch_schedules, branch_id=schedule.branch_id, db=db)
+        return True

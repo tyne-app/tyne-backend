@@ -1,8 +1,10 @@
 from loguru import logger
 from sqlalchemy import func, distinct, or_
 from sqlalchemy.orm import Session
+from starlette import status
 
 from src.dto.request.business_request_dto import SearchParameter
+from src.exception.exceptions import CustomError
 from src.repository.entity.BranchEntity import BranchEntity
 from src.repository.entity.BranchImageEntity import BranchImageEntity
 from src.repository.entity.BranchScheduleEntity import BranchScheduleEntity
@@ -227,3 +229,20 @@ class BranchDao:
             .filter(BranchEntity.id == branch_id).first()
         logger.info('name: {}', name)
         return name[0]
+
+    def update_schedule(self, schedule: list[BranchScheduleEntity], branch_id: int, db: Session):
+        try:
+            db.query(BranchScheduleEntity) \
+                .filter(BranchScheduleEntity.branch_id == branch_id) \
+                .delete()
+
+            db.bulk_save_objects(schedule)
+            db.flush()
+            db.commit()
+        except Exception as error:
+            logger.error('Error al guardar horario de la sucursal: {}', error)
+            db.rollback()
+            raise CustomError(name="Error al guardar el horario de la sucursal",
+                              detail="Error",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause="Error al guardar el horario de la sucursal")

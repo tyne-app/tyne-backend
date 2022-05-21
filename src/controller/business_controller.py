@@ -6,9 +6,11 @@ from sqlalchemy.orm import Session
 
 from src.configuration.database.database import get_data_base
 from src.configuration.openapi.search_openapi import SearchAllBranchOpenAPI
+from src.dto.request.NewBranchScheduleDto import NewBranchScheduleDto
 from src.dto.request.business_request_dto import NewAccount
 from src.dto.request.business_request_dto import NewBranch
 from src.dto.request.business_request_dto import SearchParameter
+from src.dto.response.SimpleResponse import SimpleResponse
 from src.exception.ThrowerExceptions import ThrowerExceptions
 from src.service.JwtService import JwtService
 from src.service.LocalService import LocalService
@@ -126,3 +128,14 @@ async def read_branch_profile(request: Request,
         return response
 
     return profile
+
+
+@business_controller.put('/schedule', status_code=status.HTTP_201_CREATED)
+async def update_branch_schedule(request: Request,
+                                 response: Response,
+                                 schedule: NewBranchScheduleDto,
+                                 db: Session = Depends(get_data_base)):
+    await _jwt_service.verify_and_get_token_data(request)
+    await _local_service.update_branch_schedule(schedule, db=db)
+    response.status_code = status.HTTP_201_CREATED
+    return SimpleResponse("Horario actualizado correctamente")
