@@ -14,19 +14,6 @@ _menu_service_ = MenuService()
 _jwt_service = JwtService()
 
 
-# TODO: Falta endpoint para actualizar productos de un menu
-
-@menu_controller.post('/test/{branch_id}', status_code=status.HTTP_200_OK)
-async def test_create_reservation(branch_id: int, response: Response, db: Session = Depends(database.get_data_base)):
-    print(branch_id)
-    '''
-        Flujo:
-        - Configuración apscheduler con postgresql
-        - Creación de job persistiendo en postgresql
-        - Definición de job debe contener la función (15 minutos de espera máx) el trigger (tiempo de espera para la función, fecha y hora de reserva)
-    '''
-    return "OK"
-
 @menu_controller.get('/categories', status_code=status.HTTP_200_OK)
 async def all_category(response: Response, db: Session = Depends(database.get_data_base)):
     categories = await _menu_service_.all_category(db)
