@@ -7,7 +7,7 @@ from loguru import logger
 
 from src.configuration.Settings import Settings
 from src.dto.internal.Token import Token
-from src.dto.internal.TokenProfileActivation import TokenProfileActivation
+from src.dto.internal.TokenProfile import TokenProfile
 from src.dto.response.UserTokenResponse import UserTokenResponse
 from src.exception.ThrowerExceptions import ThrowerExceptions
 from src.exception.exceptions import CustomError
@@ -63,7 +63,8 @@ class JwtService:
             if not decoded_token:
                 raise Exception(Constants.TOKEN_VERIFY_ERROR)
 
-            token = Token(int(decoded_token['id_user']), int(decoded_token['id_branch_client']), int(decoded_token['rol']))
+            token = Token(int(decoded_token['id_user']), int(decoded_token['id_branch_client']),
+                          int(decoded_token['rol']))
             return token
         except Exception as error:
             token = request.headers['authorization']
@@ -89,15 +90,14 @@ class JwtService:
                                   detail=Constants.USER_EXIST_FIREBASE,
                                   status_code=status.HTTP_401_UNAUTHORIZED)
 
-    def get_token_profile_activation(self, email: str, rol: int, name: str, last_name: str):
-        logger.info("get_token_profile_activation")
+    def get_token_profile(self, user_id: int, email: str, rol: int):
+        logger.info("get_token_profile")
 
         return jwt.encode(
             {
+                "user_id": user_id,
                 "email": email,
                 "rol": rol,
-                "name": name,
-                "last_name": last_name,
                 "iss": "https://www.tyne.cl",
                 "iat": datetime.now(tz=timezone.utc),
                 "exp": datetime.now(tz=timezone.utc) + timedelta(days=1)
@@ -105,8 +105,8 @@ class JwtService:
             str(Settings.JWT_KEY),
             algorithm="HS256")
 
-    def decode_token_profile_activation(self, token: str):
-        logger.info("decode_token_profile_activation")
+    def decode_token_profile(self, token: str):
+        logger.info("decode_token_profile")
 
         decoded_token = jwt.decode(token, str(Settings.JWT_KEY), algorithms=self.ALGORITHM)
 
@@ -116,7 +116,6 @@ class JwtService:
                               status_code=status.HTTP_401_UNAUTHORIZED,
                               cause="decoded_token is None")
 
-        return TokenProfileActivation(decoded_token['email'],
-                                      int(decoded_token['rol']),
-                                      decoded_token['name'],
-                                      decoded_token['last_name'])
+        return TokenProfile(user_id=int(decoded_token['user_id']),
+                            email=decoded_token['email'],
+                            rol=int(decoded_token['rol']))

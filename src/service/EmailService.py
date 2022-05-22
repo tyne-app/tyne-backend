@@ -88,4 +88,8 @@ class EmailService:
                     return 'refund_by_client.html'
 
         if user is Constants.USER:
-            return 'forgotten_password.html'
+            match subject:
+                case EmailSubject.FORGOTTEN_PASSWORD:
+                    return 'forgotten_password.html'
+                case EmailSubject.RETRY_ACTIVATION:
+                    return 'retry_activation.html'

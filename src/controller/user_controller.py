@@ -5,6 +5,7 @@ from src.configuration.database import database
 from src.dto.request.LoginSocialRequest import LoginSocialRequest
 from src.dto.request.LoginUserRequest import LoginUserRequest
 from src.dto.request.UserChangePasswordRequest import UserChangePasswordRequest
+from src.dto.request.UserEmail import UserEmail
 from src.dto.response.SimpleResponse import SimpleResponse
 from src.service.JwtService import JwtService
 from src.service.UserService import UserService
@@ -18,12 +19,17 @@ _service_ = UserService()
 _jwt_service_ = JwtService()
 
 
-@user_controller.get(
-    '/activation/{token}',
+@user_controller.post('/activation/retry', status_code=status.HTTP_200_OK)
+async def retry_activation(user_email: UserEmail, db: Session = Depends(database.get_data_base)):
+    return _service_.retry_activation(email=user_email.email, db=db)
+
+
+@user_controller.post(
+    '/activation',
     status_code=status.HTTP_200_OK
 )
-async def activate_user(token: str, db: Session = Depends(database.get_data_base)):
-    return _service_.activate_user(token=token, db=db)
+async def activate_user(request: Request, db: Session = Depends(database.get_data_base)):
+    return _service_.activate_user(token=request.headers['authorization'], db=db)
 
 
 @user_controller.post(
@@ -88,7 +94,11 @@ async def update_password(request: Request, response: Response, change_password:
     return SimpleResponse("Contraseña actualizada correctamente")
 
 
-@user_controller.post('/forgotten-password/{email}', status_code=status.HTTP_200_OK)
-async def forgotten_password(email: str, db: Session = Depends(database.get_data_base)):
-    await _service_.send_email_forgotten_password(email=email, db=db)
-    return SimpleResponse("Se ha enviado un correo para restablecer la contraseña")
+@user_controller.post('/password/send-email', status_code=status.HTTP_200_OK)
+def password_email(user_email: UserEmail, db: Session = Depends(database.get_data_base)):
+    return _service_.send_password_email(email=user_email.email, db=db)
+
+
+@user_controller.put('/password/restore', status_code=status.HTTP_202_ACCEPTED)
+def restore_password(request: Request, password: UserChangePasswordRequest, db: Session = Depends(database.get_data_base)):
+    return _service_.restore_password(token=request.headers['authorization'], password=password.password, db=db)

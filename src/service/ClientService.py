@@ -53,10 +53,9 @@ class ClientService:
         logger.info("Credenciales cliente creadas")
         logger.info("Cliente creado. Se enviará email de confirmación")
 
-        activation_token: str = self._token_service.get_token_profile_activation(email=user_entity.email,
-                                                                                 rol=user_entity.id_user_type,
-                                                                                 name=client_entity.name,
-                                                                                 last_name=client_entity.last_name)
+        activation_token: str = self._token_service.get_token_profile(user_id=user_entity.id,
+                                                                      email=user_entity.email,
+                                                                      rol=user_entity.id_user_type)
 
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CLIENT_WELCOME,
                                        receiver_email=client_request.email, data=activation_token)
@@ -78,10 +77,9 @@ class ClientService:
 
         logger.info("Se crea cliente")
 
-        activation_token: str = self._token_service.get_token_profile_activation(email=user_entity.email,
-                                                                                 rol=user_entity.id_user_type,
-                                                                                 name=client_entity.name,
-                                                                                 last_name=client_entity.last_name)
+        activation_token: str = self._token_service.get_token_profile(user_id=user_entity.id,
+                                                                      email=user_entity.email,
+                                                                      rol=user_entity.id_user_type)
 
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CLIENT_WELCOME,
                                        receiver_email=client_request.email, data=activation_token)
