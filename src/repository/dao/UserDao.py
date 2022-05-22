@@ -8,7 +8,7 @@ from src.repository.entity.UserEntity import UserEntity
 from src.repository.entity.ManagerEntity import ManagerEntity
 from src.repository.entity.BranchEntity import BranchEntity
 from src.repository.entity.ClientEntity import ClientEntity
-from src.dto.internal.TokenProfileActivation import TokenProfileActivation
+from src.dto.internal.TokenProfile import TokenProfile
 
 
 class UserDao:
@@ -20,7 +20,7 @@ class UserDao:
 
     def user_login(self, email: str, db: Session) -> UserEntity:
         return db.query(UserEntity) \
-            .filter(UserEntity.email == email) \
+            .filter(UserEntity.email == email.lower()) \
             .first()
 
     def verify_email(self, email: str, db: Session):  # TODO: Es necesario esto?
@@ -71,18 +71,17 @@ class UserDao:
     def change_password(self, user_id: int, password: str, db: Session):
         user = db.query(UserEntity) \
             .filter(UserEntity.id == user_id) \
+            .filter(UserEntity.is_active) \
             .first()
 
-        if user:
-            user.password = password
-            db.commit()
-            return user
-
-        return None
-
-    def send_email_forgotten_password(self, email: str, db: Session) -> bool:
-        email = email.lower()
-        return db.query(exists().where(UserEntity.email == email.lower())).scalar()
+        if not user:
+            raise CustomError(name="El usuario no existe o ya esta activo",
+                              detail="El usuario no existe o ya esta activo",
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause="El usuario no existe o ya esta activo")
+        user.password = password
+        db.commit()
+        return user
 
     def get_email_by_branch(self, branch_id: int, db: Session) -> str:
         branch_email: Row = db.query(UserEntity.email) \
@@ -98,29 +97,12 @@ class UserDao:
             .filter(ClientEntity.id == client_id).first()
         return client_email[0]
 
-    def activate_client_user(self, token_profile_activation: TokenProfileActivation, db: Session):
-        user: UserEntity = db.query(UserEntity).join(ClientEntity, ClientEntity.id_user == UserEntity.id) \
+    def activate_user(self, token_profile_activation: TokenProfile, db: Session):
+        user: UserEntity = db.query(UserEntity) \
             .filter(UserEntity.id_user_type == token_profile_activation.rol) \
             .filter(UserEntity.email == token_profile_activation.email) \
-            .filter(UserEntity.is_active == False) \
-            .filter(ClientEntity.name == token_profile_activation.name) \
-            .filter(ClientEntity.last_name == token_profile_activation.last_name).first()
-
-        if not user:
-            raise CustomError(name="El usuario no existe o ya esta activo",
-                              detail="El usuario no existe o ya esta activo",
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="El usuario no existe o ya esta activo")
-        user.is_active = True
-        db.commit()
-
-    def activate_manager_user(self, token_profile_activation: TokenProfileActivation, db: Session):
-        user: UserEntity = db.query(UserEntity).join(ManagerEntity, ManagerEntity.id_user == UserEntity.id) \
             .filter(UserEntity.id_user_type == token_profile_activation.rol) \
-            .filter(UserEntity.email == token_profile_activation.email) \
-            .filter(UserEntity.is_active == False) \
-            .filter(ManagerEntity.name == token_profile_activation.name) \
-            .filter(ManagerEntity.last_name == token_profile_activation.last_name).first()
+            .filter(UserEntity.is_active == False).first()
 
         if not user:
             raise CustomError(name="El usuario no existe o ya esta activo",

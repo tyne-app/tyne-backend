@@ -21,7 +21,7 @@ class ReservationEventService:
         logger.info("func: {}, difference_as_seconds: {}, kwargs: {}", func, difference_as_seconds, kwargs)
         kwargs = kwargs.get('kwargs')
         self._scheduler.add_job(func=func, id=kwargs.get('job_id'), misfire_grace_time=5, coalesce=True,
-                                replace_existing=True, trigger='interval', seconds=difference_as_seconds, kwargs=kwargs)
+                                replace_existing=True, trigger='date', seconds=difference_as_seconds, kwargs=kwargs)
         logger.info("Job reservation event created")
 
     def delete_job(self, job_id: str):

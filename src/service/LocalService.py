@@ -78,8 +78,8 @@ class LocalService:
         restaurant = new_account.restaurant
         state = self._state_dao_.get_state_by_id(id_state=restaurant.state_id, db=db)
         await self.geocoding(street=restaurant.street, street_number=restaurant.street_number,
-                                                    state_name=state.name,
-                                                    type_geocoding=self.TYPE_VALIDATION_GEOCODING_RESTAURANT)
+                             state_name=state.name,
+                             type_geocoding=self.TYPE_VALIDATION_GEOCODING_RESTAURANT)
 
         await business_dao.verify_restaurant(restaurant, db)
         restaurant_entity = self._business_mapper_request.to_restaurant_entity(restaurant=restaurant, name=branch.name)
@@ -102,10 +102,9 @@ class LocalService:
                                    branch_image_entity=branch_image_entity,
                                    db=db)
 
-        activation_token: str = self._token_service.get_token_profile_activation(email=user_entity.email,
-                                                                      rol=user_entity.id_user_type,
-                                                                      name=manager_entity.name,
-                                                                      last_name=manager_entity.last_name)
+        activation_token: str = self._token_service.get_token_profile(user_id=user_entity.id,
+                                                                      email=user_entity.email,
+                                                                      rol=user_entity.id_user_type)
 
         self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.LOCAL_WELCOME,
                                        receiver_email=manager.email, data=activation_token)
@@ -160,10 +159,9 @@ class LocalService:
 
         logger.info('new_branch_status: {}', new_branch_status)
 
-        activation_token: str = self._token_service.get_token_profile_activation(email=user_entity.email,
-                                                                                 rol=user_entity.id_user_type,
-                                                                                 name=manager_entity.name,
-                                                                                 last_name=manager_entity.last_name)
+        activation_token: str = self._token_service.get_token_profile(user_id=user_entity.id,
+                                                                      email=user_entity.email,
+                                                                      rol=user_entity.id_user_type)
 
         self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.LOCAL_WELCOME,
                                        receiver_email=manager.email, data=activation_token)
