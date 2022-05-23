@@ -7,13 +7,16 @@ from src.dto.request.LoginSocialRequest import LoginSocialRequest
 from src.dto.request.LoginUserRequest import LoginUserRequest
 from src.dto.response.UpdateProfileImageResponse import UpdateProfileImageDto
 from src.dto.response.UserTokenResponse import UserTokenResponse
+from src.dto.internal.TokenProfile import TokenProfile
 from src.util.UserType import UserType
 from src.repository.dao.ClientDao import ClientDao
 from src.repository.dao.LocalDao import LocalDAO
 from src.repository.dao.UserDao import UserDao
+from src.repository.dao.ManagerDao import ManagerDao
 from src.repository.entity.BranchEntity import BranchEntity
 from src.repository.entity.ClientEntity import ClientEntity
 from src.repository.entity.UserEntity import UserEntity
+from src.repository.entity.ManagerEntity import ManagerEntity
 from src.service.CloudinaryService import CloudinaryService
 from src.service.JwtService import JwtService
 from src.util.Constants import Constants
@@ -23,7 +26,6 @@ from src.util.EmailSubject import EmailSubject
 from src.service.PasswordService import PasswordService
 from src.dto.response.SimpleResponse import SimpleResponse
 from src.exception.exceptions import CustomError
-from src.dto.internal.TokenFirebase import TokenFirebase
 
 
 class UserService:
@@ -35,6 +37,7 @@ class UserService:
     _throwerExceptions = ThrowerExceptions()
     _email_service = EmailService()
     _password_service_ = PasswordService()
+    _manager_dao = ManagerDao()
 
     async def login_user(self, login_request: LoginUserRequest, ip: str, db: Session):
         logger.info('login_user')
@@ -166,29 +169,65 @@ class UserService:
         self._user_dao_.change_password(user_id=user_id, password=password, db=db)
         return True
 
-    async def send_email_forgotten_password(self, email: str, db: Session):
+    def send_password_email(self, email: str, db: Session) -> SimpleResponse:
         logger.info('email: {}', email)
-        is_user: bool = self._user_dao_.send_email_forgotten_password(email=email, db=db)
 
-        if not is_user:
-            await self._throwerExceptions.throw_custom_exception(name=Constants.USER_NOT_FOUND,
-                                                                 detail=Constants.USER_NOT_FOUND_DETAIL,
-                                                                 status_code=status.HTTP_400_BAD_REQUEST)
+        token: str = self._user_token_by_email(email=email, is_active=True, db=db)
 
         self._email_service.send_email(user=Constants.USER,
                                        subject=EmailSubject.FORGOTTEN_PASSWORD,
-                                       receiver_email=email)
+                                       receiver_email=email,
+                                       data=token)
+        return SimpleResponse("Se ha enviado un correo para restablecer la contraseña")
 
-    def activate_user(self, token: str, db: Session):
+    def restore_password(self, token: str, password: str, db: Session) -> SimpleResponse:
+        logger.info("restore_password")
+
+        token_profile: TokenProfile = self._token_service.decode_token_profile(token=token)
+
+        self._user_dao_.change_password(user_id=token_profile.user_id, password=password, db=db)
+
+        return SimpleResponse("Contraseña restaurada correctamente")
+
+    def activate_user(self, token: str,
+                      db: Session):
         logger.info("token: {}", token)
-        token_profile_activation = self._token_service.decode_token_profile_activation(token=token)
+        token_profile: TokenProfile = self._token_service.decode_token_profile(token=token)
 
-        if token_profile_activation.rol == UserType.CLIENT:
-            logger.info("Is client")
-            self._user_dao_.activate_client_user(token_profile_activation=token_profile_activation, db=db)
-
-        if token_profile_activation.rol == UserType.MANAGER:
-            logger.info("Is manager")
-            self._user_dao_.activate_manager_user(token_profile_activation=token_profile_activation, db=db)
+        self._user_dao_.activate_user(token_profile_activation=token_profile, db=db)
 
         return SimpleResponse("Cuenta activada correctamente")
+
+    def retry_activation(self, email: str, db: Session) -> SimpleResponse:
+        logger.info("email: {}", email)
+
+        token: str = self._user_token_by_email(email=email, is_active=False, db=db)
+
+        self._email_service.send_email(user=Constants.USER, subject=EmailSubject.RETRY_ACTIVATION,
+                                       receiver_email=email, data=token)
+
+        return SimpleResponse("Se ha enviado un correo para activar cuenta")
+
+    def _user_token_by_email(self, email: str, is_active: bool, db: Session) -> str:
+        logger.info("email: {}", email)
+
+        user_entity: UserEntity = self._user_dao_.user_login(email=email, db=db)
+
+        if user_entity is None:
+            raise CustomError(name=Constants.USER_NO_AUTH,
+                              detail="No existe usuario con este email",
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause="No existe usuario con este email")
+
+        if user_entity.is_active != is_active:
+            message: str = "activada" if is_active else "desactivada"
+
+            raise CustomError(name=Constants.USER_NO_AUTH,
+                              detail='Usuario debe tener cuenta %s' % message,
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause="")
+
+        token: str = self._token_service.get_token_profile(user_id=user_entity.id,
+                                                           email=user_entity.email,
+                                                           rol=user_entity.id_user_type)
+        return token

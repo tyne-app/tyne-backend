@@ -1,11 +1,15 @@
 from loguru import logger
 from sqlalchemy.orm import Session
+
+from src.dto.request.NewBranchScheduleDto import NewBranchScheduleDto
 from src.dto.request.business_request_dto import NewAccount
 from src.dto.request.business_request_dto import NewBranch
 from src.mappers.request.BusinessMapperRequest import BusinessMapperRequest
+from src.repository.dao.BranchDao import BranchDao
 from src.repository.dao.LocalDao import LocalDAO
 from src.repository.dao.StateDao import StateDao
 from src.repository.dao.BusinessDao import BusinessDao
+from src.repository.entity.BranchScheduleEntity import BranchScheduleEntity
 from src.service.MapboxService import MapBoxService
 from src.service.JwtService import JwtService
 from src.service.EmailService import EmailService
@@ -44,6 +48,7 @@ class LocalService:
     _state_dao_ = StateDao()
     _token_service = JwtService()
     _password_service = PasswordService()
+    _branch_dao_ = BranchDao()
 
     async def create_new_account(self, new_account: NewAccount, db: Session):
         local_validator = LocalValidator()
@@ -73,8 +78,8 @@ class LocalService:
         restaurant = new_account.restaurant
         state = self._state_dao_.get_state_by_id(id_state=restaurant.state_id, db=db)
         await self.geocoding(street=restaurant.street, street_number=restaurant.street_number,
-                                                    state_name=state.name,
-                                                    type_geocoding=self.TYPE_VALIDATION_GEOCODING_RESTAURANT)
+                             state_name=state.name,
+                             type_geocoding=self.TYPE_VALIDATION_GEOCODING_RESTAURANT)
 
         await business_dao.verify_restaurant(restaurant, db)
         restaurant_entity = self._business_mapper_request.to_restaurant_entity(restaurant=restaurant, name=branch.name)
@@ -97,10 +102,9 @@ class LocalService:
                                    branch_image_entity=branch_image_entity,
                                    db=db)
 
-        activation_token: str = self._token_service.get_token_profile_activation(email=user_entity.email,
-                                                                      rol=user_entity.id_user_type,
-                                                                      name=manager_entity.name,
-                                                                      last_name=manager_entity.last_name)
+        activation_token: str = self._token_service.get_token_profile(user_id=user_entity.id,
+                                                                      email=user_entity.email,
+                                                                      rol=user_entity.id_user_type)
 
         self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.LOCAL_WELCOME,
                                        receiver_email=manager.email, data=activation_token)
@@ -155,12 +159,26 @@ class LocalService:
 
         logger.info('new_branch_status: {}', new_branch_status)
 
-        activation_token: str = self._token_service.get_token_profile_activation(email=user_entity.email,
-                                                                                 rol=user_entity.id_user_type,
-                                                                                 name=manager_entity.name,
-                                                                                 last_name=manager_entity.last_name)
+        activation_token: str = self._token_service.get_token_profile(user_id=user_entity.id,
+                                                                      email=user_entity.email,
+                                                                      rol=user_entity.id_user_type)
 
         self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.LOCAL_WELCOME,
                                        receiver_email=manager.email, data=activation_token)
 
         return SimpleResponse("Nueva sucursal creada con éxito")
+
+    async def update_branch_schedule(self, schedule: NewBranchScheduleDto, db: Session):
+        branch_schedules: list[BranchScheduleEntity] = list()
+
+        for x in schedule.schedule:
+            entity = BranchScheduleEntity()
+            entity.branch_id = schedule.branch_id
+            entity.active = x.active
+            entity.day = x.day
+            entity.opening_hour = x.opening_hour
+            entity.closing_hour = x.closing_hour
+            branch_schedules.append(entity)
+
+        self._branch_dao_.update_schedule(branch_schedules, branch_id=schedule.branch_id, db=db)
+        return True
