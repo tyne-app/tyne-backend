@@ -68,7 +68,7 @@ class UserService:
         if not user:
             raise CustomError(name="Credenciales incorrectas",
                               detail="Credenciales incorrectas",
-                              status_code=status.HTTP_400_BAD_REQUEST,
+                              status_code=status.HTTP_401_UNAUTHORIZED,
                               cause="Credenciales incorrectas")
 
         if not user.is_active:
@@ -76,12 +76,6 @@ class UserService:
                               detail="El usuario no está activado",
                               status_code=status.HTTP_401_UNAUTHORIZED,
                               cause="El usuario no está activado")
-
-        if user.is_social != is_social:
-            raise CustomError(name=Constants.CLIENT_UNAUTHORIZED,
-                              detail="No existe usuario por este medio de autenticación",
-                              status_code=status.HTTP_401_UNAUTHORIZED,
-                              cause="No existe usuario por este medio")
 
         if password:
             logger.info('Password exist')
