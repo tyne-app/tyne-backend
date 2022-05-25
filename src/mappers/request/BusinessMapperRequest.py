@@ -30,7 +30,7 @@ class BusinessMapperRequest:
         legal_representative_entity = LegalRepresentativeEntity(**legal_representative.dict())
         return legal_representative_entity
 
-    def to_restaurant_entity(self, restaurant: Restaurant, name: str):
+    def to_restaurant_entity(self, restaurant: Restaurant):
         return RestaurantEntity(**restaurant.dict())
 
     def to_branch_entity(self, branch: Branch, branch_geocoding: dict):

@@ -196,9 +196,11 @@ class ReservationDao:
 
         return db \
             .query(ReservationEntity.id,
-                   BranchEntity.name.label("branch_name"), ReservationEntity.people,
+                   RestaurantEntity.name.label("branch_name"),
+                   ReservationEntity.people,
                    ReservationEntity.reservation_date,
-                   ReservationEntity.hour, PaymentEntity.amount,
+                   ReservationEntity.hour,
+                   PaymentEntity.amount,
                    BranchEntity.street.label("branch_street_address"),
                    BranchEntity.street_number.label("branch_street_number"),
                    BranchImageEntity.url_image,
@@ -208,6 +210,7 @@ class ReservationDao:
             .join(PaymentEntity, PaymentEntity.reservation_id == ReservationEntity.id) \
             .join(BranchImageEntity, BranchImageEntity.branch_id == BranchEntity.id) \
             .join(ReservationChangeStatusEntity, ReservationChangeStatusEntity.reservation_id == ReservationEntity.id) \
+            .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
             .filter(ReservationEntity.client_id == client_id) \
             .filter(BranchImageEntity.is_main_image) \
             .order_by(ReservationEntity.reservation_date.desc()) \

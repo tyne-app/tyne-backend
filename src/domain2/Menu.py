@@ -15,7 +15,7 @@ class Menu:
     def __init__(self):
         self.sections = list()
 
-    def to_menu_read_domain(self, products: list[ProductEntity], branch: BranchEntity):
+    def to_menu_read_domain(self, products: list[ProductEntity], branch):
         menu_domain = Menu()
 
         menu_domain.set_branch_id(branch)
@@ -33,6 +33,9 @@ class Menu:
 
     def set_sections_and_rango_precio(self, products):
         price_set = list()
+        max_amount = 0
+        min_amount = 0
+        avg_amount = 0
 
         for product in products:
             product_domain = Product(product.product_dict())
@@ -41,9 +44,12 @@ class Menu:
 
             #  TODO: Desacoplar
             price_set.append(product.amount)
-        max_amount = max(price_set, key=float)
-        min_amount = min(price_set, key=float)
-        avg_amount = sum(price_set) / len(price_set)
+
+        if len(price_set) > 0:
+            max_amount = max(price_set, key=float)
+            min_amount = min(price_set, key=float)
+            avg_amount = sum(price_set) / len(price_set)
+
         self.rango_precio = {
             "max": max_amount,
             "min": min_amount,

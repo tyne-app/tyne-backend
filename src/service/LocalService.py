@@ -82,7 +82,7 @@ class LocalService:
                              type_geocoding=self.TYPE_VALIDATION_GEOCODING_RESTAURANT)
 
         await business_dao.verify_restaurant(restaurant, db)
-        restaurant_entity = self._business_mapper_request.to_restaurant_entity(restaurant=restaurant, name=branch.name)
+        restaurant_entity = self._business_mapper_request.to_restaurant_entity(restaurant=restaurant)
 
         branch_entity = self._business_mapper_request.to_branch_entity(branch=branch, branch_geocoding=branch_geocoding)
 
