@@ -124,7 +124,7 @@ class LocalService:
     async def add_new_branch(self, branch_id, new_branch: NewBranch, db: Session):
         local_validator = LocalValidator()
         business_dao = BusinessDao()
-        await local_validator.validate_new_branch(new_branch=new_branch)
+        local_validator.validate_new_branch(new_branch=new_branch)
 
         branch = new_branch.branch
 
@@ -135,8 +135,11 @@ class LocalService:
                                                 type_geocoding=self.TYPE_VALIDATION_GEOCODING_BRANCH)
         manager = new_branch.manager
 
-        user = {'email': manager.email, 'password': manager.password}
+        manager.password = self._password_service.encrypt_password(manager.password)
         await business_dao.verify_manager(manager, db)
+
+        user = {'email': manager.email, 'password': manager.password}
+
         user_entity = self._business_mapper_request.to_user_entity(user_dict=user, id_user_type=self.ID_USER_TYPE)
 
         manager_entity = await self._business_mapper_request.to_manager_entity(manager=manager)
