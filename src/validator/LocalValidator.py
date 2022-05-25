@@ -15,7 +15,7 @@ class LocalValidator:
     NUMBER_AND_WORD_REGEX = re.compile(r"[A-Za-z0-9\sáéíóúÁÉÍÓÚñ]+")
     NUMBER_REGEX = re.compile(r"[0-9]+")
     PHONE_REGEX = re.compile(r"\+569[0-9]{8}")
-    ADDRESS_REGEX = re.compile(r"[A-Za-z\s\.0-9#áéíóúÁÉÍÓÚ]+")
+    ADDRESS_REGEX = re.compile(r"[a-zA-ZÀ-ÿ\u00f1\u00d1]+(\s*[a-zA-ZÀ-ÿ\u00f1\u00d1]*)*[a-zA-ZÀ-ÿ\u00f1\u00d1]+")
     EMAIL_REGEX = re.compile(r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.?[A-Za-z]+")
     PASSWORD_REGEX = re.compile(r"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[A-Za-z\d$@$!%*?&].{7,}")
     VALID_STATE_ID = range(83, 134)
@@ -26,7 +26,6 @@ class LocalValidator:
     INVALID_DATA_EMAIL_MESSAGE = "Formato de correo {0} no válido"
     INVALID_DATA_PASSWORD_MESSAGE = "Formato de contraseña {0} no válido"
     INVALID_DATA_IDENTIFIER_MESSAGE = "Formato de identificacón {0} no válido"
-    INVALID_DATA_SOCIAL_REASON_MESSAGE = "Formato de la razón social no válido"
     INVALID_DATA_COMMERCIAL_ACTIVITY_MESSAGE = "Formato del giro de local no válido"
     INVALID_DATA_STREET_MESSAGE = "Formato de calle {0} no válido"
     INVALID_DATA_NUMBER_STREET_MESSAGE = "Formato de número de calle {0} no válido"
@@ -114,13 +113,14 @@ class LocalValidator:
     def validate_restaurant(self, restaurant: Restaurant):
         logger.info('restaurant: {}', restaurant)
         invalid_data = []
-        if not re.fullmatch(self.NUMBER_AND_WORD_REGEX, restaurant.social_reason):
-            invalid_data.append(self.INVALID_DATA_SOCIAL_REASON_MESSAGE)
+        if not re.fullmatch(self.NUMBER_AND_WORD_REGEX, restaurant.name):
+            invalid_data.append('Nombre de local inválido')
         if not re.fullmatch(self.NUMBER_AND_WORD_REGEX, restaurant.commercial_activity):
             invalid_data.append(self.INVALID_DATA_COMMERCIAL_ACTIVITY_MESSAGE)
         if not re.fullmatch(self.NUMBER_REGEX, restaurant.identifier):
             invalid_data.append(self.INVALID_DATA_IDENTIFIER_MESSAGE.replace("{0}", self.RESTAURANT))
-        if not re.fullmatch(self.ADDRESS_REGEX, restaurant.street):
+        if not re.fullmatch(self.ADDRESS_REGEX, restaurant.street.strip()):
+            print(restaurant.street)
             invalid_data.append(self.INVALID_DATA_STREET_MESSAGE.replace("{0}", self.RESTAURANT))
         if type(restaurant.street_number) != int:
             invalid_data.append(self.INVALID_DATA_NUMBER_STREET_MESSAGE)
@@ -128,8 +128,10 @@ class LocalValidator:
             invalid_data.append(self.INVALID_DATA_PHONE_MESSAGE.replace("{0}", self.RESTAURANT))
         if type(restaurant.state_id) != int:
             invalid_data.append(self.INVALID_DATA_STATE_ID_MESSAGE)
-        if (restaurant.state_id) not in self.VALID_STATE_ID:
+        if restaurant.state_id not in self.VALID_STATE_ID:
             invalid_data.append(self.INVALID_STATE_ID_CITY)
+        if not re.fullmatch(self.NUMBER_AND_WORD_REGEX, restaurant.name):
+            invalid_data.append(self.INVALID_DATA_NAME_MESSAGE.replace("{0}", self.BRANCH))
 
         if invalid_data:
             raise CustomError(name=Constants.INVALID_DATA_ERROR,
@@ -142,9 +144,8 @@ class LocalValidator:
         logger.info('branch: {}', branch)
 
         invalid_data = []
-        if not re.fullmatch(self.NUMBER_AND_WORD_REGEX, branch.name):
-            invalid_data.append(self.INVALID_DATA_NAME_MESSAGE.replace("{0}", self.BRANCH))
-        if not re.fullmatch(self.ADDRESS_REGEX, branch.street):
+        if not re.fullmatch(self.ADDRESS_REGEX, branch.street.strip()):
+            print(branch.street)
             invalid_data.append(self.INVALID_DATA_STREET_MESSAGE.replace("{0}", self.BRANCH))
         if type(branch.street_number) != int:
             invalid_data.append(self.INVALID_DATA_NUMBER_STREET_MESSAGE.replace("{0}", self.BRANCH))

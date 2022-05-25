@@ -21,9 +21,10 @@ from src.util.ReservationStatus import ReservationStatus
 
 class BranchDao:
 
-    def get_branch_by_id(self, db: Session, branch_id: int) -> BranchEntity:
+    def get_branch_by_id(self, db: Session, branch_id: int):
         return db \
-            .query(BranchEntity) \
+            .query(BranchEntity.id, RestaurantEntity.name) \
+            .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
             .filter(BranchEntity.id == branch_id) \
             .first()
 
@@ -42,7 +43,7 @@ class BranchDao:
             StateEntity.id.label(name='state_id'),
             BranchEntity.street.label(name="street"),
             BranchEntity.street_number.label(name="street_number"),
-            BranchEntity.name.label(name='branch_name'),
+            RestaurantEntity.name.label(name='branch_name'),
             RestaurantEntity.description.label('restaurant_description'),
             func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id).label(name='rating'),
             func.avg(ProductEntity.amount).over(partition_by=BranchEntity.id).label(name='avg_price'),
@@ -66,7 +67,7 @@ class BranchDao:
 
         if search_parameters['name']:
             name = search_parameters['name'].lower()
-            all_branches = all_branches.filter(func.lower(BranchEntity.name).like("%" + name + "%"))
+            all_branches = all_branches.filter(func.lower(RestaurantEntity.name).like("%" + name + "%"))
 
         if search_parameters['date_reservation']:
             date_reservation = search_parameters['date_reservation']
@@ -97,7 +98,7 @@ class BranchDao:
                     all_branches = all_branches.order_by(
                         (func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id)).asc())
                 elif search_parameters['sort_by'] == 2:
-                    all_branches = all_branches.order_by(BranchEntity.name.asc())
+                    all_branches = all_branches.order_by(RestaurantEntity.name.asc())
                 elif search_parameters['sort_by'] == 3:
                     all_branches = all_branches.order_by(
                         (func.max(ProductEntity.amount).over(partition_by=BranchEntity.id)).asc())
@@ -107,7 +108,7 @@ class BranchDao:
                     all_branches = all_branches.order_by(
                         (func.avg(OpinionEntity.qualification).over(partition_by=BranchEntity.id)).desc())
                 elif search_parameters['sort_by'] == 2:
-                    all_branches = all_branches.order_by(BranchEntity.name.desc())
+                    all_branches = all_branches.order_by(RestaurantEntity.name.desc())
                 elif search_parameters['sort_by'] == 3:
                     all_branches = all_branches.order_by(
                         (func.min(ProductEntity.amount).over(partition_by=BranchEntity.id)).desc())
@@ -144,7 +145,7 @@ class BranchDao:
             BranchEntity.street_number,
             BranchEntity.accept_pet,
             RestaurantEntity.id.label(name='restaurant_id'),
-            BranchEntity.name,
+            RestaurantEntity.name,
             RestaurantEntity.description,
             StateEntity.name.label(name='state_name')) \
             .select_from(BranchEntity) \
@@ -188,7 +189,7 @@ class BranchDao:
         branches = db.query(
             distinct(BranchEntity.id),
             BranchEntity.id.label(name='branch_id'),
-            BranchEntity.name.label(name='branch_name'),
+            RestaurantEntity.name.label(name='branch_name'),
             StateEntity.name.label(name='state_name'),
             BranchEntity.street,
             BranchEntity.street_number) \
@@ -225,8 +226,10 @@ class BranchDao:
             .filter(BranchScheduleEntity.day == day).first()
 
     def get_name(self, branch_id: int, db: Session) -> str:
-        name = db.query(BranchEntity.name).select_from(BranchEntity)\
-            .filter(BranchEntity.id == branch_id).first()
+        name = db.query(RestaurantEntity.name) \
+            .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
+            .filter(BranchEntity.id == branch_id) \
+            .first()
         logger.info('name: {}', name)
         return name[0]
 

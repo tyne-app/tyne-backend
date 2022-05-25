@@ -35,13 +35,8 @@ class MenuService:
 
     async def read_menu(self, branch_id, db):
         products: list[ProductEntity] = self._product_dao_.get_products_by_branch(db, branch_id)
-        branch: BranchEntity = self._branch_dao_.get_branch_by_id(db, branch_id)
-
-        if not products:
-            return None
-
+        branch = self._branch_dao_.get_branch_by_id(db, branch_id)
         menu_read_response = menu_mapper_response.to_menu_read_response(products, branch)
-
         return menu_read_response
 
     async def all_category(self, db: Session):
