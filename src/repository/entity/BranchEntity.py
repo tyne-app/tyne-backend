@@ -11,7 +11,6 @@ class BranchEntity(Base):
     __table_args__ = {'schema': 'tyne'}
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100))
     accept_pet = Column(Boolean)
     street = Column(String(100))
     latitude = Column(DECIMAL)
