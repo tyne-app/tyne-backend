@@ -38,7 +38,7 @@ async def read_menu(branch_id: int,
                     response: Response,
                     db: Session = Depends(database.get_data_base)):  # TODO: Refactorizar flujo. Response se mantiene
 
-    menus = await _menu_service_.read_menu(branch_id, "business", db)
+    menus = await _menu_service_.read_menu(branch_id, db)
 
     if menus is None:
         response.status_code = status.HTTP_204_NO_CONTENT

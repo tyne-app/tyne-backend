@@ -17,15 +17,11 @@ class Menu:
     def __init__(self):
         self.sections = list()
 
-    def to_menu_read_domain(self, products: list[ProductEntity], branch, categories, type):
+    def to_menu_read_domain(self, products: list[ProductEntity], branch, categories):
         menu_domain = Menu()
-        print(type)
         menu_domain.set_branch_id(branch)
         menu_domain.set_name(branch)
-        if type == "client":
-            menu_domain.set_sections_and_rango_precio_client(products, categories)
-        else:
-            menu_domain.set_sections_and_rango_precio_business(products, categories)
+        menu_domain.set_sections_and_rango_precio(products, categories)
         menu_domain.set_rating("")
 
         return menu_domain
@@ -36,7 +32,7 @@ class Menu:
     def set_name(self, branch: BranchEntity):
         self.nombre_local = branch.name
 
-    def set_sections_and_rango_precio_business(self, products, categories):
+    def set_sections_and_rango_precio(self, products, categories):
         price_set = list()
         max_amount = 0
         min_amount = 0
@@ -59,34 +55,6 @@ class Menu:
             "min": min_amount,
             "avg": avg_amount,
         }
-        return self
-
-    def set_sections_and_rango_precio_client(self, products, categories):
-        price_set = list()
-        max_amount = 0
-        min_amount = 0
-        avg_amount = 0
-        for product in products:
-            product_domain = Product(product.product_dict())
-            category_domain = Category(product.get_category_dict())
-            price_set.append(product.amount)
-
-            self.add_seccion(product_domain, category_domain)
-
-            #  TODO: Desacoplar
-            price_set.append(product.amount)
-
-        if len(price_set) > 0:
-            max_amount = max(price_set, key=float)
-            min_amount = min(price_set, key=float)
-            avg_amount = sum(price_set) / len(price_set)
-
-        self.rango_precio = {
-            "max": max_amount,
-            "min": min_amount,
-            "avg": avg_amount,
-        }
-
         return self
 
     def set_rating(self, opinions):
