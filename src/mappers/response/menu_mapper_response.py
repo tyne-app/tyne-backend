@@ -1,5 +1,4 @@
 from src.domain2.Menu import Menu
-from src.repository.entity.BranchEntity import BranchEntity
 from src.repository.entity.ProductEntity import ProductEntity
 
 
