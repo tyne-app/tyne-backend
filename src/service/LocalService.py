@@ -78,11 +78,11 @@ class LocalService:
         restaurant = new_account.restaurant
         state = self._state_dao_.get_state_by_id(id_state=restaurant.state_id, db=db)
         await self.geocoding(street=restaurant.street, street_number=restaurant.street_number,
-                                                    state_name=state.name,
-                                                    type_geocoding=self.TYPE_VALIDATION_GEOCODING_RESTAURANT)
+                             state_name=state.name,
+                             type_geocoding=self.TYPE_VALIDATION_GEOCODING_RESTAURANT)
 
         await business_dao.verify_restaurant(restaurant, db)
-        restaurant_entity = self._business_mapper_request.to_restaurant_entity(restaurant=restaurant, name=branch.name)
+        restaurant_entity = self._business_mapper_request.to_restaurant_entity(restaurant=restaurant)
 
         branch_entity = self._business_mapper_request.to_branch_entity(branch=branch, branch_geocoding=branch_geocoding)
 
@@ -102,10 +102,9 @@ class LocalService:
                                    branch_image_entity=branch_image_entity,
                                    db=db)
 
-        activation_token: str = self._token_service.get_token_profile_activation(email=user_entity.email,
-                                                                      rol=user_entity.id_user_type,
-                                                                      name=manager_entity.name,
-                                                                      last_name=manager_entity.last_name)
+        activation_token: str = self._token_service.get_token_profile(user_id=user_entity.id,
+                                                                      email=user_entity.email,
+                                                                      rol=user_entity.id_user_type)
 
         self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.LOCAL_WELCOME,
                                        receiver_email=manager.email, data=activation_token)
@@ -125,7 +124,7 @@ class LocalService:
     async def add_new_branch(self, branch_id, new_branch: NewBranch, db: Session):
         local_validator = LocalValidator()
         business_dao = BusinessDao()
-        await local_validator.validate_new_branch(new_branch=new_branch)
+        local_validator.validate_new_branch(new_branch=new_branch)
 
         branch = new_branch.branch
 
@@ -136,8 +135,11 @@ class LocalService:
                                                 type_geocoding=self.TYPE_VALIDATION_GEOCODING_BRANCH)
         manager = new_branch.manager
 
-        user = {'email': manager.email, 'password': manager.password}
+        manager.password = self._password_service.encrypt_password(manager.password)
         await business_dao.verify_manager(manager, db)
+
+        user = {'email': manager.email, 'password': manager.password}
+
         user_entity = self._business_mapper_request.to_user_entity(user_dict=user, id_user_type=self.ID_USER_TYPE)
 
         manager_entity = await self._business_mapper_request.to_manager_entity(manager=manager)
@@ -160,10 +162,9 @@ class LocalService:
 
         logger.info('new_branch_status: {}', new_branch_status)
 
-        activation_token: str = self._token_service.get_token_profile_activation(email=user_entity.email,
-                                                                                 rol=user_entity.id_user_type,
-                                                                                 name=manager_entity.name,
-                                                                                 last_name=manager_entity.last_name)
+        activation_token: str = self._token_service.get_token_profile(user_id=user_entity.id,
+                                                                      email=user_entity.email,
+                                                                      rol=user_entity.id_user_type)
 
         self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.LOCAL_WELCOME,
                                        receiver_email=manager.email, data=activation_token)

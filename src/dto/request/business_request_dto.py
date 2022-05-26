@@ -25,7 +25,7 @@ class LegalRepresentative(BaseModel):
 
 class Restaurant(BaseModel):
     identifier: str
-    social_reason: str
+    name: str
     commercial_activity: str
     phone: str
     street: str
@@ -35,7 +35,6 @@ class Restaurant(BaseModel):
 
 
 class Branch(BaseModel):
-    name: Optional[str]
     street: str
     street_number: int
     state_id: int

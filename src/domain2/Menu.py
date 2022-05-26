@@ -17,7 +17,7 @@ class Menu:
     def __init__(self):
         self.sections = list()
 
-    def to_menu_read_domain(self, products: list[ProductEntity], branch: BranchEntity, categories, type):
+    def to_menu_read_domain(self, products: list[ProductEntity], branch, categories, type):
         menu_domain = Menu()
         print(type)
         menu_domain.set_branch_id(branch)
@@ -38,18 +38,22 @@ class Menu:
 
     def set_sections_and_rango_precio_business(self, products, categories):
         price_set = list()
+        max_amount = 0
+        min_amount = 0
+        avg_amount = 0
         for category in categories:
             product_domain = None
             for product in products:
                 if product.category.id == category.id:
                     product_domain = Product(product.product_dict())
                     price_set.append(product.amount)
-
             self.add_seccion(product_domain, category)
 
-        max_amount = max(price_set, key=float)
-        min_amount = min(price_set, key=float)
-        avg_amount = sum(price_set) / len(price_set)
+        if len(price_set) > 0:
+            max_amount = max(price_set, key=float)
+            min_amount = min(price_set, key=float)
+            avg_amount = sum(price_set) / len(price_set)
+            
         self.rango_precio = {
             "max": max_amount,
             "min": min_amount,
@@ -59,6 +63,9 @@ class Menu:
 
     def set_sections_and_rango_precio_client(self, products, categories):
         price_set = list()
+        max_amount = 0
+        min_amount = 0
+        avg_amount = 0
         for product in products:
             product_domain = Product(product.product_dict())
             category_domain = Category(product.get_category_dict())
@@ -66,9 +73,14 @@ class Menu:
 
             self.add_seccion(product_domain, category_domain)
 
-        max_amount = max(price_set, key=float)
-        min_amount = min(price_set, key=float)
-        avg_amount = sum(price_set) / len(price_set)
+            #  TODO: Desacoplar
+            price_set.append(product.amount)
+
+        if len(price_set) > 0:
+            max_amount = max(price_set, key=float)
+            min_amount = min(price_set, key=float)
+            avg_amount = sum(price_set) / len(price_set)
+
         self.rango_precio = {
             "max": max_amount,
             "min": min_amount,
