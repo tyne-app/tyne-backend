@@ -116,7 +116,6 @@ async def read_branch_profile(request: Request,
                               branch_id: int,
                               db: Session = Depends(get_data_base)):
     client_id = None
-
     if 'authorization' in request.headers:
         token_payload = await _jwt_service.verify_and_get_token_data(request)
         client_id = token_payload.id_branch_client
