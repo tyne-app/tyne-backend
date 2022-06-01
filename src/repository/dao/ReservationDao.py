@@ -70,7 +70,6 @@ class ReservationDao:
             database_session.commit()
 
     def local_reservations(self, db: Session, branch_id: int, reservation_date: date, status_reservation: int):
-
         if status_reservation == 0:
             filter_status_reservation = [4, 7, 8, 9]
         else:
@@ -111,7 +110,6 @@ class ReservationDao:
             .join(CityEntity, CityEntity.id == StateEntity.city_id) \
             .join(CountryEntity, CountryEntity.id == CityEntity.country_id) \
             .all()
-
         return reservations
 
     def local_reservations_date(self, db: Session, branch_id: int, status_reservation: int, reservation_date: date,
@@ -139,14 +137,16 @@ class ReservationDao:
             .join(sub_query, sub_query.c.id == ReservationChangeStatusEntity.id) \
             .label("total_items")
 
-        reservations_date_response = db \
-            .query(ReservationEntity.reservation_date, total_items) \
+        reservations_date_response = db.query(ReservationEntity.reservation_date, total_items) \
             .order_by(ReservationEntity.reservation_date.asc()) \
             .filter(ReservationEntity.branch_id == branch_id,
+                    ReservationChangeStatusEntity.status_id.in_(filter_status_reservation),
                     extract("month", ReservationEntity.reservation_date) == reservation_date.month,
                     extract("year", ReservationEntity.reservation_date) == reservation_date.year) \
+            .join(ClientEntity, ClientEntity.id == ReservationEntity.client_id) \
             .join(ReservationChangeStatusEntity, ReservationChangeStatusEntity.reservation_id == ReservationEntity.id) \
-            .join(sub_query, sub_query.c.id == ReservationChangeStatusEntity.id)
+            .join(sub_query, sub_query.c.id == ReservationChangeStatusEntity.id) \
+            .join(ReservationStatusEntity, ReservationStatusEntity.id == ReservationChangeStatusEntity.status_id)
 
         reservations_date_response = reservations_date_response.group_by(ReservationEntity.reservation_date)
 
