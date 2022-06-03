@@ -1,4 +1,3 @@
-from starlette import status
 from loguru import logger
 from src.util.Constants import Constants
 from src.util.EmailSubject import EmailSubject
@@ -6,7 +5,6 @@ from src.util.ReservationStatus import ReservationStatus
 from src.repository.dao.ReservationDao import ReservationDao
 from src.service.EmailService import EmailService
 from src.configuration.database.database import scheduler
-from src.exception.exceptions import CustomError
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.base import JobLookupError
 
@@ -45,7 +43,7 @@ class ReservationEventService:
 
         self._scheduler.add_job(func=self.cancel_reservation, kwargs=kwargs,
                                 id=kwargs.get('job_id'), misfire_grace_time=5, coalesce=True,
-                                replace_existing=True, trigger='interval', seconds=900)
+                                replace_existing=True, trigger='date', seconds=900)
 
         logger.info("Reservation event has updated to 15 minutes. At the end, reservation will be cancelled")
 
