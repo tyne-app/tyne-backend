@@ -1,3 +1,4 @@
+from fastapi import UploadFile
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -10,6 +11,7 @@ from src.repository.dao.LocalDao import LocalDAO
 from src.repository.dao.StateDao import StateDao
 from src.repository.dao.BusinessDao import BusinessDao
 from src.repository.entity.BranchScheduleEntity import BranchScheduleEntity
+from src.service.AwsService import AwsService
 from src.service.MapboxService import MapBoxService
 from src.service.JwtService import JwtService
 from src.service.EmailService import EmailService
@@ -49,6 +51,7 @@ class LocalService:
     _token_service = JwtService()
     _password_service = PasswordService()
     _branch_dao_ = BranchDao()
+    _aws_service_ = AwsService()
 
     async def create_new_account(self, new_account: NewAccount, db: Session):
         local_validator = LocalValidator()
@@ -185,3 +188,20 @@ class LocalService:
 
         self._branch_dao_.update_schedule(branch_schedules, branch_id=schedule.branch_id, db=db)
         return True
+
+    async def get_images(self, branch_id, db: Session):
+        return self._branch_dao_.get_images(branch_id, db)
+
+    async def upload_image(self, branch_id: int, image: UploadFile, db: Session):
+        content = await image.read()
+        url = await self._aws_service_.upload_to_s3(content, 'images', image.content_type)
+        images = self._branch_dao_.get_images(branch_id, db)
+        is_main = False
+
+        if len(images) == 0:
+            is_main = True
+
+        return self._branch_dao_.add_image(branch_id, url, is_main, db)
+
+    async def delete_image(self, branch_id: int, url_image: str, db: Session):
+        self._branch_dao_.delete_image(branch_id, url_image, db)
