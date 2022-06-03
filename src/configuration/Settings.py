@@ -45,3 +45,7 @@ class Settings:
     MP_SUCCESS_URL = os.getenv("MP_SUCCESS_URL")
     MP_REJECTED_URL = os.getenv("MP_REJECTED_URL")
     MP_CANCEL_URL = os.getenv("MP_CANCEL_URL")
+
+    # AWS
+    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
