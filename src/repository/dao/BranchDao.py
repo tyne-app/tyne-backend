@@ -228,7 +228,7 @@ class BranchDao:
     def get_name(self, branch_id: int, db: Session) -> str:
         name = db.query(RestaurantEntity.name) \
             .select_from(RestaurantEntity) \
-            .join(RestaurantEntity, RestaurantEntity.id == BranchEntity.restaurant_id) \
+            .join(BranchEntity, BranchEntity.restaurant_id == RestaurantEntity.id) \
             .filter(BranchEntity.id == branch_id) \
             .first()
         logger.info('name: {}', name)
