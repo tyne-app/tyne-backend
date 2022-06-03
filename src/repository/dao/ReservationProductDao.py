@@ -5,7 +5,7 @@ from src.repository.entity.ReservationProductEntity import ReservationProductEnt
 
 class ReservationProductDao:
 
-    def get_al_products_by_reservation(self, reservation_id: int, db: Session) -> list:
+    def get_all_products_by_reservation(self, reservation_id: int, db: Session) -> list:
         products = db.query(ReservationProductEntity.name_product, ReservationProductEntity.quantity)\
             .filter(ReservationProductEntity.reservation_id == reservation_id).all()
 

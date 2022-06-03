@@ -11,7 +11,6 @@ from src.exception.exceptions import CustomError
 from src.dto.request.UpdateReservationRequest import UpdateReservationRequest
 from src.repository.dao.PaymentDao import PaymentDao
 from src.repository.entity.PaymentEntity import PaymentEntity
-from src.repository.entity.ReservationChangeStatusEntity import ReservationChangeStatusEntity
 
 from src.dto.response.SimpleResponse import SimpleResponse
 from src.util.TypeCoinConstant import TypeCoinConstant
@@ -217,7 +216,7 @@ class ReservationChangeStatusService:
         return SimpleResponse("Reserva actualizada correctamente a estado confirmado")
 
     def get_reservation_data_to_email(self, reservation: ReservationEntity, db: Session) -> dict:
-        products: list = self._reservation_product_dao.get_al_products_by_reservation(reservation_id=reservation.id,
+        products: list = self._reservation_product_dao.get_all_products_by_reservation(reservation_id=reservation.id,
                                                                                       db=db)
 
         branch_name: str = self._branch_dao.get_name(branch_id=reservation.branch_id, db=db)

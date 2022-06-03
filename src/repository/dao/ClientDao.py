@@ -59,6 +59,6 @@ class ClientDao:
         return True
 
     def get_client_name(self, client_id: int, db: Session) -> str:
-        name = db.query(ClientEntity.name).filter(ClientEntity.id == client_id).first()
+        name = db.query(ClientEntity.name).select_from(ClientEntity).filter(ClientEntity.id == client_id).first()
         logger.info("Client name: {}", name)
         return name[0]
