@@ -43,7 +43,6 @@ class ReservationChangeStatusService:
     _client_dao = ClientDao()
     _settings_ = Settings()
     _NEXT_DAY: int = 1
-    _MINIMUM_VALUE: int = 1
 
     def rejected_reservation_payment(self, reservation_id: int, reservation_status: int):
         self._reservation_dao_.add_reservation_status(status=reservation_status,
@@ -123,22 +122,20 @@ class ReservationChangeStatusService:
 
         if request_datetime.date() == reservation.reservation_date:
             logger.info("Reservation is today")
+
+            today: datetime = datetime.now() + timedelta(minutes=3)
+            logger.info("Run date to execute reservation job: {}", today)
+
             self._reservation_event_service.create_job(func=self._reservation_event_service.create_reservation_event,
-                                                       difference_as_seconds=1, kwargs=kwargs)
+                                                       run_date=today, kwargs=kwargs)
             return response
 
         nearest_branch_opening_datetime: datetime = self.get_available_datetime(request_datetime=request_datetime,
                                                                                 branch_id=reservation.branch_id, db=db)
-
-        difference_as_seconds: int = round((nearest_branch_opening_datetime - request_datetime).total_seconds())
-        if difference_as_seconds < self._MINIMUM_VALUE:
-            logger.info("Request datetime is post opening hour")
-            difference_as_seconds = self._MINIMUM_VALUE
-
-        logger.info("Difference as seconds: {}", difference_as_seconds)
+        logger.info("nearest_branch_opening_datetime: {}", nearest_branch_opening_datetime)
 
         self._reservation_event_service.create_job(func=self._reservation_event_service.create_reservation_event,
-                                                   difference_as_seconds=difference_as_seconds, kwargs=kwargs)
+                                                   run_date=nearest_branch_opening_datetime, kwargs=kwargs)
         return response
 
     def rejected_reservation_by_local(self, reservation: ReservationEntity, client_email: str, db: Session):
@@ -203,10 +200,8 @@ class ReservationChangeStatusService:
         }
         logger.info("kwargs: {}", kwargs)
 
-        difference_as_seconds: int = round((branch_opening_datetime - request_datetime).total_seconds())
-
         self._reservation_event_service.create_job(func=self._reservation_event_service.reminder_email,
-                                                   difference_as_seconds=difference_as_seconds, kwargs=kwargs)
+                                                   run_date=branch_opening_datetime, kwargs=kwargs)
 
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CONFIRMATION_TO_CLIENT,
                                        receiver_email=client_email, data=data)
