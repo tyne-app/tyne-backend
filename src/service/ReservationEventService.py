@@ -7,6 +7,7 @@ from src.service.EmailService import EmailService
 from src.configuration.database.database import scheduler
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.base import JobLookupError
+from datetime import datetime, timedelta
 
 
 class ReservationEventService:
@@ -15,11 +16,13 @@ class ReservationEventService:
     _scheduler: BackgroundScheduler = scheduler
     _reservation_dao_ = ReservationDao()
 
-    def create_job(self, func, difference_as_seconds: int, **kwargs):
-        logger.info("func: {}, difference_as_seconds: {}, kwargs: {}", func, difference_as_seconds, kwargs)
+    def create_job(self, func, run_date: datetime, **kwargs):
+        logger.info("func: {}, run_date: {}, kwargs: {}", func, run_date, kwargs)
         kwargs = kwargs.get('kwargs')
+        kwargs['run_date']: datetime = run_date + timedelta(minutes=15)
+
         self._scheduler.add_job(func=func, id=kwargs.get('job_id'), misfire_grace_time=5, coalesce=True,
-                                replace_existing=True, trigger='date', seconds=difference_as_seconds, kwargs=kwargs)
+                                replace_existing=True, trigger='date', run_date=run_date, kwargs=kwargs)
         logger.info("Job reservation event created")
 
     def delete_job(self, job_id: str):
@@ -39,11 +42,14 @@ class ReservationEventService:
         logger.info("Reservation event has started. It will send an email to confirm/cancel by branch")
         logger.info("kwargs: {}", kwargs)
         self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.CONFIRMATION_TO_LOCAL,
-                                       receiver_email=kwargs.get('branch_email'), data=kwargs.get('data'))  # TODO: Este no es el correo. Debe ser uno de confirmar/cancelar
+                                       receiver_email=kwargs.get('branch_email'), data=kwargs.get('data'))
+
+        run_date: datetime = kwargs.get('run_date')
+        logger.info("Run date to cancel reservation: {}", run_date)
 
         self._scheduler.add_job(func=self.cancel_reservation, kwargs=kwargs,
                                 id=kwargs.get('job_id'), misfire_grace_time=5, coalesce=True,
-                                replace_existing=True, trigger='date', seconds=900)
+                                replace_existing=True, trigger='date', run_date=run_date)
 
         logger.info("Reservation event has updated to 15 minutes. At the end, reservation will be cancelled")
 
