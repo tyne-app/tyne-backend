@@ -53,9 +53,8 @@ class BusinessMapperRequest:
         user_entity.is_social = False
         return user_entity
 
-    def to_branch_image_entity(self, default_main_image: str):
+    def to_branch_image_entity(self):
         branch_image_entity = BranchImageEntity()
-        branch_image_entity.url_image = default_main_image
         branch_image_entity.is_main_image = True
         return branch_image_entity
 

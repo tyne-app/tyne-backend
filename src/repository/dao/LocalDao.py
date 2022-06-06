@@ -25,7 +25,6 @@ class LocalDAO:
                          restaurant_entity: RestaurantEntity,
                          branch_entity: BranchEntity,
                          branch_bank_entity: BranchBankEntity,
-                         branch_image_entity: BranchImageEntity,
                          db: Session):
         try:
             user_entity.created_date = datetime.now(tz=timezone.utc)
@@ -53,8 +52,6 @@ class LocalDAO:
             db.add(branch_entity)
             db.flush()
 
-            branch_image_entity.branch_id = branch_entity.id
-            db.add(branch_image_entity)
             db.commit()
             return True
         except Exception as ex:
@@ -127,7 +124,6 @@ class LocalDAO:
                        manager_entity: ManagerEntity,
                        branch_entity: BranchEntity,
                        branch_bank_entity: BranchBankEntity,
-                       branch_image_entity: BranchImageEntity,
                        db: Session):
         try:
             user_entity.created_date = datetime.now(tz=timezone.utc)
@@ -149,8 +145,6 @@ class LocalDAO:
             db.add(branch_entity)
             db.flush()
 
-            branch_image_entity.branch_id = branch_entity.id
-            db.add(branch_image_entity)
             db.commit()
 
             return True

@@ -41,7 +41,6 @@ class LocalService:
     MSG_NEW_BRANCH = 'Sucursal agregado correctamente'
     ID_USER_TYPE = 1  # TODO: Cambiar por UserType.MANAGER
     _business_mapper_request = BusinessMapperRequest()
-    DEFAULT_LOCAL_IMAGE_PROFILE = "https://res.cloudinary.com/dqdtvbynk/image/upload/v1636295279/Development/users/default%20main%20local%20image/Sart%C3%A9n_Tyne_Fondo_Transparente_zflbrr.png"
 
     TYPE_VALIDATION_GEOCODING_BRANCH = "del local"
     TYPE_VALIDATION_GEOCODING_RESTAURANT = "de la casa matriz"
@@ -93,9 +92,6 @@ class LocalService:
         branch_bank = new_account.branch_bank
         branch_bank_entity = self._business_mapper_request.to_branch_bank_entity(branch_bank=branch_bank)
 
-        branch_image_entity = self._business_mapper_request. \
-            to_branch_image_entity(default_main_image=self.DEFAULT_LOCAL_IMAGE_PROFILE)
-
         local_dao = LocalDAO()
         local_dao.register_account(user_entity=user_entity,
                                    manager_entity=manager_entity,
@@ -103,7 +99,6 @@ class LocalService:
                                    restaurant_entity=restaurant_entity,
                                    branch_entity=branch_entity,
                                    branch_bank_entity=branch_bank_entity,
-                                   branch_image_entity=branch_image_entity,
                                    db=db)
 
         activation_token: str = self._token_service.get_token_profile(user_id=user_entity.id,
@@ -153,15 +148,11 @@ class LocalService:
         branch_bank = new_branch.branch_bank
         branch_bank_entity = self._business_mapper_request.to_branch_bank_entity(branch_bank=branch_bank)
 
-        branch_image_entity = self._business_mapper_request \
-            .to_branch_image_entity(default_main_image=self.DEFAULT_LOCAL_IMAGE_PROFILE)
-
         new_branch_status = self._local_dao.add_new_branch(user_entity=user_entity,
                                                            branch_id=branch_id,
                                                            manager_entity=manager_entity,
                                                            branch_entity=branch_entity,
                                                            branch_bank_entity=branch_bank_entity,
-                                                           branch_image_entity=branch_image_entity,
                                                            db=db)
 
         logger.info('new_branch_status: {}', new_branch_status)
