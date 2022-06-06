@@ -301,7 +301,7 @@ class ReservationService:
 
     async def update_reservation(self, reservation_updated: UpdateReservationRequest,
                                  db: Session):
-        # TODO: Revisar correos template de elias, hay que hacerlos dinamicos algunos.
+
         logger.info("reservation_updated: {}", reservation_updated.__dict__)
         reservation_updated.validate_fields()
 

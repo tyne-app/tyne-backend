@@ -1,5 +1,3 @@
-from builtins import print
-
 from sqlalchemy.orm import Session
 from loguru import logger
 from src.dto.request.ClientRequest import ClientRequest
