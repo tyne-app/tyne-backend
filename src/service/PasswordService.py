@@ -2,9 +2,9 @@ import random
 import string
 import secrets
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from rsa import encrypt
 from src.configuration.Settings import Settings
 import base64
+
 
 class PasswordService:
 

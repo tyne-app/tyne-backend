@@ -16,7 +16,7 @@ from src.repository.dao.ManagerDao import ManagerDao
 from src.repository.entity.BranchEntity import BranchEntity
 from src.repository.entity.ClientEntity import ClientEntity
 from src.repository.entity.UserEntity import UserEntity
-from src.repository.entity.ManagerEntity import ManagerEntity
+from src.service.PasswordService import PasswordService
 from src.service.CloudinaryService import CloudinaryService
 from src.service.JwtService import JwtService
 from src.util.Constants import Constants
@@ -38,6 +38,7 @@ class UserService:
     _email_service = EmailService()
     _password_service_ = PasswordService()
     _manager_dao = ManagerDao()
+    _password_service = PasswordService()
 
     async def login_user(self, login_request: LoginUserRequest, ip: str, db: Session):
         logger.info('login_user')
@@ -160,7 +161,9 @@ class UserService:
         return True
 
     def change_password(self, user_id: int, password: str, db: Session):
-        self._user_dao_.change_password(user_id=user_id, password=password, db=db)
+        password_encrypted = self._password_service.encrypt_password(password=password)
+
+        self._user_dao_.change_password(user_id=user_id, password=password_encrypted, db=db)
         return True
 
     def send_password_email(self, email: str, db: Session) -> SimpleResponse:
@@ -179,7 +182,9 @@ class UserService:
 
         token_profile: TokenProfile = self._token_service.decode_token_profile(token=token)
 
-        self._user_dao_.change_password(user_id=token_profile.user_id, password=password, db=db)
+        password_encrypted = self._password_service.encrypt_password(password=password)
+
+        self._user_dao_.change_password(user_id=token_profile.user_id, password=password_encrypted, db=db)
 
         return SimpleResponse("Contraseña restaurada correctamente")
 
