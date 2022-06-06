@@ -209,4 +209,10 @@ class LocalService:
 
         pathImage = deleteBranchImage.urlImage.split("https://tyne.s3.amazonaws.com/")[1]
         await self._aws_service_.delete_object_s3(pathImage)
-        return self._branch_dao_.delete_image(branch_id, deleteBranchImage.urlImage, db)
+        self._branch_dao_.delete_image(branch_id, deleteBranchImage.urlImage, db)
+
+        images = self._branch_dao_.get_images(branch_id, db)
+        if len(images) > 0:
+            self._branch_dao_.update_main_image(images[0].id, db=db)
+
+        return True

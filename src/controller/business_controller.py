@@ -166,8 +166,8 @@ async def upload_image(request: Request,
                        image: UploadFile = File(...),
                        db: Session = Depends(get_data_base)):
     token_payload = await _jwt_service.verify_and_get_token_data(request)
-    response = await _local_service.upload_image(token_payload.id_branch_client, image, db)
-    return response
+    await _local_service.upload_image(token_payload.id_branch_client, image, db)
+    return SimpleResponse('Imagen subida exitosamente')
 
 
 @business_controller.delete(
@@ -180,5 +180,5 @@ async def delete_image(request: Request,
                        deleteBranchImage: DeleteBranchImageRequest,
                        db: Session = Depends(get_data_base)):
     token_payload = await _jwt_service.verify_and_get_token_data(request)
-    response = await _local_service.delete_image(token_payload.id_branch_client, deleteBranchImage, db)
-    return response
+    await _local_service.delete_image(token_payload.id_branch_client, deleteBranchImage, db)
+    return SimpleResponse('Imagen eliminada exitosamente')
