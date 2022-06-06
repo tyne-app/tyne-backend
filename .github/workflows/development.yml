@@ -38,6 +38,8 @@ jobs:
         uses: SpicyPizza/create-envfile@v1.3
         with:
           envkey_ENVIRONMENT: "Development"
+          envkey_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          envkey_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           envkey_CLOUDINARY_API_KEY: ${{ secrets._CLOUDINARY_API_KEY }}
           envkey_CLOUDINARY_API_SECRET: ${{ secrets._CLOUDINARY_API_SECRET }}
           envkey_CLOUDINARY_CLOUD_NAME: ${{ secrets._CLOUDINARY_CLOUD_NAME }}

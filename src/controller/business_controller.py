@@ -1,11 +1,12 @@
 from typing import Optional, Union
 
-from fastapi import status, APIRouter, Response, Request
+from fastapi import status, APIRouter, Response, Request, UploadFile, File
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
 
 from src.configuration.database.database import get_data_base
 from src.configuration.openapi.search_openapi import SearchAllBranchOpenAPI
+from src.dto.request.DeleteBranchImageRequest import DeleteBranchImageRequest
 from src.dto.request.NewBranchScheduleDto import NewBranchScheduleDto
 from src.dto.request.business_request_dto import NewAccount
 from src.dto.request.business_request_dto import NewBranch
@@ -138,3 +139,46 @@ async def update_branch_schedule(request: Request,
     await _local_service.update_branch_schedule(schedule, db=db)
     response.status_code = status.HTTP_201_CREATED
     return SimpleResponse("Horario actualizado correctamente")
+
+
+@business_controller.get('/{branch_id}/images', status_code=status.HTTP_200_OK)
+async def get_images(request: Request,
+                     response: Response,
+                     branch_id: int,
+                     db: Session = Depends(get_data_base)):
+    await _jwt_service.verify_and_get_token_data(request)
+
+    images = await _local_service.get_images(branch_id=branch_id, db=db)
+
+    if images is None:
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
+
+    return images
+
+
+@business_controller.post(
+    '/{branch_id}/images',
+    status_code=status.HTTP_200_OK
+)
+async def upload_image(request: Request,
+                       response: Response,
+                       image: UploadFile = File(...),
+                       db: Session = Depends(get_data_base)):
+    token_payload = await _jwt_service.verify_and_get_token_data(request)
+    await _local_service.upload_image(token_payload.id_branch_client, image, db)
+    return SimpleResponse('Imagen subida exitosamente')
+
+
+@business_controller.delete(
+    '/{branch_id}/images',
+    status_code=status.HTTP_200_OK
+)
+async def delete_image(request: Request,
+                       response: Response,
+                       branch_id: int,
+                       deleteBranchImage: DeleteBranchImageRequest,
+                       db: Session = Depends(get_data_base)):
+    token_payload = await _jwt_service.verify_and_get_token_data(request)
+    await _local_service.delete_image(token_payload.id_branch_client, deleteBranchImage, db)
+    return SimpleResponse('Imagen eliminada exitosamente')

@@ -250,3 +250,51 @@ class BranchDao:
                               detail="Error",
                               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                               cause="Error al guardar el horario de la sucursal")
+
+    def get_images(self, branch_id: int, db: Session):
+        return db.query(BranchImageEntity.url_image, BranchImageEntity.id) \
+            .filter(BranchImageEntity.branch_id == branch_id) \
+            .order_by(BranchImageEntity.id.asc()) \
+            .all()
+
+    def add_image(self, branch_id: int, url_image: str, is_main: bool, db: Session):
+        try:
+            image = BranchImageEntity()
+            image.branch_id = branch_id
+            image.url_image = url_image
+            image.is_main_image = is_main
+
+            db.add(image)
+            db.flush()
+            db.commit()
+            return image
+        except Exception as error:
+            raise CustomError(name="Error al guardar imagen para branch " + str(branch_id),
+                              detail="Error",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause=error)
+
+    def delete_image(self, branch_id: int, url_image: str, db: Session):
+        try:
+            image = db.query(BranchImageEntity).filter(BranchImageEntity.branch_id == branch_id,
+                                                       BranchImageEntity.url_image == url_image).first()
+            db.delete(image)
+            db.flush()
+            db.commit()
+        except Exception as error:
+            raise CustomError(name="Error al eliminar imagen para branch " + str(branch_id),
+                              detail="Error",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause=error)
+
+    def update_main_image(self, branchImageId: int, db: Session):
+        try:
+            image: BranchImageEntity = db.query(BranchImageEntity).filter(BranchImageEntity.id == branchImageId).first()
+            image.is_main_image = True
+            db.flush()
+            db.commit()
+        except Exception as error:
+            raise CustomError(name="Error al actualizar is_main_image",
+                              detail="Error",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                              cause=error)

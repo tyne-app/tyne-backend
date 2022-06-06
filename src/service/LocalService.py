@@ -1,6 +1,8 @@
+from fastapi import UploadFile
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from src.dto.request.DeleteBranchImageRequest import DeleteBranchImageRequest
 from src.dto.request.NewBranchScheduleDto import NewBranchScheduleDto
 from src.dto.request.business_request_dto import NewAccount
 from src.dto.request.business_request_dto import NewBranch
@@ -10,6 +12,7 @@ from src.repository.dao.LocalDao import LocalDAO
 from src.repository.dao.StateDao import StateDao
 from src.repository.dao.BusinessDao import BusinessDao
 from src.repository.entity.BranchScheduleEntity import BranchScheduleEntity
+from src.service.AwsService import AwsService
 from src.service.MapboxService import MapBoxService
 from src.service.JwtService import JwtService
 from src.service.EmailService import EmailService
@@ -49,6 +52,7 @@ class LocalService:
     _token_service = JwtService()
     _password_service = PasswordService()
     _branch_dao_ = BranchDao()
+    _aws_service_ = AwsService()
 
     async def create_new_account(self, new_account: NewAccount, db: Session):
         local_validator = LocalValidator()
@@ -184,4 +188,31 @@ class LocalService:
             branch_schedules.append(entity)
 
         self._branch_dao_.update_schedule(branch_schedules, branch_id=schedule.branch_id, db=db)
+        return True
+
+    async def get_images(self, branch_id, db: Session):
+        return self._branch_dao_.get_images(branch_id, db)
+
+    async def upload_image(self, branch_id: int, image: UploadFile, db: Session):
+        content = await image.read()
+        url = await self._aws_service_.upload_object_s3(content, 'images', image.content_type)
+        images = self._branch_dao_.get_images(branch_id, db)
+        is_main = False
+
+        if len(images) == 0:
+            is_main = True
+
+        return self._branch_dao_.add_image(branch_id, url, is_main, db)
+
+    async def delete_image(self, branch_id: int, deleteBranchImage: DeleteBranchImageRequest, db: Session):
+        deleteBranchImage.validate_fields()
+
+        pathImage = deleteBranchImage.urlImage.split("https://tyne.s3.amazonaws.com/")[1]
+        await self._aws_service_.delete_object_s3(pathImage)
+        self._branch_dao_.delete_image(branch_id, deleteBranchImage.urlImage, db)
+
+        images = self._branch_dao_.get_images(branch_id, db)
+        if len(images) > 0:
+            self._branch_dao_.update_main_image(images[0].id, db=db)
+
         return True
