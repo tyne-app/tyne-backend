@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from src.configuration.database.database import get_data_base
 from src.configuration.openapi.search_openapi import SearchAllBranchOpenAPI
+from src.dto.request.DeleteBranchImageRequest import DeleteBranchImageRequest
 from src.dto.request.NewBranchScheduleDto import NewBranchScheduleDto
 from src.dto.request.business_request_dto import NewAccount
 from src.dto.request.business_request_dto import NewBranch
@@ -170,14 +171,14 @@ async def upload_image(request: Request,
 
 
 @business_controller.delete(
-    '/{branch_id}/images/{url_image}',
+    '/{branch_id}/images',
     status_code=status.HTTP_200_OK
 )
-async def upload_image(request: Request,
+async def delete_image(request: Request,
                        response: Response,
                        branch_id: int,
-                       url_image: str,
+                       deleteBranchImage: DeleteBranchImageRequest,
                        db: Session = Depends(get_data_base)):
     token_payload = await _jwt_service.verify_and_get_token_data(request)
-    response = await _local_service.delete_image(token_payload.id_branch_client, url_image, db)
+    response = await _local_service.delete_image(token_payload.id_branch_client, deleteBranchImage, db)
     return response

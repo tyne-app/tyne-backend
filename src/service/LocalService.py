@@ -2,6 +2,7 @@ from fastapi import UploadFile
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from src.dto.request.DeleteBranchImageRequest import DeleteBranchImageRequest
 from src.dto.request.NewBranchScheduleDto import NewBranchScheduleDto
 from src.dto.request.business_request_dto import NewAccount
 from src.dto.request.business_request_dto import NewBranch
@@ -194,7 +195,7 @@ class LocalService:
 
     async def upload_image(self, branch_id: int, image: UploadFile, db: Session):
         content = await image.read()
-        url = await self._aws_service_.upload_to_s3(content, 'images', image.content_type)
+        url = await self._aws_service_.upload_object_s3(content, 'images', image.content_type)
         images = self._branch_dao_.get_images(branch_id, db)
         is_main = False
 
@@ -203,5 +204,9 @@ class LocalService:
 
         return self._branch_dao_.add_image(branch_id, url, is_main, db)
 
-    async def delete_image(self, branch_id: int, url_image: str, db: Session):
-        self._branch_dao_.delete_image(branch_id, url_image, db)
+    async def delete_image(self, branch_id: int, deleteBranchImage: DeleteBranchImageRequest, db: Session):
+        deleteBranchImage.validate_fields()
+
+        pathImage = deleteBranchImage.urlImage.split("https://tyne.s3.amazonaws.com/")[1]
+        await self._aws_service_.delete_object_s3(pathImage)
+        return self._branch_dao_.delete_image(branch_id, deleteBranchImage.urlImage, db)
