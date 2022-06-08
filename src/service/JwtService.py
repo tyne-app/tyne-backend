@@ -33,7 +33,7 @@ class JwtService:
                 "last_name": last_name,
                 "iss": "https://tyne.cl",
                 "iat": datetime.now(tz=timezone.utc),
-                "exp": datetime.now(tz=timezone.utc) + timedelta(minutes=30)
+                "exp": datetime.now(tz=timezone.utc) + timedelta(hours=5)
             },
             str(Settings.JWT_KEY),
             algorithm="HS256")
