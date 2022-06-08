@@ -220,7 +220,7 @@ class ReservationChangeStatusService:
         data: dict = {
             'branch_name': branch_name,
             'client_name': client_name,
-            'date': reservation.reservation_date,
+            'date': reservation.reservation_date.strftime("%d-%m-%Y"),
             'hour': reservation.hour,
             'total_amount': reservation.amount + reservation.tyne_commission,
             'products': products,
