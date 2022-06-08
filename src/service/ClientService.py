@@ -80,7 +80,8 @@ class ClientService:
                                                                       rol=user_entity.id_user_type)
 
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CLIENT_WELCOME,
-                                       receiver_email=client_request.email, data=activation_token)
+                                       receiver_email=client_request.email,
+                                       data=client_request.email + "/" + activation_token)
 
         logger.info("Email enviado a correo de cliente")
         return SimpleResponse(self._created_client)
