@@ -37,19 +37,19 @@ class Menu:
         max_amount = 0
         min_amount = 0
         avg_amount = 0
+        self.create_section(categories)
         for category in categories:
-            product_domain = None
             for product in products:
                 if product.category.id == category.id:
                     product_domain = Product(product.product_dict())
                     price_set.append(product.amount)
-            self.add_seccion(product_domain, category)
+                    self.add_seccion(product_domain, category)
 
         if len(price_set) > 0:
             max_amount = max(price_set, key=float)
             min_amount = min(price_set, key=float)
             avg_amount = sum(price_set) / len(price_set)
-            
+
         self.rango_precio = {
             "max": max_amount,
             "min": min_amount,
@@ -69,22 +69,15 @@ class Menu:
             return self
 
     def add_seccion(self, product: Product, category: Category):
-        # Verificar si no existe ninguna Seccion
-        if self.sections.__len__() == 0:
-            return self.create_section(category, product)
-        # Validar si la seccion es la misma
-        # Si es la misma, agregar Product a dicha Seccion
         for seccion in self.sections:
-            if seccion.is_exit(category):
+            if category.id == seccion.category.id:
                 if product:
                     seccion.add_product(product)
-                return seccion
-        # Si no, crear la Seccion
-        return self.create_section(category, product)
 
-    def create_section(self, category, product):
-        section = SectionMenu(product, category)
-        self.sections.append(section)
+    def create_section(self, categories):
+        for category in categories:
+            section = SectionMenu(None, category)
+            self.sections.append(section)
         return self
 
     def calculate_rango_precio(self):
