@@ -33,7 +33,7 @@ class JwtService:
                 "last_name": last_name,
                 "iss": "https://tyne.cl",
                 "iat": datetime.now(tz=timezone.utc),
-                "exp": datetime.now(tz=timezone.utc) + timedelta(minutes=30)
+                "exp": datetime.now(tz=timezone.utc) + timedelta(hours=5)
             },
             str(Settings.JWT_KEY),
             algorithm="HS256")
@@ -107,15 +107,19 @@ class JwtService:
 
     def decode_token_profile(self, token: str):
         logger.info("decode_token_profile")
+        try:
+            decoded_token = jwt.decode(token, str(Settings.JWT_KEY), algorithms=self.ALGORITHM)
 
-        decoded_token = jwt.decode(token, str(Settings.JWT_KEY), algorithms=self.ALGORITHM)
+            if not decoded_token:
+                raise CustomError(name=Constants.TOKEN_VERIFY_ERROR,
+                                  detail=Constants.TOKEN_VERIFY_ERROR,
+                                  status_code=status.HTTP_401_UNAUTHORIZED,
+                                  cause="decoded_token is None")
 
-        if not decoded_token:
-            raise CustomError(name=Constants.TOKEN_VERIFY_ERROR,
-                              detail=Constants.TOKEN_VERIFY_ERROR,
-                              status_code=status.HTTP_401_UNAUTHORIZED,
-                              cause="decoded_token is None")
-
-        return TokenProfile(user_id=int(decoded_token['user_id']),
-                            email=decoded_token['email'],
-                            rol=int(decoded_token['rol']))
+            return TokenProfile(user_id=int(decoded_token['user_id']),
+                                email=decoded_token['email'],
+                                rol=int(decoded_token['rol']))
+        except Exception as ex:
+            raise CustomError(name="Token expirado",
+                              detail="No fue posible activar su cuenta, se enviara un nuevo correo.",
+                              status_code=status.HTTP_401_UNAUTHORIZED)
