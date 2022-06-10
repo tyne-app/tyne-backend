@@ -47,9 +47,6 @@ class ClientSocialRegistrationRequest(BaseModel):
         if not self._utils_validator_.validate_not_empty(self.name):
             invalid_data.append(self._utils_validator_.INVALID_DATA_MESSAGE)
 
-        if not self._utils_validator_.validate_not_empty(self.lastName):
-            invalid_data.append(self._utils_validator_.INVALID_DATA_MESSAGE)
-
         if not self._utils_validator_.validate_not_empty(self.email):
             invalid_data.append(self._utils_validator_.INVALID_DATA_MESSAGE)
 
