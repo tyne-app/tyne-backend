@@ -7,7 +7,7 @@ class StateDao:
     def get_states(self, id_city: int, db: Session) -> list[StateEntity]:
         return db \
             .query(StateEntity) \
-            .filter(StateEntity.city_id == id_city) \
+            .filter(StateEntity.city_id == id_city, StateEntity.id == 118) \
             .all()
 
     def get_state_by_id(self, id_state: int, db: Session) -> StateEntity:
