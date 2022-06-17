@@ -180,7 +180,7 @@ class ReservationChangeStatusService:
         logger.info("Data to email: {}", data)
 
         if request_datetime.date() == reservation.reservation_date:
-            self._email_service.send_email(user=Constants.USER, subject=EmailSubject.CONFIRMATION_TO_CLIENT,
+            self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CONFIRMATION_TO_CLIENT,
                                            receiver_email=client_email, data=data)
             return SimpleResponse("Reserva actualizada correctamente a estado confirmado")
 
