@@ -136,6 +136,7 @@ class ReservationChangeStatusService:
 
         self._reservation_event_service.create_job(func=self._reservation_event_service.create_reservation_event,
                                                    run_date=nearest_branch_opening_datetime, kwargs=kwargs)
+
         return response
 
     def rejected_reservation_by_local(self, reservation: ReservationEntity, client_email: str, db: Session):
