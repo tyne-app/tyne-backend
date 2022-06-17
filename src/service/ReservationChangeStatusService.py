@@ -180,6 +180,9 @@ class ReservationChangeStatusService:
         logger.info("Data to email: {}", data)
 
         if request_datetime.date() == reservation.reservation_date:
+            self._reservation_dao_.add_reservation_status(status=ReservationStatus.CONFIRMED,
+                                                          reservation_id=reservation.id)
+
             self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CONFIRMATION_TO_CLIENT,
                                            receiver_email=client_email, data=data)
             return SimpleResponse("Reserva actualizada correctamente a estado confirmado")
@@ -204,10 +207,10 @@ class ReservationChangeStatusService:
         self._reservation_event_service.create_job(func=self._reservation_event_service.reminder_email,
                                                    run_date=branch_opening_datetime, kwargs=kwargs)
 
+        self._reservation_dao_.add_reservation_status(status=ReservationStatus.CONFIRMED, reservation_id=reservation.id)
+
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CONFIRMATION_TO_CLIENT,
                                        receiver_email=client_email, data=data)
-
-        self._reservation_dao_.add_reservation_status(status=ReservationStatus.CONFIRMED, reservation_id=reservation.id)
 
         return SimpleResponse("Reserva actualizada correctamente a estado confirmado")
 
