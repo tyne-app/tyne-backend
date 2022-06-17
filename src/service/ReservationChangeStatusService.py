@@ -136,6 +136,7 @@ class ReservationChangeStatusService:
 
         self._reservation_event_service.create_job(func=self._reservation_event_service.create_reservation_event,
                                                    run_date=nearest_branch_opening_datetime, kwargs=kwargs)
+
         return response
 
     def rejected_reservation_by_local(self, reservation: ReservationEntity, client_email: str, db: Session):
@@ -179,7 +180,7 @@ class ReservationChangeStatusService:
         logger.info("Data to email: {}", data)
 
         if request_datetime.date() == reservation.reservation_date:
-            self._email_service.send_email(user=Constants.USER, subject=EmailSubject.CONFIRMATION_TO_CLIENT,
+            self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CONFIRMATION_TO_CLIENT,
                                            receiver_email=client_email, data=data)
             return SimpleResponse("Reserva actualizada correctamente a estado confirmado")
 

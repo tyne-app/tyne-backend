@@ -16,8 +16,7 @@ class UpdateReservationRequest(BaseModel):
                 self.status != ReservationStatus.REJECTED_PAYMENT and \
                 self.status != ReservationStatus.CANCELED_PAYMENT and \
                 self.status != ReservationStatus.REJECTED_BY_LOCAL and \
-                self.status != ReservationStatus.CONFIRMED and \
-                self.status != ReservationStatus.SERVICED:
+                self.status != ReservationStatus.CONFIRMED:
             raise CustomError(name="Validación body",
                               detail="Status debe ser 4, 5, 6, 7, 8 o 9",
                               status_code=status.HTTP_400_BAD_REQUEST,

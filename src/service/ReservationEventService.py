@@ -19,7 +19,7 @@ class ReservationEventService:
     def create_job(self, func, run_date: datetime, **kwargs):
         logger.info("func: {}, run_date: {}, kwargs: {}", func, run_date, kwargs)
         kwargs = kwargs.get('kwargs')
-        kwargs['run_date']: datetime = run_date + timedelta(minutes=15)
+        kwargs['run_date']: datetime = run_date
 
         self._scheduler.add_job(func=func, id=kwargs.get('job_id'), misfire_grace_time=5, coalesce=True,
                                 replace_existing=True, trigger='date', run_date=run_date, kwargs=kwargs)
@@ -41,10 +41,11 @@ class ReservationEventService:
 
         logger.info("Reservation event has started. It will send an email to confirm/cancel by branch")
         logger.info("kwargs: {}", kwargs)
+
         self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.CONFIRMATION_TO_LOCAL,
                                        receiver_email=kwargs.get('branch_email'), data=kwargs.get('data'))
 
-        run_date: datetime = kwargs.get('run_date')
+        run_date: datetime = kwargs.get('run_date') + timedelta(minutes=60)
         logger.info("Run date to cancel reservation: {}", run_date)
 
         self._scheduler.add_job(func=self.cancel_reservation, kwargs=kwargs,
@@ -58,8 +59,6 @@ class ReservationEventService:
         logger.info("kwargs: {}", kwargs)
 
         data: dict = kwargs.get('data')
-
-        self.delete_job(job_id=kwargs.get('job_id'))
 
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.LOCAL_NO_CONFIRMATION_TO_CLIENT,
                                        receiver_email=kwargs.get('client_email'), data=data)
