@@ -123,3 +123,12 @@ class JwtService:
             raise CustomError(name="Token expirado",
                               detail="No fue posible activar su cuenta, se enviara un nuevo correo.",
                               status_code=status.HTTP_401_UNAUTHORIZED)
+
+    def decode_expired_token(self, token: str):
+        try:
+            return jwt.decode(jwt=token, key=str(Settings.JWT_KEY),
+                              algorithms=self.ALGORITHM, options={"verify_signature": False})
+        except Exception as ex:
+            raise CustomError(name="Error al decodificar token expirado",
+                              detail="No fue posible decodificar token expirado para reactivar cuenta",
+                              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -197,13 +197,18 @@ class UserService:
 
         return SimpleResponse("Cuenta activada correctamente")
 
+    def retry_by_email_from_expired_token(self, token: str, db: Session) -> SimpleResponse:
+        decoded_token: dict = self._token_service.decode_expired_token(token=token)
+        email: str = decoded_token['email']
+        return self.retry_activation(email=email, db=db)
+
     def retry_activation(self, email: str, db: Session) -> SimpleResponse:
         logger.info("email: {}", email)
 
         token: str = self._user_token_by_email(email=email, is_active=False, db=db)
 
         self._email_service.send_email(user=Constants.USER, subject=EmailSubject.RETRY_ACTIVATION,
-                                       receiver_email=email, data=email + "/" + token)
+                                       receiver_email=email, data=token)
 
         return SimpleResponse("Se ha enviado un correo para activar cuenta")
 
