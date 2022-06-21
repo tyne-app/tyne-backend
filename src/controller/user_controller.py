@@ -6,6 +6,7 @@ from src.dto.request.LoginSocialRequest import LoginSocialRequest
 from src.dto.request.LoginUserRequest import LoginUserRequest
 from src.dto.request.UserChangePasswordRequest import UserChangePasswordRequest
 from src.dto.request.UserEmail import UserEmail
+from src.dto.request.UserToken import UserToken
 from src.dto.response.SimpleResponse import SimpleResponse
 from src.service.JwtService import JwtService
 from src.service.UserService import UserService
@@ -19,8 +20,13 @@ _service_ = UserService()
 _jwt_service_ = JwtService()
 
 
-@user_controller.post('/activation/retry', status_code=status.HTTP_200_OK)
-async def retry_activation(user_email: UserEmail, db: Session = Depends(database.get_data_base)):
+@user_controller.post('/activation/retry/token', status_code=status.HTTP_200_OK)
+def retry_activation_with_token(user_token: UserToken, db: Session = Depends(database.get_data_base)):
+    return _service_.retry_by_email_from_expired_token(token=user_token.token, db=db)
+
+
+@user_controller.post('/activation/retry/email', status_code=status.HTTP_200_OK)
+async def retry_activation_with_email(user_email: UserEmail, db: Session = Depends(database.get_data_base)):
     return _service_.retry_activation(email=user_email.email, db=db)
 
 
