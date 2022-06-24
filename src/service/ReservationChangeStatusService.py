@@ -116,6 +116,7 @@ class ReservationChangeStatusService:
             'job_id': job_id,
             'branch_email': branch_email,
             'client_email': client_email,
+            'payment_mp_id': payment_response.payment_mp_id,
             'data': data
         }
         logger.info("kwargs: {}", kwargs)
@@ -216,7 +217,7 @@ class ReservationChangeStatusService:
 
     def get_reservation_data_to_email(self, reservation: ReservationEntity, db: Session) -> dict:
         products: list = self._reservation_product_dao.get_all_products_by_reservation(reservation_id=reservation.id,
-                                                                                      db=db)
+                                                                                       db=db)
 
         branch_name: str = self._branch_dao.get_name(branch_id=reservation.branch_id, db=db)
         client_name: str = self._client_dao.get_client_name(client_id=reservation.client_id, db=db)

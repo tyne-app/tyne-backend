@@ -4,6 +4,7 @@ from src.util.EmailSubject import EmailSubject
 from src.util.ReservationStatus import ReservationStatus
 from src.repository.dao.ReservationDao import ReservationDao
 from src.service.EmailService import EmailService
+from src.service.MercadoPagoService import MercadoPagoService
 from src.configuration.database.database import scheduler
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.base import JobLookupError
@@ -15,6 +16,7 @@ class ReservationEventService:
     _email_service = EmailService()
     _scheduler: BackgroundScheduler = scheduler
     _reservation_dao_ = ReservationDao()
+    _mercado_pago_service = MercadoPagoService()
 
     def create_job(self, func, run_date: datetime, **kwargs):
         logger.info("func: {}, run_date: {}, kwargs: {}", func, run_date, kwargs)
@@ -52,13 +54,16 @@ class ReservationEventService:
                                 id=kwargs.get('job_id'), misfire_grace_time=5, coalesce=True,
                                 replace_existing=True, trigger='date', run_date=run_date)
 
-        logger.info("Reservation event has updated to 15 minutes. At the end, reservation will be cancelled")
+        logger.info("Reservation event has updated to 60 minutes. At the end, reservation will be cancelled")
 
     def cancel_reservation(self, **kwargs):
         logger.info("Cancellation reservation event has started")
         logger.info("kwargs: {}", kwargs)
 
         data: dict = kwargs.get('data')
+        payment_mp_id: str = kwargs.get('payment_mp_id')
+
+        self._mercado_pago_service.refund_payment(payment_mp_id)
 
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.LOCAL_NO_CONFIRMATION_TO_CLIENT,
                                        receiver_email=kwargs.get('client_email'), data=data)
