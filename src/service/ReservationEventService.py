@@ -47,7 +47,7 @@ class ReservationEventService:
         self._email_service.send_email(user=Constants.BRANCH, subject=EmailSubject.CONFIRMATION_TO_LOCAL,
                                        receiver_email=kwargs.get('branch_email'), data=kwargs.get('data'))
 
-        run_date: datetime = kwargs.get('run_date') + timedelta(seconds=60)
+        run_date: datetime = kwargs.get('run_date') + timedelta(minutes=60)
         logger.info("Run date to cancel reservation: {}", run_date)
 
         self._scheduler.add_job(func=self.cancel_reservation, kwargs=kwargs,
