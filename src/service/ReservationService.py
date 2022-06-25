@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 
 import pytz
 import locale
-from datetime import datetime, timedelta
+from datetime import datetime
 from loguru import logger
 from sqlalchemy.orm import Session
 from starlette import status
@@ -23,7 +23,6 @@ from src.repository.dao.PaymentDao import PaymentDao
 from src.repository.dao.ProductDao import ProductDao
 from src.repository.dao.ReservationDao import ReservationDao
 from src.repository.entity.ClientEntity import ClientEntity
-from src.repository.entity.PaymentEntity import PaymentEntity
 from src.repository.entity.ReservationEntity import ReservationEntity
 from src.repository.entity.ReservationProductEntity import ReservationProductEntity
 from src.repository.entity.ProductEntity import ProductEntity
@@ -31,13 +30,13 @@ from src.repository.dao.ReservationProductDao import ReservationProductDao
 from src.repository.dao.UserDao import UserDao
 from src.service.MercadoPagoService import MercadoPagoService
 from src.service.EmailService import EmailService
-from src.util.TypeCoinConstant import TypeCoinConstant
 from src.util.Constants import Constants
 from src.util.ReservationConstant import ReservationConstant
 from src.util.ReservationStatus import ReservationStatus
 from src.util.EmailSubject import EmailSubject
 from src.service.ReservationEventService import ReservationEventService
 from src.service.ReservationChangeStatusService import ReservationChangeStatusService
+from src.service.ReservationDatetimeService import ReservationDatetimeService
 
 
 class ReservationService:
@@ -73,13 +72,12 @@ class ReservationService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause=f"Sucursal ya cuenta con el máximo de reservas para el día")
 
-        request_reservation_date: datetime = datetime.now(self._country_time_zone)
         reservation_day: int = new_reservation.date.isoweekday() - ReservationConstant.DAY_ADJUSTMENT
         logger.info("reservation_day: {}", reservation_day)
 
         branch_schedule_entity = self._branch_dao.get_day_schedule(branch_id=new_reservation.branch_id,
                                                                    day=reservation_day, db=db)
-        logger.info("Obtiene horario de sucursal: {}", branch_schedule_entity)
+        logger.info("branch_schedule_entity: {}", branch_schedule_entity)
 
         if not branch_schedule_entity:
             raise CustomError(name=Constants.BRANCH_DAY_UNABLE,
@@ -87,21 +85,21 @@ class ReservationService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Sucursal no disponible para el día requerido")
 
-        self._is_valid_hour(opening_hour=branch_schedule_entity.opening_hour,
-                            closing_hour=branch_schedule_entity.closing_hour,
-                            request_hour=new_reservation.hour)
+        request_datetime: datetime = datetime.now()
+        logger.info("request_datetime: {}", request_datetime)
 
-        difference_as_days: int = (new_reservation.date - request_reservation_date).days
-        current_datetime: datetime = datetime.now(
-            self._country_time_zone)  # TODO: Validar fecha reserva sea mayor a fecha de request
-        logger.info("current_datetime: {}", current_datetime)
-        logger.info("new reservation date: {}", new_reservation.date)
+        reservation_datetime: datetime = ReservationDatetimeService\
+            .to_datetime(reservation_date=new_reservation.date.date(), reservation_hour=new_reservation.hour)
 
-        if difference_as_days > ReservationConstant.WEEK_AS_DAYS:
-            raise CustomError(name=Constants.RESERVATION_DATE_INVALID_ERROR,
-                              detail=Constants.RESERVATION_DATE_DESCRIPTION_ERROR,
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="Fecha de reserva no válida")
+        ReservationDatetimeService.is_valid_datetime(request_datetime=request_datetime,
+                                                     reservation_datetime=reservation_datetime)
+
+        ReservationDatetimeService.is_valid_date(request_datetime=request_datetime,
+                                                 reservation_datetime=reservation_datetime)
+
+        ReservationDatetimeService.is_in_branch_hour(opening_hour=branch_schedule_entity.opening_hour,
+                                                     closing_hour=branch_schedule_entity.closing_hour,
+                                                     request_hour=new_reservation.hour)
 
         products = self._product_dao_.get_products_by_ids(products_id=new_reservation.get_products_ids(),
                                                           branch_id=new_reservation.branch_id, db=db)
@@ -180,36 +178,6 @@ class ReservationService:
         logger.info("reservation response: {}", response.__dict__)
 
         return response
-
-    def _is_valid_hour(self, opening_hour: str, closing_hour: str, request_hour: str) -> None:
-
-        opening_hour_datetime = datetime.strptime(opening_hour, "%H:%M")
-        closing_hour_datetime = datetime.strptime(closing_hour, "%H:%M")
-        request_hour_datetime = datetime.strptime(request_hour, "%H:%M")
-        logger.info("opening_hour_datetime: {}", opening_hour_datetime)
-        logger.info("closing_hour_datetime: {}", closing_hour_datetime)
-        logger.info("request_hour_datetime: {}", request_hour_datetime)
-
-        difference_opening_seconds = request_hour_datetime - opening_hour_datetime
-
-        difference_opening_hour = difference_opening_seconds.total_seconds() / ReservationConstant.HOUR_AS_SECONDS
-        logger.info("difference_opening_hour: {}", difference_opening_hour)
-
-        difference_closing_seconds = closing_hour_datetime - request_hour_datetime
-
-        difference_closing_hour = difference_closing_seconds.total_seconds() / ReservationConstant.HOUR_AS_SECONDS
-        logger.info("difference_closing_hour: {}", difference_closing_hour)
-
-        is_valid: bool = difference_opening_hour >= ReservationConstant.TYNE_LIMIT_HOUR and \
-                         difference_closing_hour >= ReservationConstant.TYNE_LIMIT_HOUR
-
-        logger.info("is_valid: {}", is_valid)
-
-        if not is_valid:
-            raise CustomError(name=Constants.RESERVATION_TIME_INVALID_ERROR,
-                              detail=Constants.RESERVATION_TIME_DESCRIPTION_ERROR,
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="Hora de reserva debe tener diferencia de 2hrs mínimo dentro de horario de local")
 
     def _create_reservation_product(self, product: ProductEntity,
                                     quantity: int) -> ReservationProductEntity:  # TODO: Se podría moder metodo a otro lado
