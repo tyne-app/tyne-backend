@@ -19,6 +19,7 @@ from src.util.ReservationStatus import ReservationStatus
 from src.service.MercadoPagoService import MercadoPagoService
 from src.repository.entity.ReservationEntity import ReservationEntity
 from src.service.ReservationEventService import ReservationEventService
+from src.service.ReservationDatetimeService import ReservationDatetimeService
 from src.repository.dao.UserDao import UserDao
 from src.util.Constants import Constants
 from src.util.ReservationConstant import ReservationConstant
@@ -75,7 +76,7 @@ class ReservationChangeStatusService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Ya existe un pago asociado")
 
-        request_datetime: datetime = datetime.now(self._country_time_zone)
+        request_datetime: datetime = datetime.now()
         logger.info("request datetime: {}", request_datetime)
 
         self._validate_request_date(request_date=request_datetime.date(),
@@ -124,15 +125,17 @@ class ReservationChangeStatusService:
         if request_datetime.date() == reservation.reservation_date:
             logger.info("Reservation is today")
 
-            today: datetime = datetime.now() + timedelta(minutes=3)
-            logger.info("Run date to execute reservation job: {}", today)
+            available_datetime: datetime = self._get_available_datetime(request_datetime=request_datetime,
+                                                                        reservation=reservation, db=db)
+            logger.info("Run date to execute reservation job: {}", available_datetime)
 
             self._reservation_event_service.create_job(func=self._reservation_event_service.create_reservation_event,
-                                                       run_date=today, kwargs=kwargs)
+                                                       run_date=available_datetime, kwargs=kwargs)
             return response
 
-        nearest_branch_opening_datetime: datetime = self.get_available_datetime(request_datetime=request_datetime,
-                                                                                branch_id=reservation.branch_id, db=db)
+        nearest_branch_opening_datetime: datetime = self._get_nearest_available_opening(
+            request_datetime=request_datetime,
+            branch_id=reservation.branch_id, db=db)
         logger.info("nearest_branch_opening_datetime: {}", nearest_branch_opening_datetime)
 
         self._reservation_event_service.create_job(func=self._reservation_event_service.create_reservation_event,
@@ -169,7 +172,7 @@ class ReservationChangeStatusService:
     def confirmed_reservation(self, reservation: ReservationEntity, client_email: str, branch_email: str, db: Session):
         logger.info("Confirmed reservation has been started")
 
-        request_datetime: datetime = datetime.now(self._country_time_zone)
+        request_datetime: datetime = datetime.now()
         logger.info("request datetime: {}", request_datetime)
 
         self._validate_request_date(request_date=request_datetime.date(),
@@ -236,7 +239,33 @@ class ReservationChangeStatusService:
 
         return data
 
-    def get_available_datetime(self, request_datetime: datetime, branch_id: int, db: Session) -> datetime:
+    def _get_available_datetime(self, request_datetime: datetime, reservation: ReservationEntity,
+                                db: Session) -> datetime:
+
+        day: int = reservation.reservation_date.isoweekday() - ReservationConstant.DAY_ADJUSTMENT
+        branch_schedule: BranchScheduleEntity = self._branch_dao.get_day_schedule(branch_id=reservation.branch_id,
+                                                                                  day=day, db=db)
+
+        if not branch_schedule:
+            raise CustomError(name=Constants.BRANCH_DAY_UNABLE,
+                              detail=Constants.BRANCH_DAY_UNABLE_DETAIL,
+                              status_code=status.HTTP_400_BAD_REQUEST,
+                              cause="Sucursal no disponible para el día requerido")
+
+        request_hour = str(request_datetime.time())[0:5]
+        logger.info("request_hour: {}", request_hour)
+
+        is_valid: bool = ReservationDatetimeService.is_in_service_hour(opening_hour=branch_schedule.opening_hour,
+                                                                       closing_hour=branch_schedule.closing_hour,
+                                                                       request_hour=request_hour)
+        if is_valid:
+            available_datetime: datetime = request_datetime + timedelta(minutes=2)
+            logger.info("available_datetime: {}", available_datetime)
+            return available_datetime
+
+        return self._get_nearest_available_opening(request_datetime=request_datetime, branch_id=reservation.branch_id, db=db)
+
+    def _get_nearest_available_opening(self, request_datetime: datetime, branch_id: int, db: Session) -> datetime:
 
         day: int = self._NEXT_DAY
         next_datetime = request_datetime
@@ -249,14 +278,14 @@ class ReservationChangeStatusService:
             branch_schedule: BranchScheduleEntity = self._branch_dao.get_day_schedule(branch_id=branch_id,
                                                                                       day=next_day, db=db)
             if branch_schedule:
-                nearest_branch_opening_datetime: datetime = datetime \
-                    .strptime(str(next_datetime.date()) + ' ' + str(branch_schedule.opening_hour), '%Y-%m-%d %H:%M') \
-                    .astimezone(self._country_time_zone)
+                nearest_branch_opening_datetime: datetime = ReservationDatetimeService.\
+                    to_datetime(reservation_date=next_datetime.date(), reservation_hour=branch_schedule.opening_hour)
+
                 logger.info("nearest_branch_opening_datetime: {}", nearest_branch_opening_datetime)
                 return nearest_branch_opening_datetime
 
-            day += self._NEXT_DAY
             next_datetime = request_datetime + timedelta(days=day)
+            day += self._NEXT_DAY
 
         raise CustomError(name="No existe día disponible",
                           detail="No existe día dentro de una semana para avisar a local",

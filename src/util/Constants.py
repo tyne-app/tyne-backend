@@ -56,6 +56,7 @@ class Constants:
     RESERVATION_DATE_DESCRIPTION_ERROR = "Fecha debe ser día disponible dentro de una semana"
     RESERVATION_TIME_INVALID_ERROR = "Hora para reserva no válida"
     RESERVATION_TIME_DESCRIPTION_ERROR = "Hora de reserva debe tener diferencia de 2hrs mínimo dentro de horario de local"
+    RESERVATION_REQUEST_TIME_DESCRIPTION_ERROR = "Debe haber 2 hrs mínimo de diferencia entre solicitud y reserva"
     RESERVATION_GET_ERROR = "Error al obtener reservas"
     RESERVATION_NOT_FOUND_ERROR = "Reservas no encontradas"
 
