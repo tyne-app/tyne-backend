@@ -244,7 +244,7 @@ class ReservationChangeStatusService:
                                                                            closing_hour=branch_schedule.closing_hour,
                                                                            request_hour=request_hour)
             if is_valid:
-                available_datetime: datetime = request_datetime + timedelta(minutes=2)
+                available_datetime: datetime = request_datetime + timedelta(seconds=30)
                 logger.info("available_datetime: {}", available_datetime)
                 return available_datetime
 
