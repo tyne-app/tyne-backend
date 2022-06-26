@@ -1,6 +1,5 @@
 import uuid
 from zoneinfo import ZoneInfo
-
 import pytz
 import locale
 from datetime import datetime
@@ -49,8 +48,8 @@ class ReservationService:
     _reservation_product_dao = ReservationProductDao()
     _email_service = EmailService()
     _branch_dao = BranchDao()
+    _chile_tz = pytz.timezone('Chile/Continental')
     _reservation_event_service = ReservationEventService()
-    _country_time_zone = pytz.timezone('Chile/Continental')
     _reservation_change_status_service = ReservationChangeStatusService()
     _local_currency = locale.setlocale(locale.LC_ALL, '')  # TODO: Dar formato moneda chilena
 
@@ -85,11 +84,13 @@ class ReservationService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Sucursal no disponible para el día requerido")
 
-        request_datetime: datetime = datetime.now(tz=self._country_time_zone)
+        request_datetime: datetime = datetime.now(tz=self._chile_tz)
         logger.info("request_datetime: {}", request_datetime)
 
         reservation_datetime: datetime = ReservationDatetimeService \
-            .to_datetime(reservation_date=new_reservation.date.date(), reservation_hour=new_reservation.hour)
+            .to_datetime(reservation_date=new_reservation.date.date(),
+                         reservation_hour=new_reservation.hour,
+                         tz=self._chile_tz)
 
         ReservationDatetimeService.is_to_future(request_datetime=request_datetime,
                                                 reservation_datetime=reservation_datetime)

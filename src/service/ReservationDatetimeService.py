@@ -1,3 +1,4 @@
+import pytz
 from loguru import logger
 from datetime import datetime, date, timedelta
 from starlette import status
@@ -10,9 +11,9 @@ from src.util.ReservationConstant import ReservationConstant
 class ReservationDatetimeService:
 
     @staticmethod
-    def to_datetime(reservation_date: date, reservation_hour: str) -> datetime:
+    def to_datetime(reservation_date: date, reservation_hour: str, tz) -> datetime:
         reservation_datetime: datetime = datetime.strptime(str(reservation_date) + ' ' + reservation_hour,
-                                                           '%Y-%m-%d %H:%M')
+                                                           '%Y-%m-%d %H:%M').replace(tzinfo=tz)
         logger.info("reservation_datetime: {}", reservation_datetime)
 
         return reservation_datetime
@@ -41,6 +42,10 @@ class ReservationDatetimeService:
         opening_hour_datetime = datetime.strptime(opening_hour, "%H:%M")
         closing_hour_datetime = datetime.strptime(closing_hour, "%H:%M")
         request_hour_datetime = datetime.strptime(request_hour, "%H:%M")
+
+        if closing_hour_datetime < opening_hour_datetime:
+            closing_hour_datetime = closing_hour_datetime + timedelta(days=1)
+
         logger.info("opening_hour_datetime: {}", opening_hour_datetime)
         logger.info("closing_hour_datetime: {}", closing_hour_datetime)
         logger.info("request_hour_datetime: {}", request_hour_datetime)

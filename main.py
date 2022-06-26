@@ -1,5 +1,5 @@
 import json
-
+from datetime import datetime, timedelta
 import uvicorn
 from fastapi import status, Request
 from fastapi.responses import JSONResponse
@@ -7,7 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 
 from loguru import logger
-
+import pytz
 from src.configuration.firebase.firebase_config import FirebaseConfig
 from src.exception.exceptions import CustomError
 from src.controller import business_controller, menu_controller, bank_controller, territory_controller, \
@@ -15,7 +15,7 @@ from src.controller import business_controller, menu_controller, bank_controller
 
 from src.exception.ThrowerExceptions import ThrowerExceptions
 from src.configuration.api.api_config import setup_app, add_middlewares
-
+from src.service.ReservationDatetimeService import ReservationDatetimeService
 app = setup_app()
 app = add_middlewares(app)
 
@@ -90,5 +90,13 @@ app.include_router(reservation_controller.reservation_controller)
 app.include_router(territory_controller.territory_controller)
 app.include_router(user_controller.user_controller)
 
+#future = ReservationDatetimeService.get_current_datetime() + timedelta(hours=5)
+#now = datetime.now()
+#print(future)
+#print(future.timestamp())
+#print(now.timestamp())
+#print(now)
+#ReservationDatetimeService.is_to_future(request_datetime=future, reservation_datetime=now)
+#ReservationDatetimeService.one_week_or_less(request_datetime=future, reservation_datetime=now)
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)
