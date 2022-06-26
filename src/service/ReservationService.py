@@ -88,18 +88,21 @@ class ReservationService:
         request_datetime: datetime = datetime.now()
         logger.info("request_datetime: {}", request_datetime)
 
-        reservation_datetime: datetime = ReservationDatetimeService\
+        reservation_datetime: datetime = ReservationDatetimeService \
             .to_datetime(reservation_date=new_reservation.date.date(), reservation_hour=new_reservation.hour)
 
-        ReservationDatetimeService.is_valid_datetime(request_datetime=request_datetime,
-                                                     reservation_datetime=reservation_datetime)
+        ReservationDatetimeService.is_to_future(request_datetime=request_datetime,
+                                                reservation_datetime=reservation_datetime)
 
-        ReservationDatetimeService.is_valid_date(request_datetime=request_datetime,
-                                                 reservation_datetime=reservation_datetime)
+        ReservationDatetimeService.one_week_or_less(request_datetime=request_datetime,
+                                                    reservation_datetime=reservation_datetime)
 
-        ReservationDatetimeService.is_in_branch_hour(opening_hour=branch_schedule_entity.opening_hour,
-                                                     closing_hour=branch_schedule_entity.closing_hour,
-                                                     request_hour=new_reservation.hour)
+        ReservationDatetimeService.is_in_reservation_time_slot(opening_hour=branch_schedule_entity.opening_hour,
+                                                               closing_hour=branch_schedule_entity.closing_hour,
+                                                               request_hour=new_reservation.hour)
+
+        ReservationDatetimeService.is_valid_hour_difference(request_datetime=request_datetime,
+                                                            reservation_datetime=reservation_datetime)
 
         products = self._product_dao_.get_products_by_ids(products_id=new_reservation.get_products_ids(),
                                                           branch_id=new_reservation.branch_id, db=db)
