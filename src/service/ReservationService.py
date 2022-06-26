@@ -85,7 +85,7 @@ class ReservationService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Sucursal no disponible para el día requerido")
 
-        request_datetime: datetime = datetime.now()
+        request_datetime: datetime = datetime.now(tz=self._country_time_zone)
         logger.info("request_datetime: {}", request_datetime)
 
         reservation_datetime: datetime = ReservationDatetimeService \
