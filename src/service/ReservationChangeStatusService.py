@@ -35,7 +35,7 @@ class ReservationChangeStatusService:
     _payment_dao_ = PaymentDao()
     _email_service = EmailService()
     _mercado_pago_service = MercadoPagoService()
-    _country_time_zone = timezone('Chile/Continental')
+    _chile_tz = timezone('Chile/Continental')
     _reservation_event_service = ReservationEventService()
     _use_dao = UserDao()
     _reservation_product_dao = ReservationProductDao()
@@ -76,7 +76,7 @@ class ReservationChangeStatusService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Ya existe un pago asociado")
 
-        request_datetime: datetime = datetime.now(tz=self._country_time_zone)
+        request_datetime: datetime = datetime.now(tz=self._chile_tz)
         logger.info("request datetime: {}", request_datetime)
 
         self._validate_request_date(request_date=request_datetime.date(),
@@ -86,7 +86,7 @@ class ReservationChangeStatusService:
         logger.info("payment_mercadopago: {}", payment_mp)
 
         payment = PaymentEntity()
-        payment.date = datetime.now(self._country_time_zone)
+        payment.date = datetime.now(self._chile_tz)
         payment.method = "Mercado Pago"
         payment.amount = payment_mp.get("transaction_amount")
         payment.type_coin_id = TypeCoinConstant.CLP
@@ -145,7 +145,7 @@ class ReservationChangeStatusService:
     def rejected_reservation_by_local(self, reservation: ReservationEntity, client_email: str, db: Session):
         # TODO: Las cancelaciones de rembolso sin rembolso, etc, se maneja por backend según el datetime de la cancelacion
         # TODO: Falta obtener la razón del por qué se rechaza.
-        request_datetime: datetime = datetime.now(self._country_time_zone)
+        request_datetime: datetime = datetime.now(self._chile_tz)
         logger.info("request datetime: {}", request_datetime)
 
         self._validate_request_date(request_date=request_datetime.date(),
@@ -194,9 +194,11 @@ class ReservationChangeStatusService:
         branch_schedule_entity = self._branch_dao.get_day_schedule(branch_id=reservation.branch_id,
                                                                    day=reservation_day, db=db)
 
-        branch_opening_datetime: datetime = datetime \
-            .strptime(str(reservation.reservation_date) + ' ' +
-                      branch_schedule_entity.opening_hour, '%Y-%m-%d %H:%M').astimezone(self._country_time_zone)
+        branch_opening_datetime: datetime = ReservationDatetimeService. \
+            to_datetime(reservation_date=reservation.reservation_date,
+                        reservation_hour=branch_schedule_entity.opening_hour,
+                        tz=self._chile_tz)
+
         logger.info("Branch opening datetime: {}", branch_opening_datetime)
 
         kwargs: dict = {
@@ -278,7 +280,7 @@ class ReservationChangeStatusService:
                                                                                       day=next_day, db=db)
             if branch_schedule:
                 return ReservationDatetimeService.\
-                    to_datetime(reservation_date=next_datetime.date(), reservation_hour=branch_schedule.opening_hour)
+                    to_datetime(reservation_date=next_datetime.date(), reservation_hour=branch_schedule.opening_hour, tz=self._chile_tz)
 
             next_datetime = request_datetime + timedelta(days=day)
             day += self._NEXT_DAY
