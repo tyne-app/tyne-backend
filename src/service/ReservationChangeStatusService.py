@@ -122,23 +122,12 @@ class ReservationChangeStatusService:
         }
         logger.info("kwargs: {}", kwargs)
 
-        if request_datetime.date() == reservation.reservation_date:
-            logger.info("Reservation is today")
-
-            available_datetime: datetime = self._get_available_datetime(request_datetime=request_datetime,
-                                                                        reservation=reservation, db=db)
-            logger.info("Run date to execute reservation job: {}", available_datetime)
-
-            self._reservation_event_service.create_job(func=self._reservation_event_service.create_reservation_event,
-                                                       run_date=available_datetime, kwargs=kwargs)
-            return response
-
-        nearest_branch_opening_datetime: datetime = self._get_nearest_available_opening(
-            request_datetime=request_datetime,
-            branch_id=reservation.branch_id, db=db)
+        available_datetime: datetime = self._get_available_datetime(request_datetime=request_datetime,
+                                                                    reservation=reservation, db=db)
+        logger.info("Run date to execute reservation job: {}", available_datetime)
 
         self._reservation_event_service.create_job(func=self._reservation_event_service.create_reservation_event,
-                                                   run_date=nearest_branch_opening_datetime, kwargs=kwargs)
+                                                   run_date=available_datetime, kwargs=kwargs)
 
         return response
 
@@ -243,33 +232,28 @@ class ReservationChangeStatusService:
     def _get_available_datetime(self, request_datetime: datetime, reservation: ReservationEntity,
                                 db: Session) -> datetime:
 
-        day: int = reservation.reservation_date.isoweekday() - ReservationConstant.DAY_ADJUSTMENT
+        day: int = request_datetime.isoweekday() - ReservationConstant.DAY_ADJUSTMENT
         branch_schedule: BranchScheduleEntity = self._branch_dao.get_day_schedule(branch_id=reservation.branch_id,
                                                                                   day=day, db=db)
 
-        if not branch_schedule:
-            raise CustomError(name=Constants.BRANCH_DAY_UNABLE,
-                              detail=Constants.BRANCH_DAY_UNABLE_DETAIL,
-                              status_code=status.HTTP_400_BAD_REQUEST,
-                              cause="Sucursal no disponible para el día requerido")
+        if branch_schedule:
+            request_hour = str(request_datetime.time())[0:5]
+            logger.info("request_hour: {}", request_hour)
 
-        request_hour = str(request_datetime.time())[0:5]
-        logger.info("request_hour: {}", request_hour)
-
-        is_valid: bool = ReservationDatetimeService.is_in_service_hour(opening_hour=branch_schedule.opening_hour,
-                                                                       closing_hour=branch_schedule.closing_hour,
-                                                                       request_hour=request_hour)
-        if is_valid:
-            available_datetime: datetime = request_datetime + timedelta(minutes=2)
-            logger.info("available_datetime: {}", available_datetime)
-            return available_datetime
+            is_valid: bool = ReservationDatetimeService.is_in_service_hour(opening_hour=branch_schedule.opening_hour,
+                                                                           closing_hour=branch_schedule.closing_hour,
+                                                                           request_hour=request_hour)
+            if is_valid:
+                available_datetime: datetime = request_datetime + timedelta(minutes=2)
+                logger.info("available_datetime: {}", available_datetime)
+                return available_datetime
 
         return self._get_nearest_available_opening(request_datetime=request_datetime, branch_id=reservation.branch_id, db=db)
 
     def _get_nearest_available_opening(self, request_datetime: datetime, branch_id: int, db: Session) -> datetime:
 
         day: int = self._NEXT_DAY
-        next_datetime = request_datetime
+        next_datetime = request_datetime + timedelta(days=self._NEXT_DAY)
 
         while day <= ReservationConstant.WEEK_AS_DAYS:
 
