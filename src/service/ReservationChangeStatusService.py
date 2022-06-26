@@ -76,7 +76,7 @@ class ReservationChangeStatusService:
                               status_code=status.HTTP_400_BAD_REQUEST,
                               cause="Ya existe un pago asociado")
 
-        request_datetime: datetime = datetime.now()
+        request_datetime: datetime = datetime.now(tz=self._country_time_zone)
         logger.info("request datetime: {}", request_datetime)
 
         self._validate_request_date(request_date=request_datetime.date(),
@@ -136,7 +136,6 @@ class ReservationChangeStatusService:
         nearest_branch_opening_datetime: datetime = self._get_nearest_available_opening(
             request_datetime=request_datetime,
             branch_id=reservation.branch_id, db=db)
-        logger.info("nearest_branch_opening_datetime: {}", nearest_branch_opening_datetime)
 
         self._reservation_event_service.create_job(func=self._reservation_event_service.create_reservation_event,
                                                    run_date=nearest_branch_opening_datetime, kwargs=kwargs)
@@ -278,11 +277,8 @@ class ReservationChangeStatusService:
             branch_schedule: BranchScheduleEntity = self._branch_dao.get_day_schedule(branch_id=branch_id,
                                                                                       day=next_day, db=db)
             if branch_schedule:
-                nearest_branch_opening_datetime: datetime = ReservationDatetimeService.\
+                return ReservationDatetimeService.\
                     to_datetime(reservation_date=next_datetime.date(), reservation_hour=branch_schedule.opening_hour)
-
-                logger.info("nearest_branch_opening_datetime: {}", nearest_branch_opening_datetime)
-                return nearest_branch_opening_datetime
 
             next_datetime = request_datetime + timedelta(days=day)
             day += self._NEXT_DAY
