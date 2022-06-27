@@ -1,5 +1,4 @@
 import json
-
 import uvicorn
 from fastapi import status, Request
 from fastapi.responses import JSONResponse
@@ -7,7 +6,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 
 from loguru import logger
-
 from src.configuration.firebase.firebase_config import FirebaseConfig
 from src.exception.exceptions import CustomError
 from src.controller import business_controller, menu_controller, bank_controller, territory_controller, \
@@ -15,7 +13,6 @@ from src.controller import business_controller, menu_controller, bank_controller
 
 from src.exception.ThrowerExceptions import ThrowerExceptions
 from src.configuration.api.api_config import setup_app, add_middlewares
-
 app = setup_app()
 app = add_middlewares(app)
 
