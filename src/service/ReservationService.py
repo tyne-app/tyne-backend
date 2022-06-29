@@ -365,9 +365,9 @@ class ReservationService:
             reservation_datetime = reservation_datetime.replace(tzinfo=ZoneInfo('Chile/Continental'))
 
             logger.info("reservation datetime: " + str(reservation_datetime))
-            logger.info("datetime now........: " + str(datetime.now(self._country_time_zone)))
+            logger.info("datetime now........: " + str(datetime.now(self._chile_tz)))
 
-            minutes_diff = (reservation_datetime - datetime.now(self._country_time_zone)).total_seconds() / 60
+            minutes_diff = (reservation_datetime - datetime.now(self._chile_tz)).total_seconds() / 60
             logger.info("minutes diff........: " + str(minutes_diff))
 
             if minutes_diff < 120:
