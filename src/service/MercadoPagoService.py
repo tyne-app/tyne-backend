@@ -21,6 +21,7 @@ class MercadoPagoService:
                     "unit_price": int(amount),
                 }
             ],
+            "purpose": "wallet_purchase",
             "back_urls": {
                 "success": self._settings_.MP_SUCCESS_URL,
                 "failure": self._settings_.MP_REJECTED_URL,
