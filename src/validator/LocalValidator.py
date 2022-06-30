@@ -14,8 +14,11 @@ from src.exception.exceptions import CustomError
 class LocalValidator:
     NUMBER_AND_WORD_REGEX = re.compile(r"[A-Za-z0-9\sáéíóúÁÉÍÓÚñ]+")
     NUMBER_REGEX = re.compile(r"[0-9]+")
+    IDENTIFIER_REGEX = re.compile(r"[0-9]{7,}[0-9k]")
+    BASE_COMMERCIAL_IDENTIFIER_NUMBER = 70000000
+    BASE_PERSON_IDENTIFIER_NUMBER = 4000000
     PHONE_REGEX = re.compile(r"\+569[0-9]{8}")
-    ADDRESS_REGEX = re.compile(r"[a-zA-ZÀ-ÿ\u00f1\u00d1]+(\s*[a-zA-ZÀ-ÿ\u00f1\u00d1]*)*[a-zA-ZÀ-ÿ\u00f1\u00d1]+")
+    ADDRESS_REGEX = re.compile(r"[a-zA-ZÀ-ÿ\u00f1\u00d1\d]+(\s*[a-zA-ZÀ-ÿ\u00f1\u00d1\d]*)*[a-zA-ZÀ-ÿ\u00f1\u00d1\d]+")
     EMAIL_REGEX = re.compile(r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.?[A-Za-z]+")
     PASSWORD_REGEX = re.compile(r"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[A-Za-z\d$@$!%*?&].{7,}")
     VALID_STATE_ID = range(83, 134)
@@ -96,7 +99,8 @@ class LocalValidator:
             invalid_data.append(self.INVALID_DATA_NAME_MESSAGE.replace("{0}", self.LEGAL_REPRESENTATIVE))
         if not re.fullmatch(self.NUMBER_AND_WORD_REGEX, legal_representative.last_name):
             invalid_data.append(self.INVALID_DATA_LAST_NAME_MESSAGE.replace("{0}", self.LEGAL_REPRESENTATIVE))
-        if not re.fullmatch(self.NUMBER_REGEX, legal_representative.identifier):
+        if not re.fullmatch(self.IDENTIFIER_REGEX, legal_representative.identifier.lower()) or \
+                int(legal_representative.identifier[:-1]) < self.BASE_PERSON_IDENTIFIER_NUMBER:
             invalid_data.append(self.INVALID_DATA_IDENTIFIER_MESSAGE.replace("{0}", self.LEGAL_REPRESENTATIVE))
         if not re.fullmatch(self.EMAIL_REGEX, legal_representative.email):
             invalid_data.append(self.INVALID_DATA_EMAIL_MESSAGE.replace("{0}", self.LEGAL_REPRESENTATIVE))
@@ -117,7 +121,8 @@ class LocalValidator:
             invalid_data.append('Nombre de local inválido')
         if not re.fullmatch(self.NUMBER_AND_WORD_REGEX, restaurant.commercial_activity):
             invalid_data.append(self.INVALID_DATA_COMMERCIAL_ACTIVITY_MESSAGE)
-        if not re.fullmatch(self.NUMBER_REGEX, restaurant.identifier):
+        if not re.fullmatch(self.IDENTIFIER_REGEX, restaurant.identifier.lower()) or \
+                int(restaurant.identifier[:-1]) < self.BASE_COMMERCIAL_IDENTIFIER_NUMBER:
             invalid_data.append(self.INVALID_DATA_IDENTIFIER_MESSAGE.replace("{0}", self.RESTAURANT))
         if not re.fullmatch(self.ADDRESS_REGEX, restaurant.street.strip()):
             print(restaurant.street)
