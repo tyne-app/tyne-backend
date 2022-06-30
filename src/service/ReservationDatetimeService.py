@@ -93,4 +93,11 @@ class ReservationDatetimeService:
         logger.info("closing_datetime: {}", closing_datetime)
         logger.info("request_datetime: {}", request_datetime)
 
-        return opening_datetime < request_datetime < closing_datetime
+        return opening_datetime <= request_datetime <= closing_datetime
+
+    @staticmethod
+    def is_less_than_opening(opening_hour: str, request_hour: str) -> bool:
+        opening_datetime = datetime.strptime(opening_hour, "%H:%M")
+        request_datetime = datetime.strptime(request_hour, "%H:%M")
+
+        return request_datetime < opening_datetime
