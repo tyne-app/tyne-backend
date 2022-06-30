@@ -74,17 +74,28 @@ async def get_city(response: Response, id_city: int, db: Session = Depends(datab
 
 
 @territory_controller.get(
-    '/cities/{id_city}/states',
+    '/cities/{city_id}/states',
     status_code=status.HTTP_200_OK
 )
-async def get_states_by_city(response: Response, id_city: int, db: Session = Depends(database.get_data_base)):
-    states = _state_dao_.get_states(id_city, db)
+async def get_states_by_city(response: Response, city_id: int, db: Session = Depends(database.get_data_base)):
+    states = _state_dao_.get_states(city_id=city_id, db=db)
 
     if len(states) == 0:
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
 
     return states
+
+
+@territory_controller.get('/cities/{city_id}/states/available', status_code=status.HTTP_200_OK)
+def get_available_states_by_city(response: Response, city_id: int, db: Session = Depends(database.get_data_base)):
+    available_states = _state_dao_.get_available_states(city_id=city_id, db=db)
+
+    if len(available_states) == 0:
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
+
+    return available_states
 
 
 @territory_controller.get(
