@@ -239,20 +239,25 @@ class ReservationChangeStatusService:
         if branch_schedule:
             request_hour = str(request_datetime.time())[0:5]
             logger.info("request_hour: {}", request_hour)
-            # TODO: Verificar que pasa si se reserva a las 3:00hrs para mismo día a las 17:00hrs.
-            # TODO: Parece que no envia email el mismo día, sino el día siguiente.
-            # TODO: Se debe hacer:
-            # TODO: ¿Es inferior al horario de apertura? Sí, entonces enviar correo en horario de apertura.
-            # TODO: Caso contrario se prosigue con la lógica ya creada.
-            is_valid: bool = ReservationDatetimeService.is_in_service_hour(opening_hour=branch_schedule.opening_hour,
-                                                                           closing_hour=branch_schedule.closing_hour,
-                                                                           request_hour=request_hour)
-            if is_valid:
-                available_datetime: datetime = request_datetime + timedelta(seconds=30)
-                logger.info("available_datetime: {}", available_datetime)
-                return available_datetime
 
-        return self._get_nearest_available_opening(request_datetime=request_datetime, branch_id=reservation.branch_id, db=db)
+            is_less: bool = ReservationDatetimeService.is_less_than_opening(opening_hour=branch_schedule.opening_hour,
+                                                                            request_hour=request_hour)
+
+            if is_less:
+                return ReservationDatetimeService.to_datetime(reservation_date=request_datetime.date(),
+                                                              reservation_hour=branch_schedule.opening_hour,
+                                                              tz=self._chile_tz)
+
+            is_in_service: bool = ReservationDatetimeService.is_in_service_hour(
+                opening_hour=branch_schedule.opening_hour,
+                closing_hour=branch_schedule.closing_hour,
+                request_hour=request_hour)
+
+            if is_in_service:
+                return request_datetime + timedelta(seconds=30)
+
+        return self._get_nearest_available_opening(request_datetime=request_datetime, branch_id=reservation.branch_id,
+                                                   db=db)
 
     def _get_nearest_available_opening(self, request_datetime: datetime, branch_id: int, db: Session) -> datetime:
 
@@ -267,8 +272,9 @@ class ReservationChangeStatusService:
             branch_schedule: BranchScheduleEntity = self._branch_dao.get_day_schedule(branch_id=branch_id,
                                                                                       day=next_day, db=db)
             if branch_schedule:
-                return ReservationDatetimeService.\
-                    to_datetime(reservation_date=next_datetime.date(), reservation_hour=branch_schedule.opening_hour, tz=self._chile_tz)
+                return ReservationDatetimeService. \
+                    to_datetime(reservation_date=next_datetime.date(), reservation_hour=branch_schedule.opening_hour,
+                                tz=self._chile_tz)
 
             next_datetime = request_datetime + timedelta(days=day)
             day += self._NEXT_DAY
