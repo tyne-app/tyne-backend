@@ -239,7 +239,11 @@ class ReservationChangeStatusService:
         if branch_schedule:
             request_hour = str(request_datetime.time())[0:5]
             logger.info("request_hour: {}", request_hour)
-
+            # TODO: Verificar que pasa si se reserva a las 3:00hrs para mismo día a las 17:00hrs.
+            # TODO: Parece que no envia email el mismo día, sino el día siguiente.
+            # TODO: Se debe hacer:
+            # TODO: ¿Es inferior al horario de apertura? Sí, entonces enviar correo en horario de apertura.
+            # TODO: Caso contrario se prosigue con la lógica ya creada.
             is_valid: bool = ReservationDatetimeService.is_in_service_hour(opening_hour=branch_schedule.opening_hour,
                                                                            closing_hour=branch_schedule.closing_hour,
                                                                            request_hour=request_hour)
