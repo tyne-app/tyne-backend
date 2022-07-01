@@ -56,6 +56,10 @@ class BranchBank(BaseModel):
     account_type: str
     bank_id: int
 
+    @validator('account_holder_identifier', pre=True, always=True)
+    def set_to_upper(cls, account_holder_identifier: str):
+        return account_holder_identifier.upper()
+
 
 class NewAccount(BaseModel):
     manager: Manager
