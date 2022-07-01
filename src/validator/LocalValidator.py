@@ -41,6 +41,7 @@ class LocalValidator:
     MANAGER = "del encargado"
     RESTAURANT = "de la casa matriz"
     BRANCH = "del local"
+    HOLDER = "de rut propietario cuenta bancaria"
 
     def validate_new_account(self, new_account: NewAccount):
         data_checked = []
@@ -168,8 +169,9 @@ class LocalValidator:
         logger.info('branch_bank: {}', branch_bank)
 
         invalid_data = []
-        if not re.fullmatch(self.NUMBER_REGEX, branch_bank.account_holder_identifier):
-            invalid_data.append(self.INVALID_DATA_MESSAGE)
+        if not re.fullmatch(self.IDENTIFIER_REGEX, branch_bank.account_holder_identifier) or \
+                int(branch_bank.account_holder_identifier[:-1]) < self.BASE_PERSON_IDENTIFIER_NUMBER:
+            invalid_data.append(self.INVALID_DATA_IDENTIFIER_MESSAGE.replace("{0}", self.HOLDER))
         if not re.fullmatch(self.NUMBER_AND_WORD_REGEX, branch_bank.account_holder_name):
             invalid_data.append(self.INVALID_DATA_MESSAGE)
         if not re.fullmatch(self.NUMBER_REGEX, branch_bank.account_number):
