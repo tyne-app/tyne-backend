@@ -26,7 +26,6 @@ class BusinessDao:
         return True
 
     async def verify_legal_representative(self, identifier, db):
-        print(identifier)
         data_error = []
         legal_representative_exist = db.query(LegalRepresentativeEntity) \
             .filter(or_(LegalRepresentativeEntity.identifier == identifier.identifier,
