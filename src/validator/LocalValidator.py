@@ -18,7 +18,7 @@ class LocalValidator:
     BASE_COMMERCIAL_IDENTIFIER_NUMBER = 70000000
     BASE_PERSON_IDENTIFIER_NUMBER = 4000000
     PHONE_REGEX = re.compile(r"\+569[0-9]{8}")
-    ADDRESS_REGEX = re.compile(r"[^\"\\#$%&()=?¡¿'+´{}\-_:,;|~`^¬\[\]]+")
+    ADDRESS_REGEX = re.compile(r"[^\"\\#$%&()=?¡¿'+´{}\-_:,;|~`^¬\[\]@]+")
     EMAIL_REGEX = re.compile(r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.?[A-Za-z]+")
     PASSWORD_REGEX = re.compile(r"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[A-Za-z\d$@$!%*?&].{7,}")
     VALID_STATE_ID = range(83, 134)
