@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import Optional, Union
 
 
@@ -22,6 +22,10 @@ class LegalRepresentative(BaseModel):
     email: str
     phone: str
 
+    @validator('identifier', pre=True, always=True)
+    def set_to_upper(cls, identifier: str):
+        return identifier.upper()
+
 
 class Restaurant(BaseModel):
     identifier: str
@@ -32,6 +36,10 @@ class Restaurant(BaseModel):
     street_number: int
     state_id: int
     description: str
+
+    @validator('identifier', pre=True, always=True)
+    def set_to_upper(cls, identifier: str):
+        return identifier.upper()
 
 
 class Branch(BaseModel):
@@ -47,6 +55,10 @@ class BranchBank(BaseModel):
     account_number: str
     account_type: str
     bank_id: int
+
+    @validator('account_holder_identifier', pre=True, always=True)
+    def set_to_upper(cls, account_holder_identifier: str):
+        return account_holder_identifier.upper()
 
 
 class NewAccount(BaseModel):
