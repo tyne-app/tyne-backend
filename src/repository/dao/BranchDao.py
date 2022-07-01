@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from loguru import logger
 from sqlalchemy import func, distinct, or_
 from sqlalchemy.orm import Session
@@ -71,10 +73,12 @@ class BranchDao:
 
         if search_parameters['date_reservation']:
             date_reservation = search_parameters['date_reservation']
+            week_day = datetime.strptime(search_parameters['date_reservation'], "%Y-%m-%d").weekday()
+
             reservation_data = db.query(
                 ReservationEntity.id.label(name='reservation_id'),
                 func.max(ReservationChangeStatusEntity.datetime).label(name='last_modify'),
-                ReservationEntity.branch_id
+                ReservationEntity.branch_id,
             ).select_from(ReservationEntity) \
                 .join(ReservationChangeStatusEntity,
                       ReservationChangeStatusEntity.reservation_id == ReservationEntity.id) \
@@ -82,10 +86,12 @@ class BranchDao:
                 .filter(ReservationEntity.reservation_date == date_reservation) \
                 .group_by(ReservationEntity.id).cte(name='reservation_data')
 
-            all_branches = all_branches.filter(BranchEntity.id.not_in(db.query(reservation_data.c.branch_id)
-                .select_from(reservation_data)
-                .group_by(reservation_data.c.branch_id)
-                .having(
+            print(week_day)
+            all_branches = all_branches.filter(BranchScheduleEntity.day == week_day)\
+                .filter(BranchScheduleEntity.active) \
+                .filter(BranchEntity.id.not_in(db.query(reservation_data.c.branch_id).select_from(reservation_data)
+                                               .group_by(reservation_data.c.branch_id)
+                                               .having(
                 func.count(reservation_data.c.reservation_id) == MAX_RESERVATION_COUNT)))
 
         if search_parameters['state_id']:
