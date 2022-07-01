@@ -18,7 +18,7 @@ class LocalValidator:
     BASE_COMMERCIAL_IDENTIFIER_NUMBER = 70000000
     BASE_PERSON_IDENTIFIER_NUMBER = 4000000
     PHONE_REGEX = re.compile(r"\+569[0-9]{8}")
-    ADDRESS_REGEX = re.compile(r"[a-zA-ZÀ-ÿ\u00f1\u00d1\d]+(\s*[a-zA-ZÀ-ÿ\u00f1\u00d1\d]*)*[a-zA-ZÀ-ÿ\u00f1\u00d1\d]+")
+    ADDRESS_REGEX = re.compile(r"[^\"\\#$%&()=/?¡¿'+´{}\-_.:,;|~`^¬\[\]]+")
     EMAIL_REGEX = re.compile(r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.?[A-Za-z]+")
     PASSWORD_REGEX = re.compile(r"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[A-Za-z\d$@$!%*?&].{7,}")
     VALID_STATE_ID = range(83, 134)
@@ -125,7 +125,6 @@ class LocalValidator:
                 int(restaurant.identifier[:-1]) < self.BASE_COMMERCIAL_IDENTIFIER_NUMBER:
             invalid_data.append(self.INVALID_DATA_IDENTIFIER_MESSAGE.replace("{0}", self.RESTAURANT))
         if not re.fullmatch(self.ADDRESS_REGEX, restaurant.street.strip()):
-            print(restaurant.street)
             invalid_data.append(self.INVALID_DATA_STREET_MESSAGE.replace("{0}", self.RESTAURANT))
         if type(restaurant.street_number) != int:
             invalid_data.append(self.INVALID_DATA_NUMBER_STREET_MESSAGE)
