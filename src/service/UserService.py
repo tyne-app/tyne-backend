@@ -26,6 +26,7 @@ from src.util.EmailSubject import EmailSubject
 from src.service.PasswordService import PasswordService
 from src.dto.response.SimpleResponse import SimpleResponse
 from src.exception.exceptions import CustomError
+from src.configuration.Settings import Settings
 
 
 class UserService:
@@ -207,8 +208,12 @@ class UserService:
 
         token: str = self._user_token_by_email(email=email, is_active=False, db=db)
 
+        data: str = "https://tyne-frontend-dev.herokuapp.com/cuenta/activacion/" + token
+        if Settings.ENVIRONMENT == "Production":
+            data = "http://www.tyne.cl/cuenta/activacion/" + token
+
         self._email_service.send_email(user=Constants.USER, subject=EmailSubject.RETRY_ACTIVATION,
-                                       receiver_email=email, data=token)
+                                       receiver_email=email, data=data)
 
         return SimpleResponse("Se ha enviado un correo para activar cuenta")
 
