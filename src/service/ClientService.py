@@ -57,7 +57,7 @@ class ClientService:
                                                                       email=user_entity.email,
                                                                       rol=user_entity.id_user_type)
 
-        data: str = "https://tyne-frontend-dev.herokuapp.com/" + activation_token
+        data: str = "https://tyne-frontend-dev.herokuapp.com/cuenta/activacion/" + activation_token
         if Settings.ENVIRONMENT == "Production":
             data = "http://www.tyne.cl/cuenta/activacion/" + activation_token
 
