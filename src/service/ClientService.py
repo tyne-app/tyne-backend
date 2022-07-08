@@ -1,3 +1,4 @@
+from loguru._defaults import env
 from sqlalchemy.orm import Session
 from loguru import logger
 from src.dto.request.ClientRequest import ClientRequest
@@ -15,6 +16,7 @@ from src.validator.ClientValidator import ClientValidator
 from src.service.EmailService import EmailService
 from src.util.EmailSubject import EmailSubject
 from src.service.PasswordService import PasswordService
+from src.configuration.Settings import Settings
 
 
 class ClientService:
@@ -55,9 +57,13 @@ class ClientService:
                                                                       email=user_entity.email,
                                                                       rol=user_entity.id_user_type)
 
+        data: str = "https://tyne-frontend-dev.herokuapp.com/cuenta/activacion/" + activation_token
+        if Settings.ENVIRONMENT == "Production":
+            data = "http://www.tyne.cl/cuenta/activacion/" + activation_token
+
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CLIENT_WELCOME,
                                        receiver_email=client_request.email,
-                                       data=activation_token)
+                                       data=data)
 
         return SimpleResponse(self._created_client)  # TODO: Dejar estructura de respuesta igual para todo el proyecto
 
@@ -80,9 +86,13 @@ class ClientService:
                                                                       email=user_entity.email,
                                                                       rol=user_entity.id_user_type)
 
+        data: str = "https://tyne-frontend-dev.herokuapp.com/cuenta/activacion/" + activation_token
+        if Settings.ENVIRONMENT == "Production":
+            data = "http://www.tyne.cl/cuenta/activacion/" + activation_token
+
         self._email_service.send_email(user=Constants.CLIENT, subject=EmailSubject.CLIENT_WELCOME,
                                        receiver_email=client_request.email,
-                                       data=activation_token)
+                                       data=data)
 
         logger.info("Email enviado a correo de cliente")
         return SimpleResponse(self._created_client)
