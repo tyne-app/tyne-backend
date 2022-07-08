@@ -16,6 +16,7 @@ _bank_dao_ = BankDao()
     status_code=status.HTTP_200_OK
 )
 async def get_banks(response: Response, db: Session = Depends(database.get_data_base)):
+    response.headers["Cache-Control"] = "public, max-age=604800"
     banks = _bank_dao_.get_banks(db)
 
     if len(banks) == 0:
@@ -30,6 +31,7 @@ async def get_banks(response: Response, db: Session = Depends(database.get_data_
     status_code=status.HTTP_200_OK
 )
 async def get_bank(response: Response, id: int, db: Session = Depends(database.get_data_base)):
+    response.headers["Cache-Control"] = "public, max-age=604800"
     bank = _bank_dao_.get_bank_by_id(id, db)
 
     if bank is None:
