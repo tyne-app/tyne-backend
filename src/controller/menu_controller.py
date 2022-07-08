@@ -22,6 +22,7 @@ async def all_category(response: Response, db: Session = Depends(database.get_da
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
 
+    response.headers["Cache-Control"] = "public, max-age=1800"
     return categories
 
 

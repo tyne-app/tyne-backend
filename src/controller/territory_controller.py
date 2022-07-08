@@ -28,6 +28,7 @@ async def get_countries(response: Response, db: Session = Depends(database.get_d
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
 
+    response.headers["Cache-Control"] = "public, max-age=3600"
     return countries
 
 
@@ -42,6 +43,7 @@ async def get_country(response: Response, id_country: int, db: Session = Depends
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
 
+    response.headers["Cache-Control"] = "public, max-age=3600"
     return country
 
 
@@ -56,6 +58,7 @@ async def get_cities_by_country(response: Response, id_country: int, db: Session
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
 
+    response.headers["Cache-Control"] = "public, max-age=3600"
     return cities
 
 
@@ -70,6 +73,7 @@ async def get_city(response: Response, id_city: int, db: Session = Depends(datab
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
 
+    response.headers["Cache-Control"] = "public, max-age=3600"
     return city
 
 
@@ -84,6 +88,7 @@ async def get_states_by_city(response: Response, city_id: int, db: Session = Dep
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
 
+    response.headers["Cache-Control"] = "public, max-age=3600"
     return states
 
 
@@ -109,4 +114,5 @@ async def get_state(response: Response, id_state: int, db: Session = Depends(dat
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
 
+    response.headers["Cache-Control"] = "public, max-age=3600"
     return state

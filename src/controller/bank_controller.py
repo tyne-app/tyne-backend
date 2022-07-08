@@ -22,6 +22,7 @@ async def get_banks(response: Response, db: Session = Depends(database.get_data_
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
 
+    response.headers["Cache-Control"] = "public, max-age=3600"
     return banks
 
 
