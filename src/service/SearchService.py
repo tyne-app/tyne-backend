@@ -34,9 +34,9 @@ class SearchService:
             logger.info('search_parameters[date_reservation]: {}', search_parameters['date_reservation'])
 
         all_branches_result = self._branch_dao_ \
-            .search_all_branches(search_parameters=search_parameters,
-                                 client_id=client_id,
-                                 db=db, limit=self.TOTAL_ITEMS_PAGE)
+            .search_all_branches_v2(search_parameters=search_parameters,
+                                    client_id=client_id,
+                                    db=db, limit=self.TOTAL_ITEMS_PAGE)
         logger.info('all_branches_result: {}', all_branches_result)
 
         branch_response = BranchResponse()
